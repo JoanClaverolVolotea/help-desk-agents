@@ -541,10 +541,118 @@ button:disabled {
   border-color: #96b8d9;
 }
 
+.badge.open {
+  background: #fff3db;
+  border-color: #d5b27f;
+}
+
+.badge.in_progress {
+  background: #e7f1ff;
+  border-color: #9ebce0;
+}
+
+.badge.resolved {
+  background: #ddf3e6;
+  border-color: #96c8aa;
+}
+
 .use-case-actions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.ticket-filter-row {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.ticket-filter-row label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.84rem;
+}
+
+.ticket-registry-layout {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.4fr);
+  gap: 0.9rem;
+  min-height: 320px;
+}
+
+.ticket-list-pane,
+.ticket-detail-pane {
+  border: 1px solid #cadcdf;
+  border-radius: 12px;
+  background: #fffefb;
+  padding: 0.75rem;
+  overflow: auto;
+}
+
+.ticket-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ticket-list-item {
+  border: 1px solid #c9d7dc;
+  border-radius: 10px;
+  background: #fcfffd;
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+  color: inherit;
+}
+
+.ticket-list-item.selected {
+  border-color: #6f97a1;
+  box-shadow: inset 0 0 0 1px #6f97a1;
+}
+
+.ticket-detail-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.45rem;
+}
+
+.ticket-detail-card pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ticket-detail-section {
+  margin-top: 0.75rem;
+}
+
+.ticket-detail-section h4 {
+  margin: 0 0 0.4rem;
+}
+
+.ticket-table {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ticket-table-row {
+  border: 1px solid #cfdde1;
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: #fcffff;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ticket-table-row span {
+  font-size: 0.82rem;
+}
+
+.ticket-table-row pre {
+  font-size: 0.76rem;
 }
 
 .wizard-shell {
@@ -852,6 +960,10 @@ button:disabled {
   }
 
   .role-landing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-registry-layout {
     grid-template-columns: 1fr;
   }
 

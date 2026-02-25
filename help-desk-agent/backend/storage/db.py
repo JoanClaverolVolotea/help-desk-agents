@@ -81,6 +81,88 @@ def init_schema(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_use_case_versions_status
             ON use_case_versions(use_case_id, status);
 
+        CREATE TABLE IF NOT EXISTS tickets (
+            id TEXT PRIMARY KEY,
+            conversation_id TEXT,
+            external_ticket_id TEXT,
+            use_case_id TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved')),
+            language TEXT NOT NULL,
+            ticket_context TEXT NOT NULL,
+            error_message TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            resolved_at TEXT,
+            FOREIGN KEY (use_case_id) REFERENCES use_cases(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_created_at
+            ON tickets(created_at DESC);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_status
+            ON tickets(status);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_external_ticket_id
+            ON tickets(external_ticket_id);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_conversation_id
+            ON tickets(conversation_id);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_use_case_id
+            ON tickets(use_case_id);
+
+        CREATE TABLE IF NOT EXISTS ticket_status_history (
+            id TEXT PRIMARY KEY,
+            ticket_id TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved')),
+            changed_at TEXT NOT NULL,
+            reason TEXT,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_status_history_ticket_id
+            ON ticket_status_history(ticket_id, changed_at ASC);
+
+        CREATE TABLE IF NOT EXISTS ticket_fields (
+            id TEXT PRIMARY KEY,
+            ticket_id TEXT NOT NULL,
+            field_name TEXT NOT NULL,
+            field_value TEXT NOT NULL,
+            is_required INTEGER NOT NULL CHECK (is_required IN (0, 1)),
+            source TEXT NOT NULL CHECK (source IN ('provided', 'derived', 'missing')),
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_fields_ticket_id
+            ON ticket_fields(ticket_id, field_name ASC);
+
+        CREATE TABLE IF NOT EXISTS ticket_steps (
+            id TEXT PRIMARY KEY,
+            ticket_id TEXT NOT NULL,
+            step_order INTEGER NOT NULL,
+            step_id TEXT NOT NULL,
+            output_text TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_steps_ticket_id
+            ON ticket_steps(ticket_id, step_order ASC);
+
+        CREATE TABLE IF NOT EXISTS ticket_events (
+            id TEXT PRIMARY KEY,
+            ticket_id TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            agent_name TEXT,
+            payload_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_events_ticket_id
+            ON ticket_events(ticket_id, created_at ASC);
+
         """
     )
 

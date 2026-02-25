@@ -11,6 +11,7 @@ from backend.runtime.specialists import (
     specialist_handoff_tool_name,
 )
 from backend.runtime.triage import build_triage_agent
+from backend.storage.ticket_repository import TicketRepository
 
 
 @dataclass
@@ -21,12 +22,15 @@ class RuntimeSnapshot:
     published_use_cases: list[PublishedUseCaseSummary]
 
 
-def build_runtime_snapshot(published_use_cases: list[PublishedUseCaseSummary]) -> RuntimeSnapshot:
+def build_runtime_snapshot(
+    published_use_cases: list[PublishedUseCaseSummary],
+    ticket_repository: TicketRepository | None = None,
+) -> RuntimeSnapshot:
     specialists_by_use_case_id: dict[str, Agent[Any]] = {}
     triage_handoffs = []
 
     for use_case in published_use_cases:
-        specialist = build_specialist_agent(use_case)
+        specialist = build_specialist_agent(use_case, ticket_repository=ticket_repository)
         specialists_by_use_case_id[use_case.use_case_id] = specialist
         triage_handoffs.append(
             handoff(

@@ -11,6 +11,7 @@ from agents import Runner
 from backend.api.routes import (
     admin_assistant,
     admin_categories,
+    admin_tickets,
     admin_use_cases,
     chat,
     health,
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_assistant.router)
     app.include_router(admin_categories.router)
     app.include_router(admin_use_cases.router)
+    app.include_router(admin_tickets.router)
     return app
 
 
@@ -47,6 +49,7 @@ app = create_app()
 def __getattr__(name: str) -> Any:
     if name in {
         "CATEGORY_REPOSITORY",
+        "TICKET_REPOSITORY",
         "USE_CASE_REPOSITORY",
         "RUNTIME_SNAPSHOT",
         "RUNTIME_LOCK",

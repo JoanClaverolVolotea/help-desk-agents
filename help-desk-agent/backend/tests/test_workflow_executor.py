@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from backend.domain.models import PublishedUseCaseSummary, UseCaseDefinitionPublished
+from backend.domain.models import (
+    PublishedUseCaseSummary,
+    TicketFieldSource,
+    UseCaseDefinitionPublished,
+)
 from backend.domain.templates import seed_use_case_definitions
 from backend.workflows.executor import WorkflowExecutionInput, execute_workflow
 
@@ -60,3 +64,20 @@ def test_workflow_executor_runs_steps_deterministically_in_spanish() -> None:
     assert "Workflow completed with deterministic execution" not in text
     assert "EN:" not in text
     assert "ES:" not in text
+
+
+def test_workflow_executor_tracks_field_sources_and_step_records() -> None:
+    summary = _build_summary()
+    result = execute_workflow(
+        WorkflowExecutionInput(
+            use_case=summary,
+            ticket_context="Please help with USDV-176285",
+            field_values={"requester_name": "Francois Emeriau"},
+        )
+    )
+
+    fields_by_name = {field.field_name: field for field in result.resolved_fields}
+    assert fields_by_name["ticket_id"].source == TicketFieldSource.DERIVED
+    assert fields_by_name["requester_name"].source == TicketFieldSource.PROVIDED
+    assert all(step.step_order >= 1 for step in result.step_records)
+    assert result.closure_output.startswith("[closure]")

@@ -138,6 +138,34 @@ export async function resetAdminAssistantConversation(conversationId) {
   });
 }
 
+export async function listTickets(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+  if (filters.conversationId) {
+    params.set("conversation_id", filters.conversationId);
+  }
+  if (filters.externalTicketId) {
+    params.set("external_ticket_id", filters.externalTicketId);
+  }
+  if (filters.useCaseId) {
+    params.set("use_case_id", filters.useCaseId);
+  }
+  if (typeof filters.limit === "number") {
+    params.set("limit", String(filters.limit));
+  }
+  if (typeof filters.offset === "number") {
+    params.set("offset", String(filters.offset));
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request(`/api/admin/tickets${suffix}`);
+}
+
+export async function getTicket(ticketId) {
+  return request(`/api/admin/tickets/${ticketId}`);
+}
+
 export async function listSteps() {
   return request("/api/admin/steps");
 }

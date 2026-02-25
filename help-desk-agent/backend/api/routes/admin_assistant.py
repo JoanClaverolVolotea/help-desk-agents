@@ -14,6 +14,11 @@ from backend.api_internal.conversation_state import (
     ensure_admin_assistant_state,
 )
 from backend.api_internal.event_serialization import event_from_item
+from backend.api_internal.request_context import (
+    CHANNEL_ADMIN_ASSISTANT,
+    CONVERSATION_ID_CONTEXT,
+    REQUEST_CHANNEL_CONTEXT,
+)
 from backend.domain.language_policy import detect_user_language
 
 router = APIRouter()
@@ -32,10 +37,14 @@ async def _admin_assistant_chat_impl(request: ChatRequest) -> ChatResponse:
         state.response_language = detect_user_language(message, state.response_language)
         state.input_items.append({"content": message, "role": "user"})
         context_token = RESPONSE_LANGUAGE_CONTEXT.set(state.response_language)
+        conversation_token = CONVERSATION_ID_CONTEXT.set(conversation_id)
+        channel_token = REQUEST_CHANNEL_CONTEXT.set(CHANNEL_ADMIN_ASSISTANT)
         try:
             with trace("Help desk admin assistant chat", group_id=conversation_id):
                 result = await Runner.run(state.current_agent, state.input_items)
         finally:
+            REQUEST_CHANNEL_CONTEXT.reset(channel_token)
+            CONVERSATION_ID_CONTEXT.reset(conversation_token)
             RESPONSE_LANGUAGE_CONTEXT.reset(context_token)
 
         events = []

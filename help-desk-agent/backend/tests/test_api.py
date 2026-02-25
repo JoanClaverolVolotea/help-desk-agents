@@ -517,3 +517,80 @@ def test_admin_assistant_chat_endpoint(tmp_path, monkeypatch) -> None:
     assert isinstance(payload["events"], list)
     assert payload["events"][0]["kind"] == "info"
     assert "Omitiendo" in payload["events"][0]["text"]
+
+
+def _seed_ticket_record(backend_module, external_ticket_id: str = "USDV-176285") -> str:
+    from backend.domain.models import TicketFieldSource
+    from backend.storage.ticket_repository import (
+        TicketEventWrite,
+        TicketFieldWrite,
+        TicketStepWrite,
+    )
+
+    use_case = backend_module.USE_CASE_REPOSITORY.list_use_cases(include_archived=False)[0]
+    ticket_id = backend_module.TICKET_REPOSITORY.start_workflow_execution(
+        conversation_id="api-ticket-conversation",
+        use_case_id=use_case.use_case_id,
+        language="en",
+        ticket_context=f"Ticket context for {external_ticket_id}",
+        external_ticket_id=external_ticket_id,
+        agent_name="API Test Specialist",
+    )
+    backend_module.TICKET_REPOSITORY.complete_workflow_execution_success(
+        ticket_id=ticket_id,
+        fields=[
+            TicketFieldWrite(
+                field_name="ticket_id",
+                field_value=external_ticket_id,
+                is_required=True,
+                source=TicketFieldSource.PROVIDED,
+            )
+        ],
+        steps=[
+            TicketStepWrite(
+                step_order=1,
+                step_id="verify_requester",
+                output_text="Requester verified.",
+            )
+        ],
+        events=[
+            TicketEventWrite(
+                event_type="workflow_completed",
+                agent_name="API Test Specialist",
+                payload_json='{"result":"ok"}',
+            )
+        ],
+    )
+    return str(ticket_id)
+
+
+def test_admin_ticket_endpoints_list_and_detail(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    ticket_id = _seed_ticket_record(backend_module, external_ticket_id="USDV-176999")
+
+    client = TestClient(backend_module.app)
+    list_response = client.get("/api/admin/tickets")
+    assert list_response.status_code == 200
+    list_payload = list_response.json()
+    assert any(item["ticket_id"] == ticket_id for item in list_payload["items"])
+
+    filtered_response = client.get("/api/admin/tickets?status=resolved")
+    assert filtered_response.status_code == 200
+    filtered_payload = filtered_response.json()
+    assert any(item["ticket_id"] == ticket_id for item in filtered_payload["items"])
+
+    detail_response = client.get(f"/api/admin/tickets/{ticket_id}")
+    assert detail_response.status_code == 200
+    detail_payload = detail_response.json()["ticket"]
+    assert detail_payload["ticket_id"] == ticket_id
+    assert detail_payload["status"] == "resolved"
+    assert detail_payload["fields"][0]["field_name"] == "ticket_id"
+    assert detail_payload["steps"][0]["step_id"] == "verify_requester"
+
+
+def test_admin_ticket_detail_returns_404_for_unknown_ticket(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    response = client.get("/api/admin/tickets/unknown-ticket-id")
+    assert response.status_code == 404

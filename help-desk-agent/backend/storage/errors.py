@@ -11,3 +11,7 @@ class UseCaseNotFoundError(ValueError):
 
 class NoDraftAvailableError(ValueError):
     pass
+
+
+class TicketNotFoundError(ValueError):
+    pass

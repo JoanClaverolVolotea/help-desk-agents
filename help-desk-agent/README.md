@@ -64,6 +64,7 @@ npm run dev
 - `/`: role landing page (choose User Portal vs IT Console).
 - `/user`: end-user ticket portal (guided form + chat transcript).
 - `/it/admin/categories`: IT category operations.
+- `/it/admin/tickets`: IT ticket registry (read-only list and detail).
 - `/it/admin/use-cases`: IT use-case operations.
 - `/it/assistant`: IT technical assistant chat.
 
@@ -94,6 +95,7 @@ uv run --env-file backend/.env python -m backend.cli.main
    - Archive/restore use cases.
 4. After publishing a category, optionally migrate linked use cases to the new category version.
 5. Open `/it/assistant` for tech-team guidance in a separate session.
+6. Open `/it/admin/tickets` to inspect workflow-executed tickets, extracted fields, and execution timeline.
 
 ## API summary
 
@@ -121,6 +123,8 @@ API endpoints:
 - `POST /api/admin/use-cases/{use_case_id}/archive`
 - `POST /api/admin/use-cases/{use_case_id}/restore`
 - `POST /api/admin/use-cases/{use_case_id}/migrate-category-version`
+- `GET /api/admin/tickets`
+- `GET /api/admin/tickets/{ticket_id}`
 
 ## Validation commands
 

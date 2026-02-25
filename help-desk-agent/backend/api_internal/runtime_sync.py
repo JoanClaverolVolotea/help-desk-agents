@@ -14,7 +14,10 @@ def is_triage_agent(agent: Agent[Any]) -> bool:
 
 async def refresh_runtime_snapshot() -> None:
     async with deps.RUNTIME_LOCK:
-        deps.RUNTIME_SNAPSHOT = build_snapshot_from_repository(deps.USE_CASE_REPOSITORY)
+        deps.RUNTIME_SNAPSHOT = build_snapshot_from_repository(
+            deps.USE_CASE_REPOSITORY,
+            deps.TICKET_REPOSITORY,
+        )
 
 
 async def publish_category_and_sync(category_id: str) -> CategoryDetail:

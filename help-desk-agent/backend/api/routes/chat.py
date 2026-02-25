@@ -16,6 +16,11 @@ from backend.api_internal.conversation_state import (
     ensure_chat_state,
 )
 from backend.api_internal.event_serialization import event_from_item, ndjson_line
+from backend.api_internal.request_context import (
+    CHANNEL_USER_CHAT,
+    CONVERSATION_ID_CONTEXT,
+    REQUEST_CHANNEL_CONTEXT,
+)
 from backend.api_internal.runtime_sync import is_triage_agent
 from backend.domain.language_policy import detect_user_language
 
@@ -40,10 +45,14 @@ async def _chat_impl(request: ChatRequest) -> ChatResponse:
         state.response_language = detect_user_language(message, state.response_language)
         state.input_items.append({"content": message, "role": "user"})
         context_token = RESPONSE_LANGUAGE_CONTEXT.set(state.response_language)
+        conversation_token = CONVERSATION_ID_CONTEXT.set(conversation_id)
+        channel_token = REQUEST_CHANNEL_CONTEXT.set(CHANNEL_USER_CHAT)
         try:
             with trace("Help desk web chat", group_id=conversation_id):
                 result = await Runner.run(state.current_agent, state.input_items)
         finally:
+            REQUEST_CHANNEL_CONTEXT.reset(channel_token)
+            CONVERSATION_ID_CONTEXT.reset(conversation_token)
             RESPONSE_LANGUAGE_CONTEXT.reset(context_token)
 
         events = []
@@ -89,6 +98,8 @@ async def _chat_stream_impl(request: ChatRequest) -> StreamingResponse:
             )
 
             context_token = RESPONSE_LANGUAGE_CONTEXT.set(state.response_language)
+            conversation_token = CONVERSATION_ID_CONTEXT.set(conversation_id)
+            channel_token = REQUEST_CHANNEL_CONTEXT.set(CHANNEL_USER_CHAT)
             try:
                 with trace("Help desk web chat streamed", group_id=conversation_id):
                     streamed_result = Runner.run_streamed(state.current_agent, state.input_items)
@@ -133,6 +144,8 @@ async def _chat_stream_impl(request: ChatRequest) -> StreamingResponse:
                         yield ndjson_line({"type": "error", "detail": str(exc)})
                         return
             finally:
+                REQUEST_CHANNEL_CONTEXT.reset(channel_token)
+                CONVERSATION_ID_CONTEXT.reset(conversation_token)
                 RESPONSE_LANGUAGE_CONTEXT.reset(context_token)
 
             state.input_items = streamed_result.to_input_list()

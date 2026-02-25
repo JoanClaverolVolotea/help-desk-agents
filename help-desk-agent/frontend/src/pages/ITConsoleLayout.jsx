@@ -4,6 +4,7 @@ import SectionTabs from "../components/SectionTabs.jsx";
 
 const IT_TABS = [
   { to: "/it/admin/categories", label: "Categorias / Categories" },
+  { to: "/it/admin/tickets", label: "Tickets Registry" },
   { to: "/it/admin/use-cases", label: "Casos de uso / Use cases" },
   { to: "/it/assistant", label: "Tech Assistant" },
 ];

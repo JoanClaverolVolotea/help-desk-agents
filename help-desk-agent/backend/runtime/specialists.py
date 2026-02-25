@@ -8,10 +8,14 @@ from typing import Any
 from agents import Agent
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 from backend.domain.models import PublishedUseCaseSummary
+from backend.storage.ticket_repository import TicketRepository
 from backend.workflows.tools import build_use_case_workflow_tool
 
 
-def build_specialist_agent(use_case: PublishedUseCaseSummary) -> Agent[Any]:
+def build_specialist_agent(
+    use_case: PublishedUseCaseSummary,
+    ticket_repository: TicketRepository | None = None,
+) -> Agent[Any]:
     required_fields = ", ".join(use_case.definition.required_fields) or "none"
 
     instructions = f"""{RECOMMENDED_PROMPT_PREFIX}
@@ -40,7 +44,7 @@ Rules:
         name=f"{use_case.display_name} Specialist",
         handoff_description=use_case.definition.handoff_description,
         instructions=instructions,
-        tools=[build_use_case_workflow_tool(use_case)],
+        tools=[build_use_case_workflow_tool(use_case, ticket_repository=ticket_repository)],
     )
     return specialist
 

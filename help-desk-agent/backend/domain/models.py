@@ -214,5 +214,75 @@ class UseCaseDetailResponse(BaseModel):
     use_case: UseCaseDetail
 
 
+class TicketStatus(str, Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+
+
+class TicketFieldSource(str, Enum):
+    PROVIDED = "provided"
+    DERIVED = "derived"
+    MISSING = "missing"
+
+
+class TicketStatusHistoryItem(BaseModel):
+    status: TicketStatus
+    changed_at: str
+    reason: str | None = None
+
+
+class TicketFieldItem(BaseModel):
+    field_name: str
+    field_value: str
+    is_required: bool
+    source: TicketFieldSource
+    created_at: str
+
+
+class TicketStepItem(BaseModel):
+    step_order: int
+    step_id: str
+    output_text: str
+    created_at: str
+
+
+class TicketEventItem(BaseModel):
+    event_type: str
+    agent_name: str | None = None
+    payload_json: str
+    created_at: str
+
+
+class TicketListItem(BaseModel):
+    ticket_id: str
+    conversation_id: str | None = None
+    external_ticket_id: str | None = None
+    use_case_id: str
+    use_case_display_name: str | None = None
+    status: TicketStatus
+    language: str
+    created_at: str
+    updated_at: str
+    resolved_at: str | None = None
+
+
+class TicketDetail(TicketListItem):
+    ticket_context: str
+    error_message: str | None = None
+    status_history: list[TicketStatusHistoryItem] = Field(default_factory=list)
+    fields: list[TicketFieldItem] = Field(default_factory=list)
+    steps: list[TicketStepItem] = Field(default_factory=list)
+    events: list[TicketEventItem] = Field(default_factory=list)
+
+
+class TicketListResponse(BaseModel):
+    items: list[TicketListItem]
+
+
+class TicketDetailResponse(BaseModel):
+    ticket: TicketDetail
+
+
 class ValidationErrorResponse(BaseModel):
     validation_errors: list[str]
