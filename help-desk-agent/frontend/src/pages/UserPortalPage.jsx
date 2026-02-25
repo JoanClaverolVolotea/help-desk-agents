@@ -156,6 +156,18 @@ export default function UserPortalPage() {
     setChatInput("");
   };
 
+  const samplePrompts = [
+    "My laptop won't connect to WiFi",
+    "I need a password reset",
+    "Software installation request",
+  ];
+
+  const handleSampleClick = (prompt) => {
+    if (isSending) return;
+    setChatInput("");
+    sendMessage(prompt);
+  };
+
   return (
     <div className="app-shell user-portal-shell">
       <header className="header user-portal-header">
@@ -182,12 +194,27 @@ export default function UserPortalPage() {
           entries={entries}
           isThinking={isSending}
           thinkingAgent={currentAgent}
-          emptyState="Write your issue and send it. / Escribe tu problema y envialo."
+          emptyState="Hi! Describe your issue below, or try one of the quick prompts. / ¡Hola! Describe tu problema abajo, o prueba una de las opciones rápidas."
           hiddenKinds={Array.from(INTERNAL_EVENT_KINDS)}
           allowedKinds={["message"]}
           showMeta={false}
           className="user-portal-transcript"
         />
+
+        {entries.length === 0 && !isSending ? (
+          <div className="user-portal-samples">
+            {samplePrompts.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                className="sample-button"
+                onClick={() => handleSampleClick(prompt)}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         <Composer
           value={chatInput}

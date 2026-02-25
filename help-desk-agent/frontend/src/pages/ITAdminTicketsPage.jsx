@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
+import Breadcrumb from "../components/Breadcrumb.jsx";
 import { getTicket, listTickets, readableError } from "../api.js";
 
 const STATUS_OPTIONS = [
@@ -32,6 +34,9 @@ function prettyPayload(raw) {
 }
 
 export default function ITAdminTicketsPage() {
+  const [searchParams] = useSearchParams();
+  const filterUseCaseId = searchParams.get("use_case_id") || "";
+
   const [statusFilter, setStatusFilter] = useState("");
   const [conversationFilter, setConversationFilter] = useState("");
   const [externalTicketFilter, setExternalTicketFilter] = useState("");
@@ -52,6 +57,7 @@ export default function ITAdminTicketsPage() {
         status: statusFilter || undefined,
         conversationId: conversationFilter.trim() || undefined,
         externalTicketId: externalTicketFilter.trim() || undefined,
+        useCaseId: filterUseCaseId || undefined,
         limit: 100,
         offset: 0,
       });
@@ -71,9 +77,9 @@ export default function ITAdminTicketsPage() {
 
   useEffect(() => {
     loadTickets();
-    // Only load on mount; filters run through form submit.
+    // Reload when URL use_case_id param changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filterUseCaseId]);
 
   useEffect(() => {
     if (!selectedTicketId) {
@@ -115,6 +121,15 @@ export default function ITAdminTicketsPage() {
 
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-tickets">
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/it/dashboard" },
+          ...(filterUseCaseId
+            ? [{ label: filterUseCaseId.slice(0, 20), to: "/it/admin/use-cases" }]
+            : []),
+          { label: "Tickets" },
+        ]}
+      />
       <div className="admin-toolbar">
         <h2>Ticket Registry / Registro de tickets</h2>
         <div className="admin-toolbar-actions">

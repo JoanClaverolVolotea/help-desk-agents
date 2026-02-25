@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import AdminTable from "../components/AdminTable.jsx";
+import Breadcrumb from "../components/Breadcrumb.jsx";
 import WizardModal from "../components/WizardModal.jsx";
 import {
   archiveCategory,
@@ -32,6 +34,7 @@ export default function ITAdminCategoriesPage() {
   const [adminError, setAdminError] = useState("");
   const [categoryPublishNotice, setCategoryPublishNotice] = useState("");
   const [reseedBusy, setReseedBusy] = useState(false);
+  const [useCaseCounts, setUseCaseCounts] = useState({});
 
   const [showCategoryWizard, setShowCategoryWizard] = useState(false);
   const [categoryWizardMode, setCategoryWizardMode] = useState("create");
@@ -47,12 +50,21 @@ export default function ITAdminCategoriesPage() {
     setAdminError("");
 
     try {
-      const [stepsResponse, categoriesResponse] = await Promise.all([
+      const [stepsResponse, categoriesResponse, useCasesResponse] = await Promise.all([
         listSteps(),
         listCategories(includeArchivedCategories),
+        listUseCases(true),
       ]);
       setSteps(stepsResponse.items);
       setCategories(categoriesResponse.items);
+
+      const counts = {};
+      for (const uc of useCasesResponse.items) {
+        if (uc.category_id) {
+          counts[uc.category_id] = (counts[uc.category_id] || 0) + 1;
+        }
+      }
+      setUseCaseCounts(counts);
     } catch (error) {
       setAdminError(readableError(error));
     } finally {
@@ -300,8 +312,9 @@ export default function ITAdminCategoriesPage() {
 
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-categories">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/it/dashboard" }, { label: "Categories" }]} />
       <div className="admin-toolbar">
-        <h2>Routing Policies / Categorias</h2>
+        <h2>Categories / Categorías</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
             Refresh
@@ -315,7 +328,7 @@ export default function ITAdminCategoriesPage() {
             Reseed defaults
           </button>
           <button type="button" className="primary" onClick={openCreateCategoryWizard}>
-            Nueva politica
+            Nueva categoría
           </button>
         </div>
       </div>
@@ -329,11 +342,11 @@ export default function ITAdminCategoriesPage() {
         <span>Mostrar archivadas / Show archived</span>
       </label>
       <section className="console-clarity-card">
-        <h3>Layer 1: Routing policy (Category)</h3>
+        <h3>What are Categories?</h3>
         <p>
-          This page defines issue domains, allowed step types, and default runbook templates. Publishing a
-          policy updates its category-generated default runbook and can trigger migration of linked manual
-          runbooks.
+          Categories group related issues (e.g. "Network", "Software"). Each category defines what
+          steps are available and automatically creates a default runbook. When you publish changes,
+          linked runbooks can be updated too.
         </p>
       </section>
 
@@ -350,7 +363,7 @@ export default function ITAdminCategoriesPage() {
           </p>
           <p className="helper">
             This is a cross-entity action on linked use-cases. Review list/details in{" "}
-            <Link to="/it/admin/use-cases">Use cases</Link>.
+            <Link to="/it/admin/use-cases">Runbooks</Link>.
           </p>
           <div className="check-grid">
             {migrationPrompt.items.map((item, index) => (
@@ -381,67 +394,58 @@ export default function ITAdminCategoriesPage() {
         </section>
       ) : null}
 
-      <div className="use-case-list">
-        {categories.length === 0 ? (
-          <div className="empty-state">No hay categorias.</div>
-        ) : (
-          categories.map((item) => (
-            <article key={item.category_id} className="use-case-card">
-              <div>
-                <h3>{item.display_name}</h3>
-                <p className="helper">
-                  id: <code>{item.category_id}</code> | slug: <code>{item.slug}</code>
-                </p>
-                <div className="badge-row">
-                  <span className={item.published_version_number ? "badge published" : "badge"}>
-                    Published: {item.published_version_number ?? "-"}
-                  </span>
-                  <span className={item.draft_version_number ? "badge draft" : "badge"}>
-                    Draft: {item.draft_version_number ?? "-"}
-                  </span>
-                  <span className={item.archived ? "badge archived" : "badge"}>
-                    {item.archived ? "Archived" : "Active"}
-                  </span>
-                </div>
-              </div>
-              <div className="use-case-actions">
-                <button type="button" className="ghost" onClick={() => openEditCategoryWizard(item.category_id)}>
-                  Editar draft
+      <AdminTable
+        columns={[
+          { key: "name", label: "Name", render: (row) => (
+            <strong>{row.display_name}</strong>
+          )},
+          { key: "status", label: "Status", render: (row) => (
+            <div className="badge-row">
+              <span className={row.archived ? "badge archived" : "badge published"}>
+                {row.archived ? "Archived" : "Active"}
+              </span>
+              {row.draft_version_number ? (
+                <span className="badge draft">Unpublished changes</span>
+              ) : null}
+            </div>
+          )},
+          { key: "use_cases", label: "Runbooks", render: (row) => (
+            <Link to={`/it/admin/use-cases?category_id=${row.category_id}`}>
+              {useCaseCounts[row.category_id] || 0}
+            </Link>
+          )},
+          { key: "actions", label: "", render: (row) => (
+            <div className="use-case-actions" style={{ flexDirection: "row" }}>
+              <button type="button" className="ghost" onClick={() => openEditCategoryWizard(row.category_id)}>
+                Edit
+              </button>
+              <button
+                type="button"
+                className="primary"
+                disabled={!row.draft_version_number || row.archived}
+                onClick={() => publishCategoryAndPromptMigration(row.category_id)}
+              >
+                Publish
+              </button>
+              {row.archived ? (
+                <button type="button" className="ghost" onClick={() => restoreCategoryFromList(row.category_id)}>
+                  Restore
                 </button>
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={!item.draft_version_number || item.archived}
-                  onClick={() => publishCategoryAndPromptMigration(item.category_id)}
-                >
-                  Publicar
+              ) : (
+                <button type="button" className="ghost" onClick={() => archiveCategoryFromList(row.category_id)}>
+                  Archive
                 </button>
-                {item.archived ? (
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => restoreCategoryFromList(item.category_id)}
-                  >
-                    Restaurar
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => archiveCategoryFromList(item.category_id)}
-                  >
-                    Archivar
-                  </button>
-                )}
-              </div>
-            </article>
-          ))
-        )}
-      </div>
+              )}
+            </div>
+          )},
+        ]}
+        rows={categories.map((item) => ({ ...item, id: item.category_id }))}
+        emptyMessage="No categories yet."
+      />
 
       {showCategoryWizard && categoryWizardState ? (
         <WizardModal
-          title={categoryWizardMode === "create" ? "Nueva politica" : "Editar politica"}
+          title={categoryWizardMode === "create" ? "Nueva categoría" : "Editar categoría"}
           step={categoryWizardStep}
           totalSteps={4}
           onClose={closeCategoryWizard}
@@ -498,6 +502,9 @@ export default function ITAdminCategoriesPage() {
               </label>
               <label>
                 Slug (optional)
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  Short ID used in URLs and API calls. Auto-generated from the name if left blank.
+                </span>
                 <input
                   value={categoryWizardState.slug}
                   onChange={(event) => setCategoryField("slug", event.target.value)}

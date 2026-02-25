@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
+import AdminTable from "../components/AdminTable.jsx";
+import Breadcrumb from "../components/Breadcrumb.jsx";
 import WizardModal from "../components/WizardModal.jsx";
 import {
   archiveUseCase,
@@ -8,6 +10,7 @@ import {
   getCategory,
   getUseCase,
   listCategories,
+  listTickets,
   listUseCases,
   publishUseCase,
   readableError,
@@ -23,8 +26,12 @@ import {
 } from "../utils/adminPayloads.js";
 
 export default function ITAdminUseCasesPage() {
+  const [searchParams] = useSearchParams();
+  const filterCategoryId = searchParams.get("category_id") || "";
+
   const [categories, setCategories] = useState([]);
   const [useCases, setUseCases] = useState([]);
+  const [ticketCounts, setTicketCounts] = useState({});
   const [categoryDetailsById, setCategoryDetailsById] = useState({});
   const [includeArchivedUseCases, setIncludeArchivedUseCases] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
@@ -42,12 +49,21 @@ export default function ITAdminUseCasesPage() {
     setAdminError("");
 
     try {
-      const [categoriesResponse, useCasesResponse] = await Promise.all([
+      const [categoriesResponse, useCasesResponse, ticketsResponse] = await Promise.all([
         listCategories(true),
         listUseCases(includeArchivedUseCases),
+        listTickets({ limit: 200, offset: 0 }),
       ]);
       setCategories(categoriesResponse.items);
       setUseCases(useCasesResponse.items);
+
+      const counts = {};
+      for (const t of ticketsResponse.items) {
+        if (t.use_case_id) {
+          counts[t.use_case_id] = (counts[t.use_case_id] || 0) + 1;
+        }
+      }
+      setTicketCounts(counts);
     } catch (error) {
       setAdminError(readableError(error));
     } finally {
@@ -299,13 +315,29 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
-  const manualUseCases = useCases.filter((item) => !item.is_system_default);
-  const categoryDefaultUseCases = useCases.filter((item) => item.is_system_default);
+  const filteredUseCases = filterCategoryId
+    ? useCases.filter((item) => item.category_id === filterCategoryId)
+    : useCases;
+  const manualUseCases = filteredUseCases.filter((item) => !item.is_system_default);
+  const categoryDefaultUseCases = filteredUseCases.filter((item) => item.is_system_default);
+
+  const filterCategoryName = filterCategoryId
+    ? categories.find((c) => c.category_id === filterCategoryId)?.display_name
+    : null;
 
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-use-cases">
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/it/dashboard" },
+          ...(filterCategoryName
+            ? [{ label: filterCategoryName, to: "/it/admin/categories" }]
+            : []),
+          { label: "Runbooks" },
+        ]}
+      />
       <div className="admin-toolbar">
-        <h2>Runbooks / Casos de uso</h2>
+        <h2>Runbooks / Procedimientos{filterCategoryName ? ` — ${filterCategoryName}` : ""}</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
             Refresh
@@ -325,127 +357,79 @@ export default function ITAdminUseCasesPage() {
         <span>Mostrar archivados / Show archived</span>
       </label>
       <section className="console-clarity-card">
-        <h3>Layer 2: Runbook (Use case)</h3>
+        <h3>What are Runbooks?</h3>
         <p>
-          Runbooks are executable procedures tied to a routing policy. Manual runbooks are editable here.
-          Category-generated defaults are read-only and managed from{" "}
-          <Link to="/it/admin/categories">Routing Policies</Link>.
+          Runbooks are step-by-step procedures that define how to handle an issue. Custom runbooks can
+          be edited here. Auto-generated ones come from{" "}
+          <Link to="/it/admin/categories">Categories</Link> and are read-only.
         </p>
       </section>
 
       {adminLoading ? <p className="helper">Cargando datos...</p> : null}
       {adminError ? <p className="error-text">{adminError}</p> : null}
 
-      <section className="console-section-heading">
-        <h3>Manual runbooks ({manualUseCases.length})</h3>
-        <p>Editable procedures for specific operational flows.</p>
-      </section>
-      <div className="use-case-list">
-        {manualUseCases.length === 0 ? (
-          <div className="empty-state">No manual runbooks yet.</div>
-        ) : (
-          manualUseCases.map((item) => (
-            <article key={item.use_case_id} className="use-case-card">
-              <div>
-                <h3>{item.display_name}</h3>
-                <p className="helper">
-                  slug: <code>{item.slug}</code> | category: <code>{item.category_id ?? "detached"}</code> |
-                  category version: <code>{item.category_version_number ?? "-"}</code>
-                </p>
-                <div className="badge-row">
-                  <span className={item.published_version_number ? "badge published" : "badge"}>
-                    Published: {item.published_version_number ?? "-"}
-                  </span>
-                  <span className={item.draft_version_number ? "badge draft" : "badge"}>
-                    Draft: {item.draft_version_number ?? "-"}
-                  </span>
-                  <span className={item.is_detached ? "badge detached" : "badge"}>
-                    {item.is_detached ? "Detached" : "Linked"}
-                  </span>
-                  <span className={item.archived ? "badge archived" : "badge"}>
-                    {item.archived ? "Archived" : "Active"}
-                  </span>
-                </div>
-              </div>
-              <div className="use-case-actions">
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => openEditUseCaseWizard(item.use_case_id)}
-                >
-                  Editar draft
+      <AdminTable
+        columns={[
+          { key: "name", label: "Name", render: (row) => (
+            <>
+              <strong>{row.display_name}</strong>
+              {row.is_system_default ? (
+                <span className="badge default" style={{ marginLeft: "0.4rem" }}>Auto</span>
+              ) : null}
+            </>
+          )},
+          { key: "category", label: "Category", render: (row) => (
+            row.category_id ? (
+              <Link to={`/it/admin/categories`}>
+                {categories.find((c) => c.category_id === row.category_id)?.display_name || row.category_id}
+              </Link>
+            ) : <span className="badge detached">No category</span>
+          )},
+          { key: "status", label: "Status", render: (row) => (
+            <div className="badge-row">
+              <span className={row.archived ? "badge archived" : "badge published"}>
+                {row.archived ? "Archived" : "Active"}
+              </span>
+              {row.draft_version_number && !row.is_system_default ? (
+                <span className="badge draft">Unpublished changes</span>
+              ) : null}
+            </div>
+          )},
+          { key: "tickets", label: "Tickets", render: (row) => (
+            <Link to={`/it/admin/tickets?use_case_id=${row.use_case_id}`}>
+              {ticketCounts[row.use_case_id] || 0}
+            </Link>
+          )},
+          { key: "actions", label: "", render: (row) => (
+            row.is_system_default ? null : (
+              <div className="use-case-actions" style={{ flexDirection: "row" }}>
+                <button type="button" className="ghost" onClick={() => openEditUseCaseWizard(row.use_case_id)}>
+                  Edit
                 </button>
                 <button
                   type="button"
                   className="primary"
-                  disabled={!item.draft_version_number || item.archived}
-                  onClick={() => publishUseCaseFromList(item.use_case_id)}
+                  disabled={!row.draft_version_number || row.archived}
+                  onClick={() => publishUseCaseFromList(row.use_case_id)}
                 >
-                  Publicar
+                  Publish
                 </button>
-                {item.archived ? (
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => restoreUseCaseFromList(item.use_case_id)}
-                  >
-                    Restaurar
+                {row.archived ? (
+                  <button type="button" className="ghost" onClick={() => restoreUseCaseFromList(row.use_case_id)}>
+                    Restore
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => archiveUseCaseFromList(item.use_case_id)}
-                  >
-                    Archivar
+                  <button type="button" className="ghost" onClick={() => archiveUseCaseFromList(row.use_case_id)}>
+                    Archive
                   </button>
                 )}
               </div>
-            </article>
-          ))
-        )}
-      </div>
-
-      <section className="console-section-heading">
-        <h3>Category-generated defaults ({categoryDefaultUseCases.length})</h3>
-        <p>Read-only runbooks produced from published routing policy templates.</p>
-      </section>
-      <div className="use-case-list">
-        {categoryDefaultUseCases.length === 0 ? (
-          <div className="empty-state">No category-generated defaults.</div>
-        ) : (
-          categoryDefaultUseCases.map((item) => (
-            <article key={item.use_case_id} className="use-case-card">
-              <div>
-                <h3>{item.display_name}</h3>
-                <p className="helper">
-                  slug: <code>{item.slug}</code> | category: <code>{item.category_id ?? "detached"}</code> |
-                  category version: <code>{item.category_version_number ?? "-"}</code>
-                </p>
-                <div className="badge-row">
-                  <span className="badge default">Default / Predeterminado</span>
-                  <span className={item.published_version_number ? "badge published" : "badge"}>
-                    Published: {item.published_version_number ?? "-"}
-                  </span>
-                  <span className={item.draft_version_number ? "badge draft" : "badge"}>
-                    Draft: {item.draft_version_number ?? "-"}
-                  </span>
-                  <span className={item.is_detached ? "badge detached" : "badge"}>
-                    {item.is_detached ? "Detached" : "Linked"}
-                  </span>
-                  <span className={item.archived ? "badge archived" : "badge"}>
-                    {item.archived ? "Archived" : "Active"}
-                  </span>
-                </div>
-                <p className="helper">
-                  Category-generated default (read-only here). Publish/archive/migrate via{" "}
-                  <Link to="/it/admin/categories">Routing Policies</Link>.
-                </p>
-              </div>
-            </article>
-          ))
-        )}
-      </div>
+            )
+          )},
+        ]}
+        rows={filteredUseCases.map((item) => ({ ...item, id: item.use_case_id }))}
+        emptyMessage="No runbooks yet."
+      />
 
       {showUseCaseWizard && useCaseWizardState ? (
         <WizardModal
@@ -498,7 +482,7 @@ export default function ITAdminUseCasesPage() {
           {useCaseWizardStep === 1 ? (
             <div className="form-grid">
               <label>
-                Policy source (published category)
+                Category (published)
                 <select
                   value={useCaseWizardState.categoryId}
                   onChange={(event) => onUseCaseCategoryChange(event.target.value)}
@@ -522,6 +506,9 @@ export default function ITAdminUseCasesPage() {
               </label>
               <label>
                 Slug (optional)
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  Short ID used in URLs and API calls. Auto-generated from the name if left blank.
+                </span>
                 <input
                   value={useCaseWizardState.slug}
                   onChange={(event) => setUseCaseField("slug", event.target.value)}

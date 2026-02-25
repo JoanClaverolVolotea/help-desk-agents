@@ -5,6 +5,7 @@ import ITAdminTicketsPage from "../pages/ITAdminTicketsPage.jsx";
 import ITAdminUseCasesPage from "../pages/ITAdminUseCasesPage.jsx";
 import ITAssistantPage from "../pages/ITAssistantPage.jsx";
 import ITConsoleLayout from "../pages/ITConsoleLayout.jsx";
+import ITDashboardPage from "../pages/ITDashboardPage.jsx";
 import RoleLandingPage from "../pages/RoleLandingPage.jsx";
 import UserPortalPage from "../pages/UserPortalPage.jsx";
 
@@ -15,7 +16,8 @@ export default function AppRoutes() {
       <Route path="/user" element={<UserPortalPage />} />
 
       <Route path="/it" element={<ITConsoleLayout />}>
-        <Route index element={<Navigate to="/it/admin/categories" replace />} />
+        <Route index element={<Navigate to="/it/dashboard" replace />} />
+        <Route path="dashboard" element={<ITDashboardPage />} />
         <Route path="admin/categories" element={<ITAdminCategoriesPage />} />
         <Route path="admin/tickets" element={<ITAdminTicketsPage />} />
         <Route path="admin/use-cases" element={<ITAdminUseCasesPage />} />
