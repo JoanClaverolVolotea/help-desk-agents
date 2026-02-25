@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import AdminTable from "../components/AdminTable.jsx";
@@ -42,6 +42,8 @@ export default function ITAdminCategoriesPage() {
   const [categoryWizardBusy, setCategoryWizardBusy] = useState(false);
   const [categoryWizardError, setCategoryWizardError] = useState("");
   const [categoryWizardState, setCategoryWizardState] = useState(null);
+  const [allowedStepSearch, setAllowedStepSearch] = useState("");
+  const [defaultStepSearch, setDefaultStepSearch] = useState("");
 
   const [migrationPrompt, setMigrationPrompt] = useState(null);
 
@@ -80,6 +82,8 @@ export default function ITAdminCategoriesPage() {
     setCategoryWizardMode("create");
     setCategoryWizardStep(1);
     setCategoryWizardError("");
+    setAllowedStepSearch("");
+    setDefaultStepSearch("");
     setCategoryWizardState(defaultCategoryWizard(steps));
     setShowCategoryWizard(true);
   };
@@ -97,6 +101,8 @@ export default function ITAdminCategoriesPage() {
 
       setCategoryWizardMode("edit");
       setCategoryWizardStep(1);
+      setAllowedStepSearch("");
+      setDefaultStepSearch("");
       setCategoryWizardState(wizard);
       setShowCategoryWizard(true);
     } catch (error) {
@@ -111,6 +117,8 @@ export default function ITAdminCategoriesPage() {
     setCategoryWizardState(null);
     setCategoryWizardStep(1);
     setCategoryWizardError("");
+    setAllowedStepSearch("");
+    setDefaultStepSearch("");
   };
 
   const setCategoryField = (key, value) => {
@@ -119,13 +127,122 @@ export default function ITAdminCategoriesPage() {
 
   const toggleCategoryStep = (stepId, key = "allowedStepIds") => {
     setCategoryWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
       const selected = prev[key].includes(stepId);
+      const nextValues = selected ? prev[key].filter((item) => item !== stepId) : [...prev[key], stepId];
+
+      if (key === "allowedStepIds") {
+        const allowedSet = new Set(nextValues);
+        return {
+          ...prev,
+          allowedStepIds: nextValues,
+          defaultStepIds: prev.defaultStepIds.filter((item) => allowedSet.has(item)),
+        };
+      }
+
+      return { ...prev, [key]: nextValues };
+    });
+  };
+
+  const addVisibleAllowedSteps = (stepIds) => {
+    setCategoryWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      const allowedSet = new Set(prev.allowedStepIds);
+      for (const stepId of stepIds) {
+        allowedSet.add(stepId);
+      }
+      return { ...prev, allowedStepIds: Array.from(allowedSet) };
+    });
+  };
+
+  const clearVisibleAllowedSteps = (stepIds) => {
+    setCategoryWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      const toRemove = new Set(stepIds);
+      const allowedStepIds = prev.allowedStepIds.filter((stepId) => !toRemove.has(stepId));
+      const allowedSet = new Set(allowedStepIds);
       return {
         ...prev,
-        [key]: selected ? prev[key].filter((item) => item !== stepId) : [...prev[key], stepId],
+        allowedStepIds,
+        defaultStepIds: prev.defaultStepIds.filter((stepId) => allowedSet.has(stepId)),
       };
     });
   };
+
+  const addVisibleDefaultSteps = (stepIds) => {
+    setCategoryWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      const defaultSet = new Set(prev.defaultStepIds);
+      const allowedSet = new Set(prev.allowedStepIds);
+      for (const stepId of stepIds) {
+        if (allowedSet.has(stepId)) {
+          defaultSet.add(stepId);
+        }
+      }
+      return { ...prev, defaultStepIds: Array.from(defaultSet) };
+    });
+  };
+
+  const clearVisibleDefaultSteps = (stepIds) => {
+    setCategoryWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      const toRemove = new Set(stepIds);
+      return {
+        ...prev,
+        defaultStepIds: prev.defaultStepIds.filter((stepId) => !toRemove.has(stepId)),
+      };
+    });
+  };
+
+  const stepOptions = useMemo(
+    () =>
+      steps.map((step) => {
+        const label = STEP_LABELS[step.step_id] ?? step.step_id;
+        return {
+          stepId: step.step_id,
+          label,
+          searchText: `${label} ${step.step_id}`.toLowerCase(),
+        };
+      }),
+    [steps],
+  );
+
+  const allowedSearchValue = allowedStepSearch.trim().toLowerCase();
+  const defaultSearchValue = defaultStepSearch.trim().toLowerCase();
+  const allowedStepIds = categoryWizardState?.allowedStepIds ?? [];
+  const defaultStepIds = categoryWizardState?.defaultStepIds ?? [];
+
+  const filteredAllowedStepOptions = useMemo(
+    () =>
+      stepOptions.filter(
+        (option) => !allowedSearchValue || option.searchText.includes(allowedSearchValue),
+      ),
+    [allowedSearchValue, stepOptions],
+  );
+
+  const defaultStepOptions = useMemo(() => {
+    const allowedSet = new Set(allowedStepIds);
+    return stepOptions.filter((option) => allowedSet.has(option.stepId));
+  }, [allowedStepIds, stepOptions]);
+
+  const filteredDefaultStepOptions = useMemo(
+    () =>
+      defaultStepOptions.filter(
+        (option) => !defaultSearchValue || option.searchText.includes(defaultSearchValue),
+      ),
+    [defaultSearchValue, defaultStepOptions],
+  );
 
   const validateCategoryWizard = (wizardState) => {
     if (!wizardState.displayName.trim()) {
@@ -522,34 +639,126 @@ export default function ITAdminCategoriesPage() {
           ) : null}
 
           {categoryWizardStep === 2 ? (
-            <div>
+            <div className="step-selector-section">
               <p className="helper">Pasos permitidos / Allowed steps.</p>
-              <div className="check-grid">
-                {steps.map((step) => (
-                  <label key={step.step_id} className="check-item">
-                    <input
-                      type="checkbox"
-                      checked={categoryWizardState.allowedStepIds.includes(step.step_id)}
-                      onChange={() => toggleCategoryStep(step.step_id, "allowedStepIds")}
-                    />
-                    <span>{STEP_LABELS[step.step_id] ?? step.step_id}</span>
-                  </label>
-                ))}
+              <p className="helper step-helper-copy">
+                Pick the actions this category can use. Think of this as the toolbox your team can
+                choose from later in runbooks. Use search with plain terms (for example "password",
+                "email", "manual") or a step ID.
+              </p>
+              <div className="step-selector-toolbar">
+                <input
+                  type="search"
+                  value={allowedStepSearch}
+                  onChange={(event) => setAllowedStepSearch(event.target.value)}
+                  placeholder="Search allowed steps by name or ID..."
+                />
+                <div className="step-selector-actions">
+                  <span className="helper">
+                    Selected {allowedStepIds.length} of {steps.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      addVisibleAllowedSteps(filteredAllowedStepOptions.map((option) => option.stepId))
+                    }
+                    disabled={filteredAllowedStepOptions.length === 0}
+                  >
+                    Select visible
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      clearVisibleAllowedSteps(filteredAllowedStepOptions.map((option) => option.stepId))
+                    }
+                    disabled={filteredAllowedStepOptions.length === 0}
+                  >
+                    Clear visible
+                  </button>
+                </div>
               </div>
+              {filteredAllowedStepOptions.length === 0 ? (
+                <p className="helper step-selector-empty">
+                  No steps match this search. Try a broader keyword or clear the search.
+                </p>
+              ) : (
+                <div className="check-grid step-selector-grid">
+                  {filteredAllowedStepOptions.map((option) => (
+                    <label key={option.stepId} className="check-item">
+                      <input
+                        type="checkbox"
+                        checked={allowedStepIds.includes(option.stepId)}
+                        onChange={() => toggleCategoryStep(option.stepId, "allowedStepIds")}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
               <p className="helper">Pasos por defecto / Default steps.</p>
-              <div className="check-grid">
-                {categoryWizardState.allowedStepIds.map((stepId) => (
-                  <label key={stepId} className="check-item">
-                    <input
-                      type="checkbox"
-                      checked={categoryWizardState.defaultStepIds.includes(stepId)}
-                      onChange={() => toggleCategoryStep(stepId, "defaultStepIds")}
-                    />
-                    <span>{STEP_LABELS[stepId] ?? stepId}</span>
-                  </label>
-                ))}
+              <p className="helper step-helper-copy">
+                These steps are pre-selected in new runbooks. Keep this short so non-technical team
+                members only see the most common path first.
+              </p>
+              <div className="step-selector-toolbar">
+                <input
+                  type="search"
+                  value={defaultStepSearch}
+                  onChange={(event) => setDefaultStepSearch(event.target.value)}
+                  placeholder="Search default steps..."
+                  disabled={defaultStepOptions.length === 0}
+                />
+                <div className="step-selector-actions">
+                  <span className="helper">
+                    Default {defaultStepIds.length} of {defaultStepOptions.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      addVisibleDefaultSteps(filteredDefaultStepOptions.map((option) => option.stepId))
+                    }
+                    disabled={filteredDefaultStepOptions.length === 0}
+                  >
+                    Select visible
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      clearVisibleDefaultSteps(filteredDefaultStepOptions.map((option) => option.stepId))
+                    }
+                    disabled={filteredDefaultStepOptions.length === 0}
+                  >
+                    Clear visible
+                  </button>
+                </div>
               </div>
+              {defaultStepOptions.length === 0 ? (
+                <p className="helper step-selector-empty">
+                  Select allowed steps first. Then choose which of those should be defaults.
+                </p>
+              ) : filteredDefaultStepOptions.length === 0 ? (
+                <p className="helper step-selector-empty">
+                  No default steps match this search.
+                </p>
+              ) : (
+                <div className="check-grid step-selector-grid">
+                  {filteredDefaultStepOptions.map((option) => (
+                    <label key={option.stepId} className="check-item">
+                      <input
+                        type="checkbox"
+                        checked={defaultStepIds.includes(option.stepId)}
+                        onChange={() => toggleCategoryStep(option.stepId, "defaultStepIds")}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           ) : null}
 
@@ -579,6 +788,10 @@ export default function ITAdminCategoriesPage() {
               </label>
               <label>
                 Default required fields (comma separated)
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  Write the minimum data that agents need before execution. Examples:
+                  employee_id, ticket_id, target_system.
+                </span>
                 <input
                   value={categoryWizardState.defaultRequiredFieldsText}
                   onChange={(event) =>

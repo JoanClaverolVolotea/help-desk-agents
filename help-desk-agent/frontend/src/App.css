@@ -413,6 +413,7 @@ body {
 .composer textarea,
 .form-grid textarea,
 .form-grid input,
+.step-selector-toolbar input,
 .step-item input,
 .step-item select {
   width: 100%;
@@ -772,13 +773,13 @@ button:disabled {
   background: rgb(18 49 58 / 45%);
   display: grid;
   place-items: center;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   animation: overlay-fade 160ms ease-out;
 }
 
 .wizard-shell {
-  width: min(780px, 100%);
-  max-height: calc(100dvh - 2rem);
+  width: min(1120px, calc(100vw - 3rem));
+  max-height: calc(100dvh - 1.5rem);
   display: flex;
   flex-direction: column;
   border: 1px solid #bdd2d7;
@@ -810,9 +811,9 @@ button:disabled {
 }
 
 .wizard-body {
-  padding: 1.3rem 1.4rem;
+  padding: 1.4rem 1.5rem;
   overflow-y: auto;
-  min-height: 320px;
+  min-height: 420px;
   flex: 1;
 }
 
@@ -870,6 +871,42 @@ button:disabled {
   display: grid;
   gap: 0.45rem;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.step-selector-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.step-helper-copy {
+  margin-top: -0.18rem;
+}
+
+.step-selector-toolbar {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.step-selector-actions {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.step-selector-actions .helper {
+  margin-right: auto;
+}
+
+.step-selector-grid {
+  max-height: 250px;
+  overflow: auto;
+  align-content: start;
+  padding-right: 0.2rem;
+}
+
+.step-selector-empty {
+  margin: 0;
 }
 
 .check-item {
@@ -1490,6 +1527,20 @@ button:disabled {
     border-radius: 0;
     border-left: 0;
     border-right: 0;
+  }
+
+  .wizard-overlay {
+    padding: 0.7rem;
+  }
+
+  .wizard-shell {
+    width: 100%;
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .wizard-body {
+    min-height: 300px;
+    padding: 1rem;
   }
 
   .dashboard-stats {
