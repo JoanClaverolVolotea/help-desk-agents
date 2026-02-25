@@ -86,30 +86,30 @@ uv run --env-file backend/.env python -m backend.cli.main
 
 ## API summary
 
-Canonical API (v2):
+API endpoints:
 
-- `GET /api/v2/health`
-- `POST /api/v2/chat`
-- `POST /api/v2/chat/stream`
-- `POST /api/v2/reset`
-- `POST /api/v2/admin/assistant/chat`
-- `POST /api/v2/admin/assistant/reset`
-- `GET /api/v2/admin/steps`
-- `GET /api/v2/admin/categories?include_archived=true|false`
-- `GET /api/v2/admin/categories/{category_id}`
-- `POST /api/v2/admin/categories`
-- `PUT /api/v2/admin/categories/{category_id}/draft`
-- `POST /api/v2/admin/categories/{category_id}/publish`
-- `POST /api/v2/admin/categories/{category_id}/archive`
-- `POST /api/v2/admin/categories/{category_id}/restore`
-- `GET /api/v2/admin/use-cases?include_archived=true|false`
-- `GET /api/v2/admin/use-cases/{use_case_id}`
-- `POST /api/v2/admin/use-cases`
-- `PUT /api/v2/admin/use-cases/{use_case_id}/draft`
-- `POST /api/v2/admin/use-cases/{use_case_id}/publish`
-- `POST /api/v2/admin/use-cases/{use_case_id}/archive`
-- `POST /api/v2/admin/use-cases/{use_case_id}/restore`
-- `POST /api/v2/admin/use-cases/{use_case_id}/migrate-category-version`
+- `GET /api/health`
+- `POST /api/chat`
+- `POST /api/chat/stream`
+- `POST /api/reset`
+- `POST /api/admin/assistant/chat`
+- `POST /api/admin/assistant/reset`
+- `GET /api/admin/steps`
+- `GET /api/admin/categories?include_archived=true|false`
+- `GET /api/admin/categories/{category_id}`
+- `POST /api/admin/categories`
+- `PUT /api/admin/categories/{category_id}/draft`
+- `POST /api/admin/categories/{category_id}/publish`
+- `POST /api/admin/categories/{category_id}/archive`
+- `POST /api/admin/categories/{category_id}/restore`
+- `GET /api/admin/use-cases?include_archived=true|false`
+- `GET /api/admin/use-cases/{use_case_id}`
+- `POST /api/admin/use-cases`
+- `PUT /api/admin/use-cases/{use_case_id}/draft`
+- `POST /api/admin/use-cases/{use_case_id}/publish`
+- `POST /api/admin/use-cases/{use_case_id}/archive`
+- `POST /api/admin/use-cases/{use_case_id}/restore`
+- `POST /api/admin/use-cases/{use_case_id}/migrate-category-version`
 
 ## Validation commands
 

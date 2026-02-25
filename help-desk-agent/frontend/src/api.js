@@ -25,7 +25,7 @@ async function request(path, options = {}) {
 }
 
 export async function chat(message, conversationId) {
-  return request("/api/v2/chat", {
+  return request("/api/chat", {
     method: "POST",
     body: JSON.stringify({ message, conversation_id: conversationId }),
   });
@@ -62,7 +62,7 @@ function parseNdjsonLines(chunk, onLine) {
 }
 
 export async function chatStream(message, conversationId, onEvent) {
-  const response = await fetch(`${apiBaseUrl()}/api/v2/chat/stream`, {
+  const response = await fetch(`${apiBaseUrl()}/api/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, conversation_id: conversationId }),
@@ -118,118 +118,118 @@ export async function chatStream(message, conversationId, onEvent) {
 }
 
 export async function resetConversation(conversationId) {
-  return request("/api/v2/reset", {
+  return request("/api/reset", {
     method: "POST",
     body: JSON.stringify({ conversation_id: conversationId }),
   });
 }
 
 export async function adminAssistantChat(message, conversationId) {
-  return request("/api/v2/admin/assistant/chat", {
+  return request("/api/admin/assistant/chat", {
     method: "POST",
     body: JSON.stringify({ message, conversation_id: conversationId }),
   });
 }
 
 export async function resetAdminAssistantConversation(conversationId) {
-  return request("/api/v2/admin/assistant/reset", {
+  return request("/api/admin/assistant/reset", {
     method: "POST",
     body: JSON.stringify({ conversation_id: conversationId }),
   });
 }
 
 export async function listSteps() {
-  return request("/api/v2/admin/steps");
+  return request("/api/admin/steps");
 }
 
 export async function listCategories(includeArchived = false) {
-  return request(`/api/v2/admin/categories?include_archived=${includeArchived}`);
+  return request(`/api/admin/categories?include_archived=${includeArchived}`);
 }
 
 export async function getCategory(categoryId) {
-  return request(`/api/v2/admin/categories/${categoryId}`);
+  return request(`/api/admin/categories/${categoryId}`);
 }
 
 export async function createCategory(payload) {
-  return request("/api/v2/admin/categories", {
+  return request("/api/admin/categories", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 export async function updateCategoryDraft(categoryId, payload) {
-  return request(`/api/v2/admin/categories/${categoryId}/draft`, {
+  return request(`/api/admin/categories/${categoryId}/draft`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
 export async function publishCategory(categoryId) {
-  return request(`/api/v2/admin/categories/${categoryId}/publish`, {
+  return request(`/api/admin/categories/${categoryId}/publish`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function archiveCategory(categoryId) {
-  return request(`/api/v2/admin/categories/${categoryId}/archive`, {
+  return request(`/api/admin/categories/${categoryId}/archive`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function restoreCategory(categoryId) {
-  return request(`/api/v2/admin/categories/${categoryId}/restore`, {
+  return request(`/api/admin/categories/${categoryId}/restore`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function listUseCases(includeArchived = false) {
-  return request(`/api/v2/admin/use-cases?include_archived=${includeArchived}`);
+  return request(`/api/admin/use-cases?include_archived=${includeArchived}`);
 }
 
 export async function getUseCase(useCaseId) {
-  return request(`/api/v2/admin/use-cases/${useCaseId}`);
+  return request(`/api/admin/use-cases/${useCaseId}`);
 }
 
 export async function createUseCase(payload) {
-  return request("/api/v2/admin/use-cases", {
+  return request("/api/admin/use-cases", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 export async function updateUseCaseDraft(useCaseId, payload) {
-  return request(`/api/v2/admin/use-cases/${useCaseId}/draft`, {
+  return request(`/api/admin/use-cases/${useCaseId}/draft`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
 export async function publishUseCase(useCaseId) {
-  return request(`/api/v2/admin/use-cases/${useCaseId}/publish`, {
+  return request(`/api/admin/use-cases/${useCaseId}/publish`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function archiveUseCase(useCaseId) {
-  return request(`/api/v2/admin/use-cases/${useCaseId}/archive`, {
+  return request(`/api/admin/use-cases/${useCaseId}/archive`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function restoreUseCase(useCaseId) {
-  return request(`/api/v2/admin/use-cases/${useCaseId}/restore`, {
+  return request(`/api/admin/use-cases/${useCaseId}/restore`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function migrateUseCaseCategoryVersion(useCaseId, payload) {
-  return request(`/api/v2/admin/use-cases/${useCaseId}/migrate-category-version`, {
+  return request(`/api/admin/use-cases/${useCaseId}/migrate-category-version`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

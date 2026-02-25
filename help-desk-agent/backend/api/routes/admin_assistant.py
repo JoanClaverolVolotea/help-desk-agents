@@ -59,11 +59,11 @@ async def _admin_assistant_reset_impl(request: ResetRequest) -> ResetResponse:
     return ResetResponse(deleted=deleted)
 
 
-@router.post("/api/v2/admin/assistant/chat", response_model=ChatResponse)
-async def admin_assistant_chat_v2(request: ChatRequest) -> ChatResponse:
+@router.post("/api/admin/assistant/chat", response_model=ChatResponse)
+async def admin_assistant_chat(request: ChatRequest) -> ChatResponse:
     return await _admin_assistant_chat_impl(request)
 
 
-@router.post("/api/v2/admin/assistant/reset", response_model=ResetResponse)
-async def admin_assistant_reset_v2(request: ResetRequest) -> ResetResponse:
+@router.post("/api/admin/assistant/reset", response_model=ResetResponse)
+async def admin_assistant_reset(request: ResetRequest) -> ResetResponse:
     return await _admin_assistant_reset_impl(request)

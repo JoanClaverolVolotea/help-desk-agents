@@ -27,13 +27,13 @@ from backend.storage import CategoryNotFoundError, NoDraftAvailableError
 router = APIRouter()
 
 
-@router.get("/api/v2/admin/steps", response_model=StepCatalogResponse)
+@router.get("/api/admin/steps", response_model=StepCatalogResponse)
 async def admin_steps() -> StepCatalogResponse:
     return StepCatalogResponse(items=list_step_catalog())
 
 
-@router.get("/api/v2/admin/categories", response_model=CategoryListResponse)
-async def admin_list_categories_v2(
+@router.get("/api/admin/categories", response_model=CategoryListResponse)
+async def admin_list_categories(
     include_archived: bool = Query(default=False),
 ) -> CategoryListResponse:
     return CategoryListResponse(
@@ -41,7 +41,7 @@ async def admin_list_categories_v2(
     )
 
 
-@router.get("/api/v2/admin/categories/{category_id}", response_model=CategoryDetailResponse)
+@router.get("/api/admin/categories/{category_id}", response_model=CategoryDetailResponse)
 async def admin_get_category(category_id: str) -> CategoryDetailResponse:
     try:
         category = deps.CATEGORY_REPOSITORY.get_category_detail(category_id, include_archived=True)
@@ -50,7 +50,7 @@ async def admin_get_category(category_id: str) -> CategoryDetailResponse:
     return CategoryDetailResponse(category=category)
 
 
-@router.post("/api/v2/admin/categories", response_model=CategoryDetailResponse)
+@router.post("/api/admin/categories", response_model=CategoryDetailResponse)
 async def admin_create_category(request: CreateCategoryRequest) -> CategoryDetailResponse:
     validation_errors = validate_category_definition(request.definition)
     if validation_errors:
@@ -69,7 +69,7 @@ async def admin_create_category(request: CreateCategoryRequest) -> CategoryDetai
     return CategoryDetailResponse(category=detail)
 
 
-@router.put("/api/v2/admin/categories/{category_id}/draft", response_model=CategoryDetailResponse)
+@router.put("/api/admin/categories/{category_id}/draft", response_model=CategoryDetailResponse)
 async def admin_update_category_draft(
     category_id: str,
     request: UpdateCategoryDraftRequest,
@@ -88,9 +88,7 @@ async def admin_update_category_draft(
     return CategoryDetailResponse(category=detail)
 
 
-@router.post(
-    "/api/v2/admin/categories/{category_id}/publish", response_model=CategoryDetailResponse
-)
+@router.post("/api/admin/categories/{category_id}/publish", response_model=CategoryDetailResponse)
 async def admin_publish_category(category_id: str) -> CategoryDetailResponse:
     try:
         detail = await publish_category_and_sync(category_id)
@@ -102,9 +100,7 @@ async def admin_publish_category(category_id: str) -> CategoryDetailResponse:
     return CategoryDetailResponse(category=detail)
 
 
-@router.post(
-    "/api/v2/admin/categories/{category_id}/archive", response_model=ArchiveRestoreResponse
-)
+@router.post("/api/admin/categories/{category_id}/archive", response_model=ArchiveRestoreResponse)
 async def admin_archive_category(category_id: str) -> ArchiveRestoreResponse:
     try:
         await archive_category_and_sync(category_id)
@@ -114,9 +110,7 @@ async def admin_archive_category(category_id: str) -> ArchiveRestoreResponse:
     return ArchiveRestoreResponse(success=True, entity_id=category_id, archived=True)
 
 
-@router.post(
-    "/api/v2/admin/categories/{category_id}/restore", response_model=ArchiveRestoreResponse
-)
+@router.post("/api/admin/categories/{category_id}/restore", response_model=ArchiveRestoreResponse)
 async def admin_restore_category(category_id: str) -> ArchiveRestoreResponse:
     try:
         await restore_category_and_sync(category_id)

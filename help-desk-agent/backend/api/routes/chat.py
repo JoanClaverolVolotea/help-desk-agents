@@ -153,16 +153,16 @@ async def _reset_impl(request: ResetRequest) -> ResetResponse:
     return ResetResponse(deleted=deleted)
 
 
-@router.post("/api/v2/chat", response_model=ChatResponse)
-async def chat_v2(request: ChatRequest) -> ChatResponse:
+@router.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest) -> ChatResponse:
     return await _chat_impl(request)
 
 
-@router.post("/api/v2/chat/stream")
-async def chat_stream_v2(request: ChatRequest) -> StreamingResponse:
+@router.post("/api/chat/stream")
+async def chat_stream(request: ChatRequest) -> StreamingResponse:
     return await _chat_stream_impl(request)
 
 
-@router.post("/api/v2/reset", response_model=ResetResponse)
-async def reset_v2(request: ResetRequest) -> ResetResponse:
+@router.post("/api/reset", response_model=ResetResponse)
+async def reset(request: ResetRequest) -> ResetResponse:
     return await _reset_impl(request)

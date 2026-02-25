@@ -29,8 +29,8 @@ from backend.storage import (
 router = APIRouter()
 
 
-@router.get("/api/v2/admin/use-cases", response_model=UseCaseListResponse)
-async def admin_list_use_cases_v2(
+@router.get("/api/admin/use-cases", response_model=UseCaseListResponse)
+async def admin_list_use_cases(
     include_archived: bool = Query(default=False),
 ) -> UseCaseListResponse:
     return UseCaseListResponse(
@@ -38,7 +38,7 @@ async def admin_list_use_cases_v2(
     )
 
 
-@router.get("/api/v2/admin/use-cases/{use_case_id}", response_model=UseCaseDetailResponse)
+@router.get("/api/admin/use-cases/{use_case_id}", response_model=UseCaseDetailResponse)
 async def admin_get_use_case(use_case_id: str) -> UseCaseDetailResponse:
     try:
         detail = deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
@@ -47,7 +47,7 @@ async def admin_get_use_case(use_case_id: str) -> UseCaseDetailResponse:
     return UseCaseDetailResponse(use_case=detail)
 
 
-@router.post("/api/v2/admin/use-cases", response_model=CreateUseCaseResponse)
+@router.post("/api/admin/use-cases", response_model=CreateUseCaseResponse)
 async def admin_create_use_case(request: CreateUseCaseRequest) -> CreateUseCaseResponse:
     try:
         validation_errors, category_version_number = validate_use_case_payload(
@@ -77,7 +77,7 @@ async def admin_create_use_case(request: CreateUseCaseRequest) -> CreateUseCaseR
     return CreateUseCaseResponse(use_case=detail)
 
 
-@router.put("/api/v2/admin/use-cases/{use_case_id}/draft", response_model=UseCaseDetailResponse)
+@router.put("/api/admin/use-cases/{use_case_id}/draft", response_model=UseCaseDetailResponse)
 async def admin_update_use_case_draft(
     use_case_id: str,
     request: UpdateUseCaseDraftRequest,
@@ -110,7 +110,7 @@ async def admin_update_use_case_draft(
     return UseCaseDetailResponse(use_case=detail)
 
 
-@router.post("/api/v2/admin/use-cases/{use_case_id}/publish", response_model=PublishUseCaseResponse)
+@router.post("/api/admin/use-cases/{use_case_id}/publish", response_model=PublishUseCaseResponse)
 async def admin_publish_use_case(use_case_id: str) -> PublishUseCaseResponse:
     try:
         detail = deps.USE_CASE_REPOSITORY.publish_draft(use_case_id)
@@ -123,7 +123,7 @@ async def admin_publish_use_case(use_case_id: str) -> PublishUseCaseResponse:
     return PublishUseCaseResponse(use_case=detail)
 
 
-@router.post("/api/v2/admin/use-cases/{use_case_id}/archive", response_model=ArchiveRestoreResponse)
+@router.post("/api/admin/use-cases/{use_case_id}/archive", response_model=ArchiveRestoreResponse)
 async def admin_archive_use_case(use_case_id: str) -> ArchiveRestoreResponse:
     try:
         deps.USE_CASE_REPOSITORY.archive_use_case(use_case_id)
@@ -134,7 +134,7 @@ async def admin_archive_use_case(use_case_id: str) -> ArchiveRestoreResponse:
     return ArchiveRestoreResponse(success=True, entity_id=use_case_id, archived=True)
 
 
-@router.post("/api/v2/admin/use-cases/{use_case_id}/restore", response_model=ArchiveRestoreResponse)
+@router.post("/api/admin/use-cases/{use_case_id}/restore", response_model=ArchiveRestoreResponse)
 async def admin_restore_use_case(use_case_id: str) -> ArchiveRestoreResponse:
     try:
         deps.USE_CASE_REPOSITORY.restore_use_case(use_case_id)
@@ -146,7 +146,7 @@ async def admin_restore_use_case(use_case_id: str) -> ArchiveRestoreResponse:
 
 
 @router.post(
-    "/api/v2/admin/use-cases/{use_case_id}/migrate-category-version",
+    "/api/admin/use-cases/{use_case_id}/migrate-category-version",
     response_model=UseCaseDetailResponse,
 )
 async def admin_migrate_use_case_category_version(
