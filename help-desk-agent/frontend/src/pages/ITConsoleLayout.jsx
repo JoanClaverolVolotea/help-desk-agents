@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 
+import ITAssistantPanel from "../components/ITAssistantPanel.jsx";
 import SectionTabs from "../components/SectionTabs.jsx";
 
 const IT_TABS = [
@@ -7,10 +9,11 @@ const IT_TABS = [
   { to: "/it/admin/categories", label: "Categories" },
   { to: "/it/admin/use-cases", label: "Runbooks" },
   { to: "/it/admin/tickets", label: "Tickets" },
-  { to: "/it/assistant", label: "Tech Assistant" },
 ];
 
 export default function ITConsoleLayout() {
+  const [isAssistantOpen, setIsAssistantOpen] = useState(true);
+
   return (
     <div className="app-shell it-console-shell">
       <header className="header it-console-header">
@@ -30,7 +33,17 @@ export default function ITConsoleLayout() {
       </header>
 
       <SectionTabs items={IT_TABS} className="it-console-tabs" />
-      <Outlet />
+      <div className={`it-console-workspace ${isAssistantOpen ? "" : "assistant-collapsed"}`.trim()}>
+        <main className="it-console-main-pane">
+          <Outlet />
+        </main>
+        <aside id="it-console-assistant-pane" className="it-console-assistant-pane">
+          <ITAssistantPanel
+            isOpen={isAssistantOpen}
+            onToggle={() => setIsAssistantOpen((prev) => !prev)}
+          />
+        </aside>
+      </div>
     </div>
   );
 }

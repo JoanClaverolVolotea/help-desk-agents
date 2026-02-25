@@ -18,7 +18,7 @@ erDiagram
 
     CATEGORIES {
       text id PK
-      text slug UNIQUE
+      text slug UK
       text display_name
       text created_at
       text updated_at
@@ -36,7 +36,7 @@ erDiagram
 
     USE_CASES {
       text id PK
-      text slug UNIQUE
+      text slug UK
       text display_name
       text template_id
       text category_id FK

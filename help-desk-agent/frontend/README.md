@@ -10,7 +10,7 @@ It includes:
   - Routing policies (categories)
   - Runbooks (use-cases)
   - Ticket registry
-  - Tech assistant
+  - Persistent tech assistant panel
 
 ## Stack
 
@@ -56,10 +56,11 @@ VITE_API_BASE_URL=http://127.0.0.1:8000 npm run dev
 
 - `/`: role landing
 - `/user`: user portal
+- `/it/dashboard`: IT console dashboard
 - `/it/admin/categories`: routing policy management
 - `/it/admin/tickets`: ticket registry
 - `/it/admin/use-cases`: runbook management
-- `/it/assistant`: technical assistant
+- `/it/assistant`: alias to IT dashboard (assistant stays visible in the console panel)
 
 ## Build and preview
 

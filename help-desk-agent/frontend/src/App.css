@@ -1073,7 +1073,7 @@ button:disabled {
 
 .it-console-shell {
   border-color: #bfd4cc;
-  width: 100%;
+  width: min(1760px, calc(100vw - 2.4rem));
   max-height: none;
 }
 
@@ -1083,6 +1083,101 @@ button:disabled {
 
 .it-console-tabs {
   background: linear-gradient(90deg, #eef8f1, #f3f8ee);
+}
+
+.it-console-workspace {
+  --assistant-pane-width: clamp(360px, 32vw, 460px);
+  --assistant-collapsed-width: 74px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(680px, 1fr) var(--assistant-pane-width);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.it-console-workspace.assistant-collapsed {
+  grid-template-columns: minmax(0, 1fr) var(--assistant-collapsed-width);
+}
+
+.it-console-main-pane {
+  min-height: 0;
+  min-width: 680px;
+  display: flex;
+  flex-direction: column;
+}
+
+.it-console-workspace.assistant-collapsed .it-console-main-pane {
+  min-width: 0;
+}
+
+.it-console-main-pane > .it-console-panel {
+  height: 100%;
+}
+
+.it-console-assistant-pane {
+  min-height: 0;
+  display: flex;
+  border-left: 1px solid #c9ddd4;
+  background: linear-gradient(180deg, #fafffc 0%, #f5fbf8 100%);
+  overflow: hidden;
+  transition: width 190ms ease;
+}
+
+.it-console-assistant-panel {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.it-console-assistant-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.55rem 0.7rem 0.5rem;
+  border-bottom: 1px solid #c9ddd4;
+  background: linear-gradient(90deg, #f2fbf5, #eef9f4);
+}
+
+.it-console-assistant-panel.collapsed .it-console-assistant-toolbar {
+  justify-content: center;
+  border-bottom: 0;
+  padding: 0.6rem 0.35rem;
+}
+
+.it-console-assistant-panel .status-row {
+  padding: 0.8rem 1rem 0.75rem;
+}
+
+.it-console-assistant-panel .transcript {
+  padding: 0.9rem 1rem;
+}
+
+.it-console-assistant-panel .composer {
+  padding: 0.8rem 1rem;
+}
+
+.it-console-assistant-panel .error-banner {
+  padding: 0.65rem 1rem;
+}
+
+.assistant-visibility-toggle {
+  border: 1px solid #98bcc4;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  background: #f1fbfd;
+  color: #0e4c5b;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.assistant-visibility-toggle:hover {
+  background: #dff2f6;
+}
+
+.assistant-visibility-toggle.closed {
+  padding: 0.28rem 0.56rem;
 }
 
 .it-console-panel {
@@ -1399,5 +1494,19 @@ button:disabled {
 
   .dashboard-stats {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .it-console-workspace {
+    --assistant-pane-width: 340px;
+    --assistant-collapsed-width: 66px;
+    grid-template-columns: minmax(560px, 1fr) var(--assistant-pane-width);
+  }
+
+  .it-console-main-pane {
+    min-width: 560px;
+  }
+
+  .it-console-shell {
+    width: 100%;
   }
 }
