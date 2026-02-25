@@ -120,7 +120,10 @@ def seed_category_definitions() -> list[tuple[str, CategoryDefinitionDraft]]:
             "access-reset",
             CategoryDefinitionDraft(
                 display_name="Reset de acceso / Access reset",
-                description="Login problems, locked accounts, and access recovery.",
+                description=(
+                    "Case-aligned access recovery for eCrew login failures, locked accounts, "
+                    "and credential reset workflows."
+                ),
                 allowed_step_ids=[
                     "verify_requester",
                     "reset_ecrew_access",
@@ -128,13 +131,18 @@ def seed_category_definitions() -> list[tuple[str, CategoryDefinitionDraft]]:
                     "manual_instruction",
                 ],
                 default_handoff_description=(
-                    "Handles eCrew login issues and account recovery requests."
+                    "Handles eCrew account recovery requests similar to case USDV-176285."
                 ),
                 default_routing_description=(
-                    "Use this category for tickets about login failures, password resets, "
-                    "locked users, or eCrew account restoration."
+                    "Use this category when a requester cannot access eCrew and needs "
+                    "identity verification plus access reset (pattern from USDV-176285)."
                 ),
-                default_required_fields=["ticket_id", "requester_name"],
+                default_required_fields=[
+                    "ticket_id",
+                    "requester_name",
+                    "requester_id",
+                    "affected_platforms",
+                ],
                 default_steps=[
                     UseCaseStep(step_id="verify_requester", params={}),
                     UseCaseStep(step_id="reset_ecrew_access", params={}),
@@ -149,7 +157,10 @@ def seed_category_definitions() -> list[tuple[str, CategoryDefinitionDraft]]:
             "employee-onboarding",
             CategoryDefinitionDraft(
                 display_name="Alta empleado / Employee onboarding",
-                description="New employee setup across E-MAIL, EFOS, and PELESYS.",
+                description=(
+                    "Case-aligned onboarding setup for provisioning E-MAIL, EFOS, and "
+                    "PELESYS access for new employees."
+                ),
                 allowed_step_ids=[
                     "provision_email",
                     "provision_efos",
@@ -158,13 +169,19 @@ def seed_category_definitions() -> list[tuple[str, CategoryDefinitionDraft]]:
                     "manual_instruction",
                 ],
                 default_handoff_description=(
-                    "Handles onboarding setup for E-MAIL, EFOS, and PELESYS."
+                    "Handles onboarding requests similar to case USDV-176893."
                 ),
                 default_routing_description=(
-                    "Use this category for onboarding requests that require account creation "
-                    "in E-MAIL, EFOS, or PELESYS."
+                    "Use this category for onboarding tickets that request E-MAIL/EFOS/"
+                    "PELESYS account provisioning (pattern from USDV-176893)."
                 ),
-                default_required_fields=["ticket_id", "employee_name"],
+                default_required_fields=[
+                    "ticket_id",
+                    "requester_name",
+                    "employee_name",
+                    "employee_batch",
+                    "target_systems",
+                ],
                 default_steps=[
                     UseCaseStep(step_id="provision_email", params={}),
                     UseCaseStep(step_id="provision_efos", params={}),
@@ -186,12 +203,19 @@ def seed_use_case_definitions() -> list[SeedUseCase]:
             category_slug="access-reset",
             definition=UseCaseDefinitionDraft(
                 display_name="Reset de acceso eCrew",
-                handoff_description="Handles eCrew login issues and account recovery requests.",
-                routing_description=(
-                    "Ticket example: USDV-176285. Use when users cannot log in to eCrew "
-                    "or require account unlock/password reset."
+                handoff_description=(
+                    "Handles eCrew login and account recovery requests based on case USDV-176285."
                 ),
-                required_fields=["ticket_id", "requester_name"],
+                routing_description=(
+                    "Ticket example: USDV-176285. Use when a requester cannot log in to "
+                    "eCrew and needs verification plus access restoration."
+                ),
+                required_fields=[
+                    "ticket_id",
+                    "requester_name",
+                    "requester_id",
+                    "affected_platforms",
+                ],
                 steps=[
                     UseCaseStep(step_id="verify_requester", params={}),
                     UseCaseStep(step_id="reset_ecrew_access", params={}),
@@ -207,12 +231,21 @@ def seed_use_case_definitions() -> list[SeedUseCase]:
             category_slug="employee-onboarding",
             definition=UseCaseDefinitionDraft(
                 display_name="Alta E-MAIL/EFOS/PELESYS",
-                handoff_description="Handles onboarding setup for E-MAIL, EFOS, and PELESYS.",
-                routing_description=(
-                    "Ticket example: USDV-176893. Use for onboarding new employees "
-                    "in E-MAIL, EFOS, and PELESYS."
+                handoff_description=(
+                    "Handles onboarding setup for E-MAIL, EFOS, and PELESYS based on case "
+                    "USDV-176893."
                 ),
-                required_fields=["ticket_id", "employee_name"],
+                routing_description=(
+                    "Ticket example: USDV-176893. Use for onboarding requests that include "
+                    "employee identity plus target systems (E-MAIL, EFOS, PELESYS)."
+                ),
+                required_fields=[
+                    "ticket_id",
+                    "requester_name",
+                    "employee_name",
+                    "employee_batch",
+                    "target_systems",
+                ],
                 steps=[
                     UseCaseStep(step_id="provision_email", params={}),
                     UseCaseStep(step_id="provision_efos", params={}),

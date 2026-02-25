@@ -86,6 +86,150 @@ def test_health_endpoint(tmp_path, monkeypatch) -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_admin_reseed_defaults_requires_confirm_token(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    response = client.post(
+        "/api/admin/bootstrap/reseed-defaults",
+        json={"confirm_token": "WRONG_TOKEN"},
+    )
+    assert response.status_code == 422
+
+
+def test_admin_reseed_defaults_resets_and_recreates_seed_catalog(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    create_category_response = client.post(
+        "/api/admin/categories",
+        json=_category_payload(display_name="Transient Category"),
+    )
+    assert create_category_response.status_code == 200
+    category_id = create_category_response.json()["category"]["category_id"]
+    assert client.post(f"/api/admin/categories/{category_id}/publish", json={}).status_code == 200
+
+    create_use_case_response = client.post(
+        "/api/admin/use-cases",
+        json={
+            **_use_case_payload(category_id, display_name="Transient use case"),
+            "slug": "transient-use-case",
+        },
+    )
+    assert create_use_case_response.status_code == 200
+    use_case_id = create_use_case_response.json()["use_case"]["use_case_id"]
+    assert client.post(f"/api/admin/use-cases/{use_case_id}/publish", json={}).status_code == 200
+
+    published_items = backend_module.USE_CASE_REPOSITORY.list_published_use_cases()
+    backend_module.TICKET_REPOSITORY.start_workflow_execution(
+        conversation_id="reseed-test-conversation",
+        use_case_id=published_items[0].use_case_id,
+        language="en",
+        ticket_context="Need help with USDV-999999",
+        external_ticket_id="USDV-999999",
+        agent_name="Reseed Test Agent",
+    )
+
+    categories_before = backend_module.CATEGORY_REPOSITORY.list_categories(include_archived=True)
+    use_cases_before = backend_module.USE_CASE_REPOSITORY.list_use_cases(include_archived=True)
+    tickets_before = backend_module.TICKET_REPOSITORY.list_tickets(limit=200, offset=0)
+
+    response = client.post(
+        "/api/admin/bootstrap/reseed-defaults",
+        json={"confirm_token": "RESET_DEFAULTS"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["deleted_counts"] == {
+        "tickets": len(tickets_before),
+        "use_cases": len(use_cases_before),
+        "categories": len(categories_before),
+    }
+    assert payload["seeded_counts"] == {
+        "categories": 2,
+        "use_cases": 4,
+    }
+
+    categories_after = backend_module.CATEGORY_REPOSITORY.list_categories(include_archived=True)
+    assert sorted(item.slug for item in categories_after) == [
+        "access-reset",
+        "employee-onboarding",
+    ]
+
+    use_cases_after = backend_module.USE_CASE_REPOSITORY.list_use_cases(include_archived=True)
+    assert len(use_cases_after) == 4
+    slugs_after = {item.slug for item in use_cases_after}
+    assert "reset-acceso-ecrew" in slugs_after
+    assert "alta-email-efos-pelesys" in slugs_after
+
+    published_after = {
+        item.slug: item for item in backend_module.USE_CASE_REPOSITORY.list_published_use_cases()
+    }
+    assert published_after["reset-acceso-ecrew"].definition.required_fields == [
+        "ticket_id",
+        "requester_name",
+        "requester_id",
+        "affected_platforms",
+    ]
+    assert published_after["alta-email-efos-pelesys"].definition.required_fields == [
+        "ticket_id",
+        "requester_name",
+        "employee_name",
+        "employee_batch",
+        "target_systems",
+    ]
+
+
+def test_system_default_use_case_endpoints_are_blocked(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    list_response = client.get("/api/admin/use-cases?include_archived=true")
+    assert list_response.status_code == 200
+    default_item = next(
+        item for item in list_response.json()["items"] if item["is_system_default"] is True
+    )
+    use_case_id = default_item["use_case_id"]
+
+    detail_response = client.get(f"/api/admin/use-cases/{use_case_id}")
+    assert detail_response.status_code == 200
+    detail = detail_response.json()["use_case"]
+    definition = detail["draft_definition"] or detail["published_definition"]
+    assert definition is not None
+    definition_payload = {
+        key: value for key, value in definition.items() if key != "version_number"
+    }
+
+    update_response = client.put(
+        f"/api/admin/use-cases/{use_case_id}/draft",
+        json={
+            "category_id": detail["category_id"],
+            "definition": definition_payload,
+        },
+    )
+    publish_response = client.post(f"/api/admin/use-cases/{use_case_id}/publish", json={})
+    archive_response = client.post(f"/api/admin/use-cases/{use_case_id}/archive", json={})
+    restore_response = client.post(f"/api/admin/use-cases/{use_case_id}/restore", json={})
+    migrate_response = client.post(
+        f"/api/admin/use-cases/{use_case_id}/migrate-category-version",
+        json={
+            "category_id": detail["category_id"],
+            "category_version_number": detail["category_version_number"],
+        },
+    )
+
+    for response in [
+        update_response,
+        publish_response,
+        archive_response,
+        restore_response,
+        migrate_response,
+    ]:
+        assert response.status_code == 409
+        assert "System default use-cases" in response.text
+
+
 def test_v2_use_case_list_accepts_boolean_include_archived(tmp_path, monkeypatch) -> None:
     backend_module = _load_backend_module(tmp_path, monkeypatch)
     client = TestClient(backend_module.app)

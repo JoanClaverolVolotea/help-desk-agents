@@ -5,7 +5,7 @@ from backend.domain.models import (
     TicketFieldSource,
     UseCaseDefinitionPublished,
 )
-from backend.domain.templates import seed_use_case_definitions
+from backend.domain.templates import seed_category_definitions, seed_use_case_definitions
 from backend.workflows.executor import WorkflowExecutionInput, execute_workflow
 
 
@@ -81,3 +81,41 @@ def test_workflow_executor_tracks_field_sources_and_step_records() -> None:
     assert fields_by_name["requester_name"].source == TicketFieldSource.PROVIDED
     assert all(step.step_order >= 1 for step in result.step_records)
     assert result.closure_output.startswith("[closure]")
+
+
+def test_seed_templates_include_case_aligned_required_fields() -> None:
+    categories = dict(seed_category_definitions())
+    assert categories["access-reset"].default_required_fields == [
+        "ticket_id",
+        "requester_name",
+        "requester_id",
+        "affected_platforms",
+    ]
+    assert categories["employee-onboarding"].default_required_fields == [
+        "ticket_id",
+        "requester_name",
+        "employee_name",
+        "employee_batch",
+        "target_systems",
+    ]
+
+    use_cases = {seed.slug: seed.definition for seed in seed_use_case_definitions()}
+    assert use_cases["reset-acceso-ecrew"].required_fields == [
+        "ticket_id",
+        "requester_name",
+        "requester_id",
+        "affected_platforms",
+    ]
+    assert use_cases["alta-email-efos-pelesys"].required_fields == [
+        "ticket_id",
+        "requester_name",
+        "employee_name",
+        "employee_batch",
+        "target_systems",
+    ]
+
+
+def test_seed_use_case_routing_descriptions_reference_case_examples() -> None:
+    use_cases = {seed.slug: seed.definition for seed in seed_use_case_definitions()}
+    assert "USDV-176285" in use_cases["reset-acceso-ecrew"].routing_description
+    assert "USDV-176893" in use_cases["alta-email-efos-pelesys"].routing_description

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import WizardModal from "../components/WizardModal.jsx";
 import {
@@ -10,6 +11,7 @@ import {
   listUseCases,
   migrateUseCaseCategoryVersion,
   publishCategory,
+  reseedDefaults,
   readableError,
   restoreCategory,
   updateCategoryDraft,
@@ -29,6 +31,7 @@ export default function ITAdminCategoriesPage() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
   const [categoryPublishNotice, setCategoryPublishNotice] = useState("");
+  const [reseedBusy, setReseedBusy] = useState(false);
 
   const [showCategoryWizard, setShowCategoryWizard] = useState(false);
   const [categoryWizardMode, setCategoryWizardMode] = useState("create");
@@ -268,6 +271,33 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
+  const handleReseedDefaults = async () => {
+    const confirmed = window.confirm(
+      "This action deletes current categories, use-cases, and ticket registry data, then reseeds defaults. Continue?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setReseedBusy(true);
+    setAdminError("");
+    setCategoryPublishNotice("");
+    setMigrationPrompt(null);
+
+    try {
+      const response = await reseedDefaults();
+      await loadAdminData();
+      const useCasesResponse = await listUseCases(false);
+      setCategoryPublishNotice(
+        `Defaults reseeded. Deleted tickets/use-cases/categories: ${response.deleted_counts.tickets}/${response.deleted_counts.use_cases}/${response.deleted_counts.categories}. Seeded categories/use-cases: ${response.seeded_counts.categories}/${response.seeded_counts.use_cases}. Active use-cases now: ${useCasesResponse.items.length}.`,
+      );
+    } catch (error) {
+      setAdminError(readableError(error));
+    } finally {
+      setReseedBusy(false);
+    }
+  };
+
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-categories">
       <div className="admin-toolbar">
@@ -275,6 +305,14 @@ export default function ITAdminCategoriesPage() {
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
             Refresh
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            onClick={handleReseedDefaults}
+            disabled={adminLoading || reseedBusy}
+          >
+            Reseed defaults
           </button>
           <button type="button" className="primary" onClick={openCreateCategoryWizard}>
             Nueva categoria
@@ -290,6 +328,9 @@ export default function ITAdminCategoriesPage() {
         />
         <span>Mostrar archivadas / Show archived</span>
       </label>
+      <p className="helper">
+        Category = routing template and policy family. Use case = executable deterministic workflow.
+      </p>
 
       {adminLoading ? <p className="helper">Cargando datos...</p> : null}
       {categoryPublishNotice ? <p className="helper">{categoryPublishNotice}</p> : null}
@@ -301,6 +342,10 @@ export default function ITAdminCategoriesPage() {
           <p>
             Categoria publicada con version <strong>{migrationPrompt.categoryVersionNumber}</strong>.
             Selecciona los casos a migrar.
+          </p>
+          <p className="helper">
+            This is a cross-entity action on linked use-cases. Review list/details in{" "}
+            <Link to="/it/admin/use-cases">Use cases</Link>.
           </p>
           <div className="check-grid">
             {migrationPrompt.items.map((item, index) => (

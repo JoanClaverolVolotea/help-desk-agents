@@ -29,6 +29,18 @@ from backend.storage import (
 router = APIRouter()
 
 
+def _ensure_not_system_default(detail, operation: str) -> None:
+    if not detail.is_system_default:
+        return
+    raise HTTPException(
+        status_code=409,
+        detail=(
+            "System default use-cases are managed from category publish lifecycle and "
+            f"cannot be {operation} via use-case endpoints."
+        ),
+    )
+
+
 @router.get("/api/admin/use-cases", response_model=UseCaseListResponse)
 async def admin_list_use_cases(
     include_archived: bool = Query(default=False),
@@ -83,9 +95,11 @@ async def admin_update_use_case_draft(
     request: UpdateUseCaseDraftRequest,
 ) -> UseCaseDetailResponse:
     try:
-        deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
+        detail = deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
     except UseCaseNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    _ensure_not_system_default(detail, operation="updated")
 
     try:
         validation_errors, category_version_number = validate_use_case_payload(
@@ -113,6 +127,13 @@ async def admin_update_use_case_draft(
 @router.post("/api/admin/use-cases/{use_case_id}/publish", response_model=PublishUseCaseResponse)
 async def admin_publish_use_case(use_case_id: str) -> PublishUseCaseResponse:
     try:
+        detail = deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
+    except UseCaseNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    _ensure_not_system_default(detail, operation="published")
+
+    try:
         detail = deps.USE_CASE_REPOSITORY.publish_draft(use_case_id)
     except UseCaseNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -126,9 +147,13 @@ async def admin_publish_use_case(use_case_id: str) -> PublishUseCaseResponse:
 @router.post("/api/admin/use-cases/{use_case_id}/archive", response_model=ArchiveRestoreResponse)
 async def admin_archive_use_case(use_case_id: str) -> ArchiveRestoreResponse:
     try:
-        deps.USE_CASE_REPOSITORY.archive_use_case(use_case_id)
+        detail = deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
     except UseCaseNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    _ensure_not_system_default(detail, operation="archived")
+
+    deps.USE_CASE_REPOSITORY.archive_use_case(use_case_id)
 
     await refresh_runtime_snapshot()
     return ArchiveRestoreResponse(success=True, entity_id=use_case_id, archived=True)
@@ -137,9 +162,13 @@ async def admin_archive_use_case(use_case_id: str) -> ArchiveRestoreResponse:
 @router.post("/api/admin/use-cases/{use_case_id}/restore", response_model=ArchiveRestoreResponse)
 async def admin_restore_use_case(use_case_id: str) -> ArchiveRestoreResponse:
     try:
-        deps.USE_CASE_REPOSITORY.restore_use_case(use_case_id)
+        detail = deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
     except UseCaseNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    _ensure_not_system_default(detail, operation="restored")
+
+    deps.USE_CASE_REPOSITORY.restore_use_case(use_case_id)
 
     await refresh_runtime_snapshot()
     return ArchiveRestoreResponse(success=True, entity_id=use_case_id, archived=False)
@@ -157,6 +186,8 @@ async def admin_migrate_use_case_category_version(
         detail = deps.USE_CASE_REPOSITORY.get_use_case_detail(use_case_id, include_archived=True)
     except UseCaseNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    _ensure_not_system_default(detail, operation="migrated")
 
     try:
         category_definition = deps.CATEGORY_REPOSITORY.get_published_category_definition(

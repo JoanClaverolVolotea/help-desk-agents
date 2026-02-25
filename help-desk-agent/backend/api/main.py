@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from agents import Runner
 from backend.api.routes import (
     admin_assistant,
+    admin_bootstrap,
     admin_categories,
     admin_tickets,
     admin_use_cases,
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(chat.router)
     app.include_router(admin_assistant.router)
+    app.include_router(admin_bootstrap.router)
     app.include_router(admin_categories.router)
     app.include_router(admin_use_cases.router)
     app.include_router(admin_tickets.router)

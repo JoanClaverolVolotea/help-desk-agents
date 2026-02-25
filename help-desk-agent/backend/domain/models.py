@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -212,6 +213,27 @@ class UseCaseListResponse(BaseModel):
 
 class UseCaseDetailResponse(BaseModel):
     use_case: UseCaseDetail
+
+
+class ReseedDefaultsRequest(BaseModel):
+    confirm_token: Literal["RESET_DEFAULTS"]
+
+
+class ReseedDeletedCounts(BaseModel):
+    tickets: int
+    use_cases: int
+    categories: int
+
+
+class ReseedSeededCounts(BaseModel):
+    categories: int
+    use_cases: int
+
+
+class ReseedDefaultsResponse(BaseModel):
+    success: bool
+    deleted_counts: ReseedDeletedCounts
+    seeded_counts: ReseedSeededCounts
 
 
 class TicketStatus(str, Enum):

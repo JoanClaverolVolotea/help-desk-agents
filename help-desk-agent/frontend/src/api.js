@@ -166,6 +166,13 @@ export async function getTicket(ticketId) {
   return request(`/api/admin/tickets/${ticketId}`);
 }
 
+export async function reseedDefaults() {
+  return request("/api/admin/bootstrap/reseed-defaults", {
+    method: "POST",
+    body: JSON.stringify({ confirm_token: "RESET_DEFAULTS" }),
+  });
+}
+
 export async function listSteps() {
   return request("/api/admin/steps");
 }

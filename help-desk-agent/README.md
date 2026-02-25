@@ -89,6 +89,7 @@ uv run --env-file backend/.env python -m backend.cli.main
    - Create/edit drafts.
    - Publish versions.
    - Archive/restore categories.
+   - Optionally reseed defaults (destructive reset) from case-aligned templates.
 3. Manage **Casos de uso**:
    - Create/edit drafts linked to a published category.
    - Publish versions.
@@ -107,6 +108,7 @@ API endpoints:
 - `POST /api/reset`
 - `POST /api/admin/assistant/chat`
 - `POST /api/admin/assistant/reset`
+- `POST /api/admin/bootstrap/reseed-defaults`
 - `GET /api/admin/steps`
 - `GET /api/admin/categories?include_archived=true|false`
 - `GET /api/admin/categories/{category_id}`

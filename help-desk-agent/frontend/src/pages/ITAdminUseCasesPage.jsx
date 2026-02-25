@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import WizardModal from "../components/WizardModal.jsx";
 import {
@@ -298,6 +299,9 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
+  const manualUseCases = useCases.filter((item) => !item.is_system_default);
+  const categoryDefaultUseCases = useCases.filter((item) => item.is_system_default);
+
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-use-cases">
       <div className="admin-toolbar">
@@ -320,15 +324,22 @@ export default function ITAdminUseCasesPage() {
         />
         <span>Mostrar archivados / Show archived</span>
       </label>
+      <p className="helper">
+        Category defines allowed workflow patterns. Use case defines the exact runnable step sequence.
+      </p>
+      <p className="helper">
+        Manual use-cases are editable here. Category-generated defaults are read-only and sync from{" "}
+        <Link to="/it/admin/categories">Categories</Link>.
+      </p>
 
       {adminLoading ? <p className="helper">Cargando datos...</p> : null}
       {adminError ? <p className="error-text">{adminError}</p> : null}
 
       <div className="use-case-list">
-        {useCases.length === 0 ? (
-          <div className="empty-state">No hay casos de uso.</div>
+        {manualUseCases.length === 0 ? (
+          <div className="empty-state">No editable manual use-cases.</div>
         ) : (
-          useCases.map((item) => (
+          manualUseCases.map((item) => (
             <article key={item.use_case_id} className="use-case-card">
               <div>
                 <h3>{item.display_name}</h3>
@@ -337,9 +348,6 @@ export default function ITAdminUseCasesPage() {
                   category version: <code>{item.category_version_number ?? "-"}</code>
                 </p>
                 <div className="badge-row">
-                  {item.is_system_default ? (
-                    <span className="badge default">Default / Predeterminado</span>
-                  ) : null}
                   <span className={item.published_version_number ? "badge published" : "badge"}>
                     Published: {item.published_version_number ?? "-"}
                   </span>
@@ -353,18 +361,12 @@ export default function ITAdminUseCasesPage() {
                     {item.archived ? "Archived" : "Active"}
                   </span>
                 </div>
-                {item.is_system_default ? (
-                  <p className="helper">
-                    This use-case is generated from category defaults and auto-syncs on category publish.
-                  </p>
-                ) : null}
               </div>
               <div className="use-case-actions">
                 <button
                   type="button"
                   className="ghost"
                   onClick={() => openEditUseCaseWizard(item.use_case_id)}
-                  disabled={item.is_system_default}
                 >
                   Editar draft
                 </button>
@@ -388,12 +390,48 @@ export default function ITAdminUseCasesPage() {
                   <button
                     type="button"
                     className="ghost"
-                    disabled={item.is_system_default}
                     onClick={() => archiveUseCaseFromList(item.use_case_id)}
                   >
                     Archivar
                   </button>
                 )}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      <div className="use-case-list">
+        {categoryDefaultUseCases.length === 0 ? (
+          <div className="empty-state">No category-generated defaults.</div>
+        ) : (
+          categoryDefaultUseCases.map((item) => (
+            <article key={item.use_case_id} className="use-case-card">
+              <div>
+                <h3>{item.display_name}</h3>
+                <p className="helper">
+                  slug: <code>{item.slug}</code> | category: <code>{item.category_id ?? "detached"}</code> |
+                  category version: <code>{item.category_version_number ?? "-"}</code>
+                </p>
+                <div className="badge-row">
+                  <span className="badge default">Default / Predeterminado</span>
+                  <span className={item.published_version_number ? "badge published" : "badge"}>
+                    Published: {item.published_version_number ?? "-"}
+                  </span>
+                  <span className={item.draft_version_number ? "badge draft" : "badge"}>
+                    Draft: {item.draft_version_number ?? "-"}
+                  </span>
+                  <span className={item.is_detached ? "badge detached" : "badge"}>
+                    {item.is_detached ? "Detached" : "Linked"}
+                  </span>
+                  <span className={item.archived ? "badge archived" : "badge"}>
+                    {item.archived ? "Archived" : "Active"}
+                  </span>
+                </div>
+                <p className="helper">
+                  Category-generated default (read-only here). Publish/archive/migrate via{" "}
+                  <Link to="/it/admin/categories">Categories</Link>.
+                </p>
               </div>
             </article>
           ))
