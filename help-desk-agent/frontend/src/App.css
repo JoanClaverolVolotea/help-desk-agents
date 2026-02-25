@@ -64,6 +64,14 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
+.user-portal-header,
+.it-console-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
 .header h1 {
   margin: 0;
   font-size: 1.35rem;
@@ -97,6 +105,13 @@ body {
   cursor: pointer;
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.75rem;
+}
+
+.tab-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab.active {
@@ -663,6 +678,125 @@ button:disabled {
   margin-top: 0;
 }
 
+.role-landing-shell {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.role-landing-header {
+  background: linear-gradient(100deg, #f2e7d4, #dff2ed);
+}
+
+.role-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1.1rem 1.4rem 1.3rem;
+  overflow: auto;
+}
+
+.role-card {
+  border: 1px solid #c5d8da;
+  border-radius: 16px;
+  background: #fffffd;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem;
+  display: grid;
+  gap: 0.7rem;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.role-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgb(18 49 58 / 12%);
+}
+
+.user-portal-card {
+  border-left: 6px solid #0f6f8c;
+}
+
+.it-console-card {
+  border-left: 6px solid #166866;
+}
+
+.role-card h2 {
+  margin: 0;
+}
+
+.role-card p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.role-card-cta {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.user-portal-shell {
+  border-color: #b7ced4;
+}
+
+.user-portal-header {
+  background: linear-gradient(100deg, #e8f4f9, #edf8ef);
+}
+
+.user-back-link,
+.it-back-link {
+  white-space: nowrap;
+}
+
+.user-portal-panel {
+  background: linear-gradient(180deg, #f8fcff, #f7fdf6);
+}
+
+.user-portal-status {
+  border-bottom-color: #c6dce2;
+}
+
+.user-portal-composer {
+  background: #f8fdff;
+  border-top-color: #c6dce2;
+}
+
+.user-portal-transcript {
+  background: linear-gradient(180deg, #f3fbff 0%, #f6fcf7 100%);
+}
+
+.user-portal-transcript .entry-user {
+  background: #0f4665;
+}
+
+.user-portal-transcript .entry-assistant {
+  border-color: #c8dce3;
+}
+
+.it-console-shell {
+  border-color: #bfd4cc;
+}
+
+.it-console-header {
+  background: linear-gradient(100deg, #ebf7f0, #f6faef);
+}
+
+.it-console-tabs {
+  background: linear-gradient(90deg, #eef8f1, #f3f8ee);
+}
+
+.it-console-panel {
+  background: linear-gradient(180deg, #fbfffc 0%, #f7fbfa 100%);
+}
+
+.section-tabs {
+  border-bottom-color: #c9ddd4;
+}
+
+.wizard-error {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+}
+
 @keyframes reveal {
   from {
     opacity: 0;
@@ -707,12 +841,18 @@ button:disabled {
   }
 
   .status-row,
+  .user-portal-header,
+  .it-console-header,
   .admin-toolbar,
   .use-case-card,
   .wizard-header,
   .wizard-footer {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .role-landing-grid {
+    grid-template-columns: 1fr;
   }
 
   .use-case-actions {

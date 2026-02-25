@@ -2,10 +2,10 @@
 
 This project is a non-technical help desk platform with:
 
-- Operator chat for live ticket handling.
+- User ticket portal for quick guided ticket creation.
 - Category + use-case CRUD (draft/publish/archive/restore).
 - Deterministic workflow execution after triage.
-- Separate **Tech Assistant** chat with handoff agents to help create categories.
+- Separate **Tech Assistant** chat for IT operations support.
 
 ## Project layout
 
@@ -18,7 +18,7 @@ This project is a non-technical help desk platform with:
 - `backend/domain/`: shared models, templates, and language policy.
 - `backend/cli/main.py`: optional terminal chat runner.
 - `data/`: SQLite data files at the same level as `backend/`.
-- `frontend/`: Vite + React app with `Chat`, `Admin`, and `Tech Assistant` tabs.
+- `frontend/`: Vite + React app with role-based routes (`/`, `/user`, `/it/...`).
 
 ## Requirements
 
@@ -59,15 +59,31 @@ npm run dev
 
 5. Open `http://127.0.0.1:5173`.
 
+## Frontend route map
+
+- `/`: role landing page (choose User Portal vs IT Console).
+- `/user`: end-user ticket portal (guided form + chat transcript).
+- `/it/admin/categories`: IT category operations.
+- `/it/admin/use-cases`: IT use-case operations.
+- `/it/assistant`: IT technical assistant chat.
+
+Backend APIs remain under `/api/*` only.
+
 Optional CLI runner:
 
 ```bash
 uv run --env-file backend/.env python -m backend.cli.main
 ```
 
-## Admin workflow
+## User workflow
 
-1. Open `Admin` tab.
+1. Open `/user`.
+2. Describe the issue in free text and send it in chat format.
+3. Continue the same conversation or reset to open a new one.
+
+## IT workflow
+
+1. Open `/it/admin/categories` or `/it/admin/use-cases`.
 2. Manage **Categorias**:
    - Create/edit drafts.
    - Publish versions.
@@ -77,12 +93,7 @@ uv run --env-file backend/.env python -m backend.cli.main
    - Publish versions.
    - Archive/restore use cases.
 4. After publishing a category, optionally migrate linked use cases to the new category version.
-
-## Tech team workflow
-
-1. Open `Tech Assistant` tab.
-2. Use a separate conversation session to ask for category creation guidance.
-3. The assistant triage agent hands off to a category-creation specialist and can create/publish drafts through tools.
+5. Open `/it/assistant` for tech-team guidance in a separate session.
 
 ## API summary
 
