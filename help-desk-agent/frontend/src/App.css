@@ -82,8 +82,26 @@ body {
   color: var(--ink-soft);
 }
 
+.it-operating-model {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.it-operating-model span {
+  border: 1px solid #b9d2d8;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  background: #f4fbfc;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  color: #214f58;
+}
+
 .tab-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.75rem 1.4rem;
   border-bottom: 1px solid var(--line);
@@ -466,6 +484,46 @@ button:disabled {
 .helper {
   color: var(--ink-soft);
   font-size: 0.9rem;
+}
+
+.console-clarity-card {
+  margin-top: 0.85rem;
+  border: 1px solid #c8dcdf;
+  border-radius: 12px;
+  background: #f7fdfb;
+  padding: 0.7rem 0.8rem;
+}
+
+.console-clarity-card h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.console-clarity-card p {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.console-clarity-card a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.console-section-heading {
+  margin-top: 1rem;
+}
+
+.console-section-heading h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.console-section-heading p {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
 }
 
 .toggle-row {

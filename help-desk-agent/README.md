@@ -1,55 +1,50 @@
 # Help Desk Agent Platform
 
-This project is a non-technical help desk platform with:
+Help Desk Agent is a PoC platform with:
 
-- User ticket portal for quick guided ticket creation.
-- Category + use-case CRUD (draft/publish/archive/restore).
-- Deterministic workflow execution after triage.
-- Separate **Tech Assistant** chat for IT operations support.
+- User-facing guided ticket chat
+- IT console for routing policies and runbooks
+- Deterministic workflow execution
+- Ticket registry for execution traceability
 
-## Project layout
+## Architecture
 
-- `backend/api/main.py`: FastAPI app factory + module entrypoint.
-- `backend/api/routes/`: HTTP routes grouped by feature.
-- `backend/api_internal/`: non-route API logic (state, runtime sync, event serialization).
-- `backend/runtime/`: runtime wiring split by goal (bootstrap, snapshot, triage, specialists).
-- `backend/workflows/`: deterministic use-case step execution and tool bindings.
-- `backend/storage/`: SQLite repositories split by entity.
-- `backend/domain/`: shared models, templates, and language policy.
-- `backend/cli/main.py`: optional terminal chat runner.
-- `data/`: SQLite data files at the same level as `backend/`.
-- `frontend/`: Vite + React app with role-based routes (`/`, `/user`, `/it/...`).
+- `backend/`: FastAPI API + runtime + SQLite repositories
+- `frontend/`: React/Vite UI for user and IT operations
+- `data/`: local SQLite database (`helpdesk.db`)
+- `docs/`: schema and case references
 
-## Requirements
+Detailed component docs:
 
-- `backend/.env` with `OPENAI_API_KEY=...`
+- Backend guide: [`backend/README.md`](backend/README.md)
+- Frontend guide: [`frontend/README.md`](frontend/README.md)
+- DB schema: [`docs/db/schema.md`](docs/db/schema.md)
+- Case references: [`docs/cases/README.md`](docs/cases/README.md)
+
+## Prerequisites
+
 - Python 3.10+
 - `uv`
 - Node.js + npm
+- OpenAI API key in `backend/.env`
 
 ## Quick start
 
-All commands below assume your current directory is `help-desk-agent/`.
+From `help-desk-agent/`:
 
-1. Enter the project folder:
-
-```bash
-cd help-desk-agent
-```
-
-2. Create backend-local `.env`:
+1. Configure backend env:
 
 ```bash
 echo 'OPENAI_API_KEY=sk-...' > backend/.env
 ```
 
-3. Start backend API:
+2. Start backend:
 
 ```bash
 uv run --env-file backend/.env python -m backend.api.main
 ```
 
-4. Start frontend in another terminal:
+3. Start frontend (new terminal):
 
 ```bash
 cd frontend
@@ -57,80 +52,34 @@ npm install
 npm run dev
 ```
 
-5. Open `http://127.0.0.1:5173`.
+4. Open:
 
-## Frontend route map
+- `http://127.0.0.1:5173`
 
-- `/`: role landing page (choose User Portal vs IT Console).
-- `/user`: end-user ticket portal (guided form + chat transcript).
-- `/it/admin/categories`: IT category operations.
-- `/it/admin/tickets`: IT ticket registry (read-only list and detail).
-- `/it/admin/use-cases`: IT use-case operations.
-- `/it/assistant`: IT technical assistant chat.
+## Concept model (for business demo)
 
-Backend APIs remain under `/api/*` only.
+- **Routing Policy (Category)**: defines domain, allowed steps, and default template.
+- **Runbook (Use case)**: executable deterministic workflow with required fields.
+- **Ticket Registry**: stores field extraction, workflow steps, status history, and events.
 
-Optional CLI runner:
+Flow:
 
-```bash
-uv run --env-file backend/.env python -m backend.cli.main
-```
+1. Ticket intake
+2. Routing policy selected by triage
+3. Runbook executed by specialist
+4. Execution persisted in ticket registry
 
-## User workflow
+## Operational notes
 
-1. Open `/user`.
-2. Describe the issue in free text and send it in chat format.
-3. Continue the same conversation or reset to open a new one.
+- Backend API base URL: `http://127.0.0.1:8000`
+- Frontend default URL: `http://127.0.0.1:5173`
+- Destructive reseed endpoint:
+  - `POST /api/admin/bootstrap/reseed-defaults`
+  - Payload: `{"confirm_token":"RESET_DEFAULTS"}`
 
-## IT workflow
+## Validation
 
-1. Open `/it/admin/categories` or `/it/admin/use-cases`.
-2. Manage **Categorias**:
-   - Create/edit drafts.
-   - Publish versions.
-   - Archive/restore categories.
-   - Optionally reseed defaults (destructive reset) from case-aligned templates.
-3. Manage **Casos de uso**:
-   - Create/edit drafts linked to a published category.
-   - Publish versions.
-   - Archive/restore use cases.
-4. After publishing a category, optionally migrate linked use cases to the new category version.
-5. Open `/it/assistant` for tech-team guidance in a separate session.
-6. Open `/it/admin/tickets` to inspect workflow-executed tickets, extracted fields, and execution timeline.
-
-## API summary
-
-API endpoints:
-
-- `GET /api/health`
-- `POST /api/chat`
-- `POST /api/chat/stream`
-- `POST /api/reset`
-- `POST /api/admin/assistant/chat`
-- `POST /api/admin/assistant/reset`
-- `POST /api/admin/bootstrap/reseed-defaults`
-- `GET /api/admin/steps`
-- `GET /api/admin/categories?include_archived=true|false`
-- `GET /api/admin/categories/{category_id}`
-- `POST /api/admin/categories`
-- `PUT /api/admin/categories/{category_id}/draft`
-- `POST /api/admin/categories/{category_id}/publish`
-- `POST /api/admin/categories/{category_id}/archive`
-- `POST /api/admin/categories/{category_id}/restore`
-- `GET /api/admin/use-cases?include_archived=true|false`
-- `GET /api/admin/use-cases/{use_case_id}`
-- `POST /api/admin/use-cases`
-- `PUT /api/admin/use-cases/{use_case_id}/draft`
-- `POST /api/admin/use-cases/{use_case_id}/publish`
-- `POST /api/admin/use-cases/{use_case_id}/archive`
-- `POST /api/admin/use-cases/{use_case_id}/restore`
-- `POST /api/admin/use-cases/{use_case_id}/migrate-category-version`
-- `GET /api/admin/tickets`
-- `GET /api/admin/tickets/{ticket_id}`
-
-## Validation commands
-
-Run from `help-desk-agent/`:
+From `help-desk-agent/`:
 
 ```bash
 uv run ruff check backend

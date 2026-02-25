@@ -301,7 +301,7 @@ export default function ITAdminCategoriesPage() {
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-categories">
       <div className="admin-toolbar">
-        <h2>Categorias / Categories</h2>
+        <h2>Routing Policies / Categorias</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
             Refresh
@@ -315,7 +315,7 @@ export default function ITAdminCategoriesPage() {
             Reseed defaults
           </button>
           <button type="button" className="primary" onClick={openCreateCategoryWizard}>
-            Nueva categoria
+            Nueva politica
           </button>
         </div>
       </div>
@@ -328,9 +328,14 @@ export default function ITAdminCategoriesPage() {
         />
         <span>Mostrar archivadas / Show archived</span>
       </label>
-      <p className="helper">
-        Category = routing template and policy family. Use case = executable deterministic workflow.
-      </p>
+      <section className="console-clarity-card">
+        <h3>Layer 1: Routing policy (Category)</h3>
+        <p>
+          This page defines issue domains, allowed step types, and default runbook templates. Publishing a
+          policy updates its category-generated default runbook and can trigger migration of linked manual
+          runbooks.
+        </p>
+      </section>
 
       {adminLoading ? <p className="helper">Cargando datos...</p> : null}
       {categoryPublishNotice ? <p className="helper">{categoryPublishNotice}</p> : null}
@@ -436,7 +441,7 @@ export default function ITAdminCategoriesPage() {
 
       {showCategoryWizard && categoryWizardState ? (
         <WizardModal
-          title={categoryWizardMode === "create" ? "Nueva categoria" : "Editar categoria"}
+          title={categoryWizardMode === "create" ? "Nueva politica" : "Editar politica"}
           step={categoryWizardStep}
           totalSteps={4}
           onClose={closeCategoryWizard}

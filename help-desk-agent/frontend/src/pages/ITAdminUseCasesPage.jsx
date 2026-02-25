@@ -305,13 +305,13 @@ export default function ITAdminUseCasesPage() {
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-use-cases">
       <div className="admin-toolbar">
-        <h2>Casos de uso / Use cases</h2>
+        <h2>Runbooks / Casos de uso</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
             Refresh
           </button>
           <button type="button" className="primary" onClick={openCreateUseCaseWizard}>
-            Nuevo caso
+            Nuevo runbook
           </button>
         </div>
       </div>
@@ -324,20 +324,25 @@ export default function ITAdminUseCasesPage() {
         />
         <span>Mostrar archivados / Show archived</span>
       </label>
-      <p className="helper">
-        Category defines allowed workflow patterns. Use case defines the exact runnable step sequence.
-      </p>
-      <p className="helper">
-        Manual use-cases are editable here. Category-generated defaults are read-only and sync from{" "}
-        <Link to="/it/admin/categories">Categories</Link>.
-      </p>
+      <section className="console-clarity-card">
+        <h3>Layer 2: Runbook (Use case)</h3>
+        <p>
+          Runbooks are executable procedures tied to a routing policy. Manual runbooks are editable here.
+          Category-generated defaults are read-only and managed from{" "}
+          <Link to="/it/admin/categories">Routing Policies</Link>.
+        </p>
+      </section>
 
       {adminLoading ? <p className="helper">Cargando datos...</p> : null}
       {adminError ? <p className="error-text">{adminError}</p> : null}
 
+      <section className="console-section-heading">
+        <h3>Manual runbooks ({manualUseCases.length})</h3>
+        <p>Editable procedures for specific operational flows.</p>
+      </section>
       <div className="use-case-list">
         {manualUseCases.length === 0 ? (
-          <div className="empty-state">No editable manual use-cases.</div>
+          <div className="empty-state">No manual runbooks yet.</div>
         ) : (
           manualUseCases.map((item) => (
             <article key={item.use_case_id} className="use-case-card">
@@ -401,6 +406,10 @@ export default function ITAdminUseCasesPage() {
         )}
       </div>
 
+      <section className="console-section-heading">
+        <h3>Category-generated defaults ({categoryDefaultUseCases.length})</h3>
+        <p>Read-only runbooks produced from published routing policy templates.</p>
+      </section>
       <div className="use-case-list">
         {categoryDefaultUseCases.length === 0 ? (
           <div className="empty-state">No category-generated defaults.</div>
@@ -430,7 +439,7 @@ export default function ITAdminUseCasesPage() {
                 </div>
                 <p className="helper">
                   Category-generated default (read-only here). Publish/archive/migrate via{" "}
-                  <Link to="/it/admin/categories">Categories</Link>.
+                  <Link to="/it/admin/categories">Routing Policies</Link>.
                 </p>
               </div>
             </article>
@@ -440,7 +449,7 @@ export default function ITAdminUseCasesPage() {
 
       {showUseCaseWizard && useCaseWizardState ? (
         <WizardModal
-          title={useCaseWizardMode === "create" ? "Nuevo caso" : "Editar caso"}
+          title={useCaseWizardMode === "create" ? "Nuevo runbook" : "Editar runbook"}
           step={useCaseWizardStep}
           totalSteps={4}
           onClose={closeUseCaseWizard}
@@ -489,7 +498,7 @@ export default function ITAdminUseCasesPage() {
           {useCaseWizardStep === 1 ? (
             <div className="form-grid">
               <label>
-                Categoria publicada
+                Policy source (published category)
                 <select
                   value={useCaseWizardState.categoryId}
                   onChange={(event) => onUseCaseCategoryChange(event.target.value)}
