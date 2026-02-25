@@ -681,7 +681,7 @@ button:disabled {
 
 .ticket-detail-card h3 {
   margin-top: 0;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0;
 }
 
 .ticket-detail-card pre {
@@ -690,12 +690,57 @@ button:disabled {
   word-break: break-word;
 }
 
-.ticket-detail-section {
-  margin-top: 0.75rem;
+.ticket-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.4rem;
 }
 
-.ticket-detail-section h4 {
-  margin: 0 0 0.4rem;
+.ticket-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.6rem;
+}
+
+.ticket-detail-meta code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+}
+
+.ticket-context-box {
+  border: 1px solid #c8dcdf;
+  border-radius: 10px;
+  background: #f8fdfb;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.ticket-context-box h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+}
+
+.ticket-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.ticket-detail-cell {
+  border: 1px solid #cadcdf;
+  border-radius: 10px;
+  background: #fcfffd;
+  padding: 0.7rem 0.8rem;
+  min-height: 100px;
+}
+
+.ticket-detail-cell h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
 }
 
 .ticket-table {
@@ -1333,6 +1378,10 @@ button:disabled {
   }
 
   .ticket-registry-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-detail-grid {
     grid-template-columns: 1fr;
   }
 

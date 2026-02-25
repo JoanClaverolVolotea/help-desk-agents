@@ -131,7 +131,7 @@ export default function ITAdminTicketsPage() {
         ]}
       />
       <div className="admin-toolbar">
-        <h2>Ticket Registry / Registro de tickets</h2>
+        <h2>Tickets</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadTickets} disabled={listLoading}>
             Refresh
@@ -206,86 +206,93 @@ export default function ITAdminTicketsPage() {
           ) : null}
           {!detailLoading && selectedTicket ? (
             <article className="ticket-detail-card">
-              <h3>{selectedTicket.external_ticket_id || selectedTicket.ticket_id}</h3>
-              <div className="badge-row">
+              <div className="ticket-detail-header">
+                <h3>{selectedTicket.external_ticket_id || selectedTicket.ticket_id}</h3>
                 <span className={`badge ${selectedTicket.status}`}>{selectedTicket.status}</span>
               </div>
-              <p className="helper">
-                use_case: <code>{selectedTicket.use_case_display_name || selectedTicket.use_case_id}</code>
-              </p>
-              <p className="helper">
-                conversation: <code>{selectedTicket.conversation_id || "-"}</code>
-              </p>
-              <p className="helper">
-                created: <code>{formatTimestamp(selectedTicket.created_at)}</code> | updated:{" "}
-                <code>{formatTimestamp(selectedTicket.updated_at)}</code> | resolved:{" "}
-                <code>{formatTimestamp(selectedTicket.resolved_at)}</code>
-              </p>
+              <div className="ticket-detail-meta">
+                <span>Runbook: <strong>{selectedTicket.use_case_display_name || selectedTicket.use_case_id}</strong></span>
+                <span>Conversation: <code>{selectedTicket.conversation_id || "-"}</code></span>
+                <span>Created: {formatTimestamp(selectedTicket.created_at)}</span>
+                {selectedTicket.resolved_at ? (
+                  <span>Resolved: {formatTimestamp(selectedTicket.resolved_at)}</span>
+                ) : null}
+              </div>
               {selectedTicket.error_message ? (
                 <p className="error-text">
-                  latest_error: <code>{selectedTicket.error_message}</code>
+                  Error: <code>{selectedTicket.error_message}</code>
                 </p>
               ) : null}
 
-              <div className="ticket-detail-section">
+              <div className="ticket-context-box">
                 <h4>Ticket context</h4>
                 <pre>{selectedTicket.ticket_context}</pre>
               </div>
 
-              <div className="ticket-detail-section">
-                <h4>Status history</h4>
-                <div className="ticket-table">
-                  {selectedTicket.status_history.map((item, index) => (
-                    <div key={`${item.status}-${item.changed_at}-${index}`} className="ticket-table-row">
-                      <span>{item.status}</span>
-                      <span>{formatTimestamp(item.changed_at)}</span>
-                      <span>{item.reason || "-"}</span>
-                    </div>
-                  ))}
+              <div className="ticket-detail-grid">
+                <div className="ticket-detail-cell">
+                  <h4>Status history</h4>
+                  <div className="ticket-table">
+                    {selectedTicket.status_history.length === 0 ? (
+                      <p className="helper">No status changes yet.</p>
+                    ) : selectedTicket.status_history.map((item, index) => (
+                      <div key={`${item.status}-${item.changed_at}-${index}`} className="ticket-table-row">
+                        <span className={`badge ${item.status}`}>{item.status}</span>
+                        <span>{formatTimestamp(item.changed_at)}</span>
+                        <span>{item.reason || "-"}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="ticket-detail-section">
-                <h4>Extracted fields</h4>
-                <div className="ticket-table">
-                  {selectedTicket.fields.map((item, index) => (
-                    <div key={`${item.field_name}-${index}`} className="ticket-table-row">
-                      <span>{item.field_name}</span>
-                      <span>{item.field_value}</span>
-                      <span>
-                        {item.source}
-                        {item.is_required ? " / required" : ""}
-                      </span>
-                    </div>
-                  ))}
+                <div className="ticket-detail-cell">
+                  <h4>Extracted fields</h4>
+                  <div className="ticket-table">
+                    {selectedTicket.fields.length === 0 ? (
+                      <p className="helper">No fields extracted.</p>
+                    ) : selectedTicket.fields.map((item, index) => (
+                      <div key={`${item.field_name}-${index}`} className="ticket-table-row">
+                        <span><strong>{item.field_name}</strong></span>
+                        <span>{item.field_value}</span>
+                        <span>
+                          {item.source}
+                          {item.is_required ? " (required)" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="ticket-detail-section">
-                <h4>Workflow steps</h4>
-                <div className="ticket-table">
-                  {selectedTicket.steps.map((item, index) => (
-                    <div key={`${item.step_order}-${index}`} className="ticket-table-row">
-                      <span>{item.step_order}</span>
-                      <span>{item.step_id}</span>
-                      <span>{item.output_text}</span>
-                    </div>
-                  ))}
+                <div className="ticket-detail-cell">
+                  <h4>Workflow steps</h4>
+                  <div className="ticket-table">
+                    {selectedTicket.steps.length === 0 ? (
+                      <p className="helper">No steps executed.</p>
+                    ) : selectedTicket.steps.map((item, index) => (
+                      <div key={`${item.step_order}-${index}`} className="ticket-table-row">
+                        <span className="badge">{item.step_order}</span>
+                        <span><strong>{item.step_id}</strong></span>
+                        <span>{item.output_text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="ticket-detail-section">
-                <h4>Events</h4>
-                <div className="ticket-table">
-                  {selectedTicket.events.map((item, index) => (
-                    <div key={`${item.event_type}-${item.created_at}-${index}`} className="ticket-table-row">
-                      <span>{item.event_type}</span>
-                      <span>{item.agent_name || "-"}</span>
-                      <span>
-                        <pre>{prettyPayload(item.payload_json)}</pre>
-                      </span>
-                    </div>
-                  ))}
+                <div className="ticket-detail-cell">
+                  <h4>Events</h4>
+                  <div className="ticket-table">
+                    {selectedTicket.events.length === 0 ? (
+                      <p className="helper">No events recorded.</p>
+                    ) : selectedTicket.events.map((item, index) => (
+                      <div key={`${item.event_type}-${item.created_at}-${index}`} className="ticket-table-row">
+                        <span><strong>{item.event_type}</strong></span>
+                        <span>{item.agent_name || "-"}</span>
+                        <span>
+                          <pre>{prettyPayload(item.payload_json)}</pre>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </article>
