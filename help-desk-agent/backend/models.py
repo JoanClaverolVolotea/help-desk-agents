@@ -10,10 +10,6 @@ class VersionStatus(str, Enum):
     PUBLISHED = "published"
 
 
-class ClosureStyle(str, Enum):
-    BILINGUAL = "bilingual"
-
-
 class UseCaseStep(BaseModel):
     step_id: str
     params: dict[str, str] = Field(default_factory=dict)
@@ -40,7 +36,6 @@ class CategoryDefinition(BaseModel):
     default_routing_description: str
     default_required_fields: list[str] = Field(default_factory=list)
     default_steps: list[UseCaseStep] = Field(default_factory=list)
-    closure_style: ClosureStyle = ClosureStyle.BILINGUAL
 
     @field_validator(
         "display_name",
@@ -124,7 +119,6 @@ class UseCaseDefinition(BaseModel):
     routing_description: str
     required_fields: list[str] = Field(default_factory=list)
     steps: list[UseCaseStep] = Field(default_factory=list)
-    closure_style: ClosureStyle = ClosureStyle.BILINGUAL
 
     @field_validator("display_name", "handoff_description", "routing_description")
     @classmethod

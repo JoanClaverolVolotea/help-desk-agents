@@ -809,7 +809,6 @@ class UseCaseRepository:
                 UseCaseStep.model_validate(step.model_dump())
                 for step in category_definition.default_steps
             ],
-            closure_style=category_definition.closure_style,
         )
 
         existing = self.get_default_use_case_for_category(

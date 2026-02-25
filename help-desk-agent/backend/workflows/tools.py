@@ -4,9 +4,9 @@ import json
 from typing import Any
 
 from models import PublishedUseCaseSummary
-from workflow_executor import WorkflowExecutionInput, execute_workflow
 
 from agents import function_tool
+from workflows.executor import WorkflowExecutionInput, execute_workflow
 
 
 def build_use_case_workflow_tool(use_case: PublishedUseCaseSummary):

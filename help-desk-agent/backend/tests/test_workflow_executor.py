@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from models import PublishedUseCaseSummary, UseCaseDefinitionPublished
 from templates import seed_use_case_definitions
-from workflow_executor import WorkflowExecutionInput, execute_workflow
+from workflows.executor import WorkflowExecutionInput, execute_workflow
 
 
 def _build_summary() -> PublishedUseCaseSummary:

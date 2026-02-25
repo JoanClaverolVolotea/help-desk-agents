@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from agent_factory import RuntimeSnapshot, build_runtime_snapshot
 from repository import CategoryRepository, UseCaseRepository
 from templates import seed_category_definitions, seed_use_case_definitions
+
+from agent_runtime.snapshot import RuntimeSnapshot, build_runtime_snapshot
 
 
 def initialize_repositories(

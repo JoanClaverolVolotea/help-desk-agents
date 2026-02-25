@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from models import (
     CategoryDefinitionDraft,
     CategoryDefinitionInput,
-    ClosureStyle,
     StepCatalogItem,
     UseCaseDefinitionDraft,
     UseCaseDefinitionInput,
@@ -144,7 +143,6 @@ def seed_category_definitions() -> list[tuple[str, CategoryDefinitionDraft]]:
                         params={"note": "Access reset completed and user informed."},
                     ),
                 ],
-                closure_style=ClosureStyle.BILINGUAL,
             ),
         ),
         (
@@ -176,7 +174,6 @@ def seed_category_definitions() -> list[tuple[str, CategoryDefinitionDraft]]:
                         params={"note": "Onboarding setup completed for all requested systems."},
                     ),
                 ],
-                closure_style=ClosureStyle.BILINGUAL,
             ),
         ),
     ]
@@ -203,7 +200,6 @@ def seed_use_case_definitions() -> list[SeedUseCase]:
                         params={"note": "eCrew access reset complete."},
                     ),
                 ],
-                closure_style=ClosureStyle.BILINGUAL,
             ),
         ),
         SeedUseCase(
@@ -226,7 +222,6 @@ def seed_use_case_definitions() -> list[SeedUseCase]:
                         params={"note": "Onboarding setup complete."},
                     ),
                 ],
-                closure_style=ClosureStyle.BILINGUAL,
             ),
         ),
     ]

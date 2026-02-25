@@ -80,9 +80,7 @@ _TEXT_BY_LANGUAGE = {
             "Category draft created. category_id={category_id}, slug={slug}, "
             "draft_version={draft_version}."
         ),
-        "category_published": (
-            "Category published. category_id={category_id}, version={version}."
-        ),
+        "category_published": ("Category published. category_id={category_id}, version={version}."),
         "category_status_line": (
             "- {category_id} | {display_name} "
             "(published={published_version}, draft={draft_version}, archived={archived})"
@@ -95,8 +93,7 @@ _TEXT_BY_LANGUAGE = {
         "step_append_resolution_note": "Append a closure note to the ticket.",
         "step_manual_instruction": "Write a deterministic operator-facing instruction.",
         "workflow_verify_requester": (
-            "[verify_requester] Requester verified for ticket {ticket_id} as "
-            "{requester_name}."
+            "[verify_requester] Requester verified for ticket {ticket_id} as {requester_name}."
         ),
         "workflow_reset_ecrew_access": (
             "[reset_ecrew_access] eCrew account reset completed for ticket {ticket_id}."
@@ -106,19 +103,16 @@ _TEXT_BY_LANGUAGE = {
             "{ticket_id}."
         ),
         "workflow_provision_efos": (
-            "[provision_efos] EFOS access granted to {employee_name} for ticket "
-            "{ticket_id}."
+            "[provision_efos] EFOS access granted to {employee_name} for ticket {ticket_id}."
         ),
         "workflow_provision_pelesys": (
-            "[provision_pelesys] PELESYS profile created for {employee_name} on ticket "
-            "{ticket_id}."
+            "[provision_pelesys] PELESYS profile created for {employee_name} on ticket {ticket_id}."
         ),
         "workflow_default_resolution_note": "Resolution note added.",
         "workflow_default_manual_instruction": "Manual instruction completed.",
         "workflow_unsupported_step": "[{step_id}] Unsupported step id.",
         "workflow_closure": (
-            "[closure] Workflow completed with deterministic execution for ticket "
-            "{ticket_id}."
+            "[closure] Workflow completed with deterministic execution for ticket {ticket_id}."
         ),
     },
     "es": {
@@ -158,8 +152,7 @@ _TEXT_BY_LANGUAGE = {
             "ticket {ticket_id}."
         ),
         "workflow_provision_efos": (
-            "[provision_efos] Acceso EFOS concedido a {employee_name} para el ticket "
-            "{ticket_id}."
+            "[provision_efos] Acceso EFOS concedido a {employee_name} para el ticket {ticket_id}."
         ),
         "workflow_provision_pelesys": (
             "[provision_pelesys] Perfil PELESYS creado para {employee_name} en el "
@@ -169,8 +162,7 @@ _TEXT_BY_LANGUAGE = {
         "workflow_default_manual_instruction": "Instruccion manual completada.",
         "workflow_unsupported_step": "[{step_id}] Id de paso no soportado.",
         "workflow_closure": (
-            "[closure] Flujo completado con ejecucion determinista para el ticket "
-            "{ticket_id}."
+            "[closure] Flujo completado con ejecucion determinista para el ticket {ticket_id}."
         ),
     },
 }

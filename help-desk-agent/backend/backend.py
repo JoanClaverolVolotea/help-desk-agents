@@ -3,9 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import pathlib
 import re
-import sys
 import uuid
 from collections.abc import AsyncIterator
 from contextvars import ContextVar
@@ -16,20 +14,15 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from import_paths import configure_backend_import_paths
 from pydantic import BaseModel
 
-CURRENT_DIR = pathlib.Path(__file__).resolve().parent
-REPO_ROOT = CURRENT_DIR.parent.parent
-SRC_DIR = REPO_ROOT / "src"
+configure_backend_import_paths(__file__)
 
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(1, str(REPO_ROOT))
-if str(CURRENT_DIR) not in sys.path:
-    sys.path.insert(2, str(CURRENT_DIR))
-
-from help_desk_agents import build_snapshot_from_repository, initialize_repositories  # noqa: E402
+from agent_runtime.bootstrap import (  # noqa: E402
+    build_snapshot_from_repository,
+    initialize_repositories,
+)
 from language_policy import (  # noqa: E402
     detect_user_language,
     normalize_language,
@@ -198,7 +191,6 @@ def _build_admin_assistant_triage_agent() -> Agent[Any]:
             "default_steps": [
                 UseCaseStep(step_id=step_id, params={}).model_dump() for step_id in default_step_ids
             ],
-            "closure_style": "bilingual",
         }
 
         definition_input = CategoryDefinitionInput.model_validate(definition)
@@ -452,9 +444,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
         CONVERSATIONS[conversation_id] = state
 
     async with state.lock:
-        if (
-            state.snapshot_id != RUNTIME_SNAPSHOT.snapshot_id
-            and _is_triage_agent(state.current_agent)
+        if state.snapshot_id != RUNTIME_SNAPSHOT.snapshot_id and _is_triage_agent(
+            state.current_agent
         ):
             state.current_agent = RUNTIME_SNAPSHOT.triage_agent
             state.snapshot_id = RUNTIME_SNAPSHOT.snapshot_id
@@ -501,9 +492,8 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
 
     async def stream_events() -> AsyncIterator[str]:
         async with state.lock:
-            if (
-                state.snapshot_id != RUNTIME_SNAPSHOT.snapshot_id
-                and _is_triage_agent(state.current_agent)
+            if state.snapshot_id != RUNTIME_SNAPSHOT.snapshot_id and _is_triage_agent(
+                state.current_agent
             ):
                 state.current_agent = RUNTIME_SNAPSHOT.triage_agent
                 state.snapshot_id = RUNTIME_SNAPSHOT.snapshot_id
@@ -862,8 +852,7 @@ async def admin_migrate_use_case_category_version(
         raise HTTPException(
             status_code=409,
             detail=(
-                "Cannot migrate use case category version "
-                "without draft or published definition."
+                "Cannot migrate use case category version without draft or published definition."
             ),
         )
 

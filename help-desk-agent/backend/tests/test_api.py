@@ -36,7 +36,6 @@ def _category_payload(display_name: str = "Access Ops") -> dict[str, Any]:
                 {"step_id": "verify_requester", "params": {}},
                 {"step_id": "reset_ecrew_access", "params": {}},
             ],
-            "closure_style": "bilingual",
         }
     }
 
@@ -57,7 +56,6 @@ def _use_case_payload(
                 {"step_id": "verify_requester", "params": {}},
                 {"step_id": "reset_ecrew_access", "params": {}},
             ],
-            "closure_style": "bilingual",
         },
     }
 

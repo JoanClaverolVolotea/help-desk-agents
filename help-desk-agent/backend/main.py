@@ -1,23 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
 import uuid
 from typing import Any
 
-CURRENT_DIR = pathlib.Path(__file__).resolve().parent
-REPO_ROOT = CURRENT_DIR.parent.parent
-SRC_DIR = REPO_ROOT / "src"
+from import_paths import configure_backend_import_paths
 
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(1, str(REPO_ROOT))
-if str(CURRENT_DIR) not in sys.path:
-    sys.path.insert(2, str(CURRENT_DIR))
+configure_backend_import_paths(__file__)
 
-from help_desk_agents import build_snapshot_from_repository, initialize_repositories  # noqa: E402
+from agent_runtime.bootstrap import (  # noqa: E402
+    build_snapshot_from_repository,
+    initialize_repositories,
+)
 from repository import CategoryRepository, UseCaseRepository  # noqa: E402
 
 from agents import (  # noqa: E402
