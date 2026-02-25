@@ -3,36 +3,37 @@ import { Link, Outlet } from "react-router-dom";
 
 import ITAssistantPanel from "../components/ITAssistantPanel.jsx";
 import SectionTabs from "../components/SectionTabs.jsx";
-
-const IT_TABS = [
-  { to: "/it/dashboard", label: "Dashboard" },
-  { to: "/it/admin/categories", label: "Categories" },
-  { to: "/it/admin/use-cases", label: "Runbooks" },
-  { to: "/it/admin/tickets", label: "Tickets" },
-];
+import { useI18n } from "../i18n/useI18n.js";
 
 export default function ITConsoleLayout() {
+  const { t } = useI18n();
   const [isAssistantOpen, setIsAssistantOpen] = useState(true);
+  const itTabs = [
+    { to: "/it/dashboard", label: t("itConsole.tabDashboard") },
+    { to: "/it/admin/categories", label: t("itConsole.tabCategories") },
+    { to: "/it/admin/use-cases", label: t("itConsole.tabRunbooks") },
+    { to: "/it/admin/tickets", label: t("itConsole.tabTickets") },
+  ];
 
   return (
     <div className="app-shell it-console-shell">
       <header className="header it-console-header">
         <div>
-          <h1>IT Console / Consola IT</h1>
-          <p>Operations workspace for managing how issues are categorized, handled, and tracked.</p>
+          <h1>{t("itConsole.title")}</h1>
+          <p>{t("itConsole.description")}</p>
           <div className="it-operating-model">
-            <Link to="/it/dashboard">1. Issue received</Link>
-            <Link to="/it/admin/categories">2. Categorized</Link>
-            <Link to="/it/admin/use-cases">3. Runbook executed</Link>
-            <Link to="/it/admin/tickets">4. Ticket recorded</Link>
+            <Link to="/it/dashboard">{t("itConsole.modelStep1")}</Link>
+            <Link to="/it/admin/categories">{t("itConsole.modelStep2")}</Link>
+            <Link to="/it/admin/use-cases">{t("itConsole.modelStep3")}</Link>
+            <Link to="/it/admin/tickets">{t("itConsole.modelStep4")}</Link>
           </div>
         </div>
         <Link to="/" className="tab tab-link it-back-link">
-          Back to role selection
+          {t("common.backToRoleSelection")}
         </Link>
       </header>
 
-      <SectionTabs items={IT_TABS} className="it-console-tabs" />
+      <SectionTabs items={itTabs} className="it-console-tabs" />
       <div className={`it-console-workspace ${isAssistantOpen ? "" : "assistant-collapsed"}`.trim()}>
         <main className="it-console-main-pane">
           <Outlet />

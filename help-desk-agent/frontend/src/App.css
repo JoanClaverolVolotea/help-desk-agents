@@ -38,6 +38,44 @@ body {
   overflow: hidden;
 }
 
+.language-selector-shell {
+  position: fixed;
+  top: 0.9rem;
+  right: 1rem;
+  z-index: 160;
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  border: 1px solid #9ec0c7;
+  background: rgb(252 255 254 / 92%);
+  box-shadow: 0 8px 18px rgb(18 49 58 / 18%);
+  backdrop-filter: blur(2px);
+}
+
+.language-button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.27rem 0.58rem;
+  background: transparent;
+  color: #1c4a55;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.69rem;
+  font-weight: 600;
+  min-width: 2.4rem;
+}
+
+.language-button.active {
+  background: #0f6f8c;
+  color: #f5fbff;
+  border-color: #0f6f8c;
+}
+
+.language-button:not(.active):hover {
+  background: #e6f3f6;
+  border-color: #b2ced6;
+}
+
 .app-shell {
   width: min(1040px, 100%);
   border: 1px solid var(--line);
@@ -1480,6 +1518,17 @@ button:disabled {
 @media (max-width: 780px) {
   #root {
     padding: 0;
+  }
+
+  .language-selector-shell {
+    top: 0.45rem;
+    right: 0.5rem;
+    padding: 0.2rem;
+  }
+
+  .language-button {
+    padding: 0.24rem 0.52rem;
+    min-width: 2.15rem;
   }
 
   .app-shell {

@@ -1,6 +1,11 @@
-export default function AdminTable({ columns, rows, emptyMessage = "No data." }) {
+import { useI18n } from "../i18n/useI18n.js";
+
+export default function AdminTable({ columns, rows, emptyMessage }) {
+  const { t } = useI18n();
+  const resolvedEmptyMessage = emptyMessage ?? t("common.noData");
+
   if (rows.length === 0) {
-    return <div className="empty-state">{emptyMessage}</div>;
+    return <div className="empty-state">{resolvedEmptyMessage}</div>;
   }
 
   return (

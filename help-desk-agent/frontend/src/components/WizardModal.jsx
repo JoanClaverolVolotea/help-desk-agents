@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 
+import { useI18n } from "../i18n/useI18n.js";
+
 export default function WizardModal({
   title,
   step,
@@ -10,6 +12,8 @@ export default function WizardModal({
   submitActions,
   error,
 }) {
+  const { t } = useI18n();
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -23,10 +27,10 @@ export default function WizardModal({
       <section className="wizard-shell" onClick={(e) => e.stopPropagation()}>
         <header className="wizard-header">
           <h3>
-            {title} — Step {step}/{totalSteps}
+            {title} — {t("common.step")} {step}/{totalSteps}
           </h3>
           <button type="button" className="ghost" onClick={onClose}>
-            Close
+            {t("common.close")}
           </button>
         </header>
 

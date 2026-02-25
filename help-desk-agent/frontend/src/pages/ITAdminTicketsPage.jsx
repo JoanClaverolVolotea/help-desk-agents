@@ -2,24 +2,18 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import Breadcrumb from "../components/Breadcrumb.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import { getTicket, listTickets, readableError } from "../api.js";
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "open", label: "open" },
-  { value: "in_progress", label: "in_progress" },
-  { value: "resolved", label: "resolved" },
-];
-
-function formatTimestamp(value) {
+function formatTimestamp(value, language) {
   if (!value) {
-    return "-";
+    return language === "es" ? "-" : "-";
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-  return date.toLocaleString();
+  return date.toLocaleString(language === "es" ? "es-ES" : "en-US");
 }
 
 function prettyPayload(raw) {
@@ -34,6 +28,7 @@ function prettyPayload(raw) {
 }
 
 export default function ITAdminTicketsPage() {
+  const { language, t } = useI18n();
   const [searchParams] = useSearchParams();
   const filterUseCaseId = searchParams.get("use_case_id") || "";
 
@@ -48,6 +43,25 @@ export default function ITAdminTicketsPage() {
   const [listLoading, setListLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const statusOptions = [
+    { value: "", label: t("ticketPage.statusAll") },
+    { value: "open", label: t("common.statusOpen") },
+    { value: "in_progress", label: t("common.statusInProgress") },
+    { value: "resolved", label: t("common.statusResolved") },
+  ];
+
+  const statusLabel = (value) => {
+    if (value === "open") {
+      return t("common.statusOpen");
+    }
+    if (value === "in_progress") {
+      return t("common.statusInProgress");
+    }
+    if (value === "resolved") {
+      return t("common.statusResolved");
+    }
+    return value;
+  };
 
   const loadTickets = async () => {
     setListLoading(true);
@@ -123,27 +137,27 @@ export default function ITAdminTicketsPage() {
     <section className="tab-panel admin-panel it-console-panel it-console-tickets">
       <Breadcrumb
         items={[
-          { label: "Dashboard", to: "/it/dashboard" },
+          { label: t("common.dashboard"), to: "/it/dashboard" },
           ...(filterUseCaseId
             ? [{ label: filterUseCaseId.slice(0, 20), to: "/it/admin/use-cases" }]
             : []),
-          { label: "Tickets" },
+          { label: t("common.tickets") },
         ]}
       />
       <div className="admin-toolbar">
-        <h2>Tickets</h2>
+        <h2>{t("ticketPage.title")}</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadTickets} disabled={listLoading}>
-            Refresh
+            {t("common.refresh")}
           </button>
         </div>
       </div>
 
       <form className="ticket-filter-row" onSubmit={handleFilterSubmit}>
         <label>
-          Status
+          {t("ticketPage.filterStatus")}
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            {STATUS_OPTIONS.map((option) => (
+            {statusOptions.map((option) => (
               <option key={option.value || "all"} value={option.value}>
                 {option.label}
               </option>
@@ -151,16 +165,16 @@ export default function ITAdminTicketsPage() {
           </select>
         </label>
         <label>
-          Conversation
+          {t("ticketPage.filterConversation")}
           <input
             type="text"
             value={conversationFilter}
             onChange={(event) => setConversationFilter(event.target.value)}
-            placeholder="conversation_id"
+            placeholder={t("ticketPage.filterConversationPlaceholder")}
           />
         </label>
         <label>
-          External ticket
+          {t("ticketPage.filterExternalTicket")}
           <input
             type="text"
             value={externalTicketFilter}
@@ -169,17 +183,17 @@ export default function ITAdminTicketsPage() {
           />
         </label>
         <button type="submit" className="primary" disabled={listLoading}>
-          Apply filters
+          {t("common.applyFilters")}
         </button>
       </form>
 
-      {listLoading ? <p className="helper">Loading ticket registry...</p> : null}
+      {listLoading ? <p className="helper">{t("ticketPage.loadingRegistry")}</p> : null}
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
       <div className="ticket-registry-layout">
         <aside className="ticket-list-pane">
           {tickets.length === 0 ? (
-            <p className="helper">No tickets found for the selected filters.</p>
+            <p className="helper">{t("ticketPage.emptyList")}</p>
           ) : (
             <div className="ticket-list">
               {tickets.map((item) => (
@@ -191,8 +205,8 @@ export default function ITAdminTicketsPage() {
                 >
                   <strong>{item.external_ticket_id || item.ticket_id.slice(0, 12)}</strong>
                   <span>{item.use_case_display_name || item.use_case_id}</span>
-                  <span className={`badge ${item.status}`}>{item.status}</span>
-                  <span className="helper">{formatTimestamp(item.created_at)}</span>
+                  <span className={`badge ${item.status}`}>{statusLabel(item.status)}</span>
+                  <span className="helper">{formatTimestamp(item.created_at, language)}</span>
                 </button>
               ))}
             </div>
@@ -200,63 +214,63 @@ export default function ITAdminTicketsPage() {
         </aside>
 
         <section className="ticket-detail-pane">
-          {detailLoading ? <p className="helper">Loading ticket detail...</p> : null}
+          {detailLoading ? <p className="helper">{t("ticketPage.loadingDetail")}</p> : null}
           {!detailLoading && !selectedTicket ? (
-            <p className="helper">Select a ticket to inspect structured execution details.</p>
+            <p className="helper">{t("ticketPage.selectTicket")}</p>
           ) : null}
           {!detailLoading && selectedTicket ? (
             <article className="ticket-detail-card">
               <div className="ticket-detail-header">
                 <h3>{selectedTicket.external_ticket_id || selectedTicket.ticket_id}</h3>
-                <span className={`badge ${selectedTicket.status}`}>{selectedTicket.status}</span>
+                <span className={`badge ${selectedTicket.status}`}>{statusLabel(selectedTicket.status)}</span>
               </div>
               <div className="ticket-detail-meta">
-                <span>Runbook: <strong>{selectedTicket.use_case_display_name || selectedTicket.use_case_id}</strong></span>
-                <span>Conversation: <code>{selectedTicket.conversation_id || "-"}</code></span>
-                <span>Created: {formatTimestamp(selectedTicket.created_at)}</span>
+                <span>{t("common.fieldRunbook")}: <strong>{selectedTicket.use_case_display_name || selectedTicket.use_case_id}</strong></span>
+                <span>{t("common.fieldConversation")}: <code>{selectedTicket.conversation_id || t("common.notAvailable")}</code></span>
+                <span>{t("common.fieldCreated")}: {formatTimestamp(selectedTicket.created_at, language)}</span>
                 {selectedTicket.resolved_at ? (
-                  <span>Resolved: {formatTimestamp(selectedTicket.resolved_at)}</span>
+                  <span>{t("common.fieldResolved")}: {formatTimestamp(selectedTicket.resolved_at, language)}</span>
                 ) : null}
               </div>
               {selectedTicket.error_message ? (
                 <p className="error-text">
-                  Error: <code>{selectedTicket.error_message}</code>
+                  {t("common.fieldError")}: <code>{selectedTicket.error_message}</code>
                 </p>
               ) : null}
 
               <div className="ticket-context-box">
-                <h4>Ticket context</h4>
+                <h4>{t("ticketPage.detailContext")}</h4>
                 <pre>{selectedTicket.ticket_context}</pre>
               </div>
 
               <div className="ticket-detail-grid">
                 <div className="ticket-detail-cell">
-                  <h4>Status history</h4>
+                  <h4>{t("ticketPage.detailStatusHistory")}</h4>
                   <div className="ticket-table">
                     {selectedTicket.status_history.length === 0 ? (
-                      <p className="helper">No status changes yet.</p>
+                      <p className="helper">{t("ticketPage.noStatusHistory")}</p>
                     ) : selectedTicket.status_history.map((item, index) => (
                       <div key={`${item.status}-${item.changed_at}-${index}`} className="ticket-table-row">
-                        <span className={`badge ${item.status}`}>{item.status}</span>
-                        <span>{formatTimestamp(item.changed_at)}</span>
-                        <span>{item.reason || "-"}</span>
+                        <span className={`badge ${item.status}`}>{statusLabel(item.status)}</span>
+                        <span>{formatTimestamp(item.changed_at, language)}</span>
+                        <span>{item.reason || t("common.notAvailable")}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="ticket-detail-cell">
-                  <h4>Extracted fields</h4>
+                  <h4>{t("ticketPage.detailExtractedFields")}</h4>
                   <div className="ticket-table">
                     {selectedTicket.fields.length === 0 ? (
-                      <p className="helper">No fields extracted.</p>
+                      <p className="helper">{t("ticketPage.noFields")}</p>
                     ) : selectedTicket.fields.map((item, index) => (
                       <div key={`${item.field_name}-${index}`} className="ticket-table-row">
                         <span><strong>{item.field_name}</strong></span>
                         <span>{item.field_value}</span>
                         <span>
                           {item.source}
-                          {item.is_required ? " (required)" : ""}
+                          {item.is_required ? ` ${t("common.requiredSuffix")}` : ""}
                         </span>
                       </div>
                     ))}
@@ -264,10 +278,10 @@ export default function ITAdminTicketsPage() {
                 </div>
 
                 <div className="ticket-detail-cell">
-                  <h4>Workflow steps</h4>
+                  <h4>{t("ticketPage.detailWorkflowSteps")}</h4>
                   <div className="ticket-table">
                     {selectedTicket.steps.length === 0 ? (
-                      <p className="helper">No steps executed.</p>
+                      <p className="helper">{t("ticketPage.noSteps")}</p>
                     ) : selectedTicket.steps.map((item, index) => (
                       <div key={`${item.step_order}-${index}`} className="ticket-table-row">
                         <span className="badge">{item.step_order}</span>
@@ -279,14 +293,14 @@ export default function ITAdminTicketsPage() {
                 </div>
 
                 <div className="ticket-detail-cell">
-                  <h4>Events</h4>
+                  <h4>{t("ticketPage.detailEvents")}</h4>
                   <div className="ticket-table">
                     {selectedTicket.events.length === 0 ? (
-                      <p className="helper">No events recorded.</p>
+                      <p className="helper">{t("ticketPage.noEvents")}</p>
                     ) : selectedTicket.events.map((item, index) => (
                       <div key={`${item.event_type}-${item.created_at}-${index}`} className="ticket-table-row">
                         <span><strong>{item.event_type}</strong></span>
-                        <span>{item.agent_name || "-"}</span>
+                        <span>{item.agent_name || t("common.notAvailable")}</span>
                         <span>
                           <pre>{prettyPayload(item.payload_json)}</pre>
                         </span>
@@ -302,4 +316,3 @@ export default function ITAdminTicketsPage() {
     </section>
   );
 }
-

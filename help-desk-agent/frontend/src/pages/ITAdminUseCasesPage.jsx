@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import AdminTable from "../components/AdminTable.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import WizardModal from "../components/WizardModal.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import {
   archiveUseCase,
   createUseCase,
@@ -26,6 +27,7 @@ import {
 } from "../utils/adminPayloads.js";
 
 export default function ITAdminUseCasesPage() {
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const filterCategoryId = searchParams.get("category_id") || "";
 
@@ -95,7 +97,7 @@ export default function ITAdminUseCasesPage() {
     );
 
     if (availableCategories.length === 0) {
-      setAdminError("No hay categorias publicadas. / Publish a category before creating use cases.");
+      setAdminError(t("useCasesPage.noPublishedCategories"));
       return;
     }
 
@@ -118,7 +120,7 @@ export default function ITAdminUseCasesPage() {
       const response = await getUseCase(useCaseId);
       const wizard = useCaseWizardFromDetail(response.use_case);
       if (!wizard) {
-        throw new Error("Use case has no draft or published definition.");
+        throw new Error(t("useCasesPage.noDefinition"));
       }
 
       if (wizard.categoryId) {
@@ -216,19 +218,19 @@ export default function ITAdminUseCasesPage() {
 
   const validateUseCaseWizard = (wizardState) => {
     if (!wizardState.categoryId) {
-      return "Selecciona categoria. / Select a category.";
+      return t("useCasesPage.validationSelectCategory");
     }
     if (!wizardState.displayName.trim()) {
-      return "Nombre del caso obligatorio. / Display name is required.";
+      return t("useCasesPage.validationDisplayName");
     }
     if (!wizardState.handoffDescription.trim()) {
-      return "Agent transfer message is required.";
+      return t("useCasesPage.validationHandoff");
     }
     if (!wizardState.routingDescription.trim()) {
-      return "\"When to use this runbook\" is required.";
+      return t("useCasesPage.validationRouting");
     }
     if (wizardState.steps.length === 0) {
-      return "Define al menos un paso. / Add at least one step.";
+      return t("useCasesPage.validationSteps");
     }
     return "";
   };
@@ -329,21 +331,25 @@ export default function ITAdminUseCasesPage() {
     <section className="tab-panel admin-panel it-console-panel it-console-use-cases">
       <Breadcrumb
         items={[
-          { label: "Dashboard", to: "/it/dashboard" },
+          { label: t("common.dashboard"), to: "/it/dashboard" },
           ...(filterCategoryName
             ? [{ label: filterCategoryName, to: "/it/admin/categories" }]
             : []),
-          { label: "Runbooks" },
+          { label: t("common.runbooks") },
         ]}
       />
       <div className="admin-toolbar">
-        <h2>Runbooks / Procedimientos{filterCategoryName ? ` — ${filterCategoryName}` : ""}</h2>
+        <h2>
+          {filterCategoryName
+            ? t("useCasesPage.headingWithCategory", { category: filterCategoryName })
+            : t("useCasesPage.heading")}
+        </h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
-            Refresh
+            {t("common.refresh")}
           </button>
           <button type="button" className="primary" onClick={openCreateUseCaseWizard}>
-            Nuevo runbook
+            {t("useCasesPage.create")}
           </button>
         </div>
       </div>
@@ -354,48 +360,46 @@ export default function ITAdminUseCasesPage() {
           checked={includeArchivedUseCases}
           onChange={(event) => setIncludeArchivedUseCases(event.target.checked)}
         />
-        <span>Mostrar archivados / Show archived</span>
+        <span>{t("common.showArchived")}</span>
       </label>
       <section className="console-clarity-card">
-        <h3>What are Runbooks?</h3>
+        <h3>{t("useCasesPage.cardTitle")}</h3>
         <p>
-          Runbooks are step-by-step procedures that define how to handle an issue. Custom runbooks can
-          be edited here. Auto-generated ones come from{" "}
-          <Link to="/it/admin/categories">Categories</Link> and are read-only.
+          {t("useCasesPage.cardBody")}
         </p>
       </section>
 
-      {adminLoading ? <p className="helper">Cargando datos...</p> : null}
+      {adminLoading ? <p className="helper">{t("common.loadingData")}</p> : null}
       {adminError ? <p className="error-text">{adminError}</p> : null}
 
       <AdminTable
         columns={[
-          { key: "name", label: "Name", render: (row) => (
+          { key: "name", label: t("useCasesPage.tableName"), render: (row) => (
             <>
               <strong>{row.display_name}</strong>
               {row.is_system_default ? (
-                <span className="badge default" style={{ marginLeft: "0.4rem" }}>Auto</span>
+                <span className="badge default" style={{ marginLeft: "0.4rem" }}>{t("common.auto")}</span>
               ) : null}
             </>
           )},
-          { key: "category", label: "Category", render: (row) => (
+          { key: "category", label: t("useCasesPage.tableCategory"), render: (row) => (
             row.category_id ? (
               <Link to={`/it/admin/categories`}>
                 {categories.find((c) => c.category_id === row.category_id)?.display_name || row.category_id}
               </Link>
-            ) : <span className="badge detached">No category</span>
+            ) : <span className="badge detached">{t("common.noCategory")}</span>
           )},
-          { key: "status", label: "Status", render: (row) => (
+          { key: "status", label: t("useCasesPage.tableStatus"), render: (row) => (
             <div className="badge-row">
               <span className={row.archived ? "badge archived" : "badge published"}>
-                {row.archived ? "Archived" : "Active"}
+                {row.archived ? t("common.archived") : t("common.active")}
               </span>
               {row.draft_version_number && !row.is_system_default ? (
-                <span className="badge draft">Unpublished changes</span>
+                <span className="badge draft">{t("common.unpublishedChanges")}</span>
               ) : null}
             </div>
           )},
-          { key: "tickets", label: "Tickets", render: (row) => (
+          { key: "tickets", label: t("useCasesPage.tableTickets"), render: (row) => (
             <Link to={`/it/admin/tickets?use_case_id=${row.use_case_id}`}>
               {ticketCounts[row.use_case_id] || 0}
             </Link>
@@ -404,7 +408,7 @@ export default function ITAdminUseCasesPage() {
             row.is_system_default ? null : (
               <div className="use-case-actions" style={{ flexDirection: "row" }}>
                 <button type="button" className="ghost" onClick={() => openEditUseCaseWizard(row.use_case_id)}>
-                  Edit
+                  {t("common.edit")}
                 </button>
                 <button
                   type="button"
@@ -412,15 +416,15 @@ export default function ITAdminUseCasesPage() {
                   disabled={!row.draft_version_number || row.archived}
                   onClick={() => publishUseCaseFromList(row.use_case_id)}
                 >
-                  Publish
+                  {t("common.publish")}
                 </button>
                 {row.archived ? (
                   <button type="button" className="ghost" onClick={() => restoreUseCaseFromList(row.use_case_id)}>
-                    Restore
+                    {t("common.restore")}
                   </button>
                 ) : (
                   <button type="button" className="ghost" onClick={() => archiveUseCaseFromList(row.use_case_id)}>
-                    Archive
+                    {t("common.archive")}
                   </button>
                 )}
               </div>
@@ -428,12 +432,12 @@ export default function ITAdminUseCasesPage() {
           )},
         ]}
         rows={filteredUseCases.map((item) => ({ ...item, id: item.use_case_id }))}
-        emptyMessage="No runbooks yet."
+        emptyMessage={t("useCasesPage.emptyRunbooks")}
       />
 
       {showUseCaseWizard && useCaseWizardState ? (
         <WizardModal
-          title={useCaseWizardMode === "create" ? "Nuevo runbook" : "Editar runbook"}
+          title={useCaseWizardMode === "create" ? t("useCasesPage.wizardNew") : t("useCasesPage.wizardEdit")}
           step={useCaseWizardStep}
           totalSteps={4}
           onClose={closeUseCaseWizard}
@@ -446,7 +450,7 @@ export default function ITAdminUseCasesPage() {
                 onClick={() => setUseCaseWizardStep((prev) => Math.max(1, prev - 1))}
                 disabled={useCaseWizardStep === 1}
               >
-                Anterior
+                {t("common.previous")}
               </button>
               <button
                 type="button"
@@ -454,7 +458,7 @@ export default function ITAdminUseCasesPage() {
                 onClick={() => setUseCaseWizardStep((prev) => Math.min(4, prev + 1))}
                 disabled={useCaseWizardStep === 4}
               >
-                Siguiente
+                {t("common.next")}
               </button>
             </>
           }
@@ -466,7 +470,7 @@ export default function ITAdminUseCasesPage() {
                 onClick={saveUseCaseDraft}
                 disabled={useCaseWizardBusy}
               >
-                Guardar draft
+                {t("common.saveDraft")}
               </button>
               <button
                 type="button"
@@ -474,7 +478,7 @@ export default function ITAdminUseCasesPage() {
                 onClick={publishUseCaseFromWizard}
                 disabled={useCaseWizardBusy}
               >
-                Guardar y publicar
+                {t("common.saveAndPublish")}
               </button>
             </>
           }
@@ -482,12 +486,12 @@ export default function ITAdminUseCasesPage() {
           {useCaseWizardStep === 1 ? (
             <div className="form-grid">
               <label>
-                Category (published)
+                {t("useCasesPage.formCategoryPublished")}
                 <select
                   value={useCaseWizardState.categoryId}
                   onChange={(event) => onUseCaseCategoryChange(event.target.value)}
                 >
-                  <option value="">Select category</option>
+                  <option value="">{t("useCasesPage.formSelectCategory")}</option>
                   {categories
                     .filter((category) => !category.archived && category.published_version_number !== null)
                     .map((category) => (
@@ -498,16 +502,16 @@ export default function ITAdminUseCasesPage() {
                 </select>
               </label>
               <label>
-                Nombre / Display name
+                {t("useCasesPage.formDisplayName")}
                 <input
                   value={useCaseWizardState.displayName}
                   onChange={(event) => setUseCaseField("displayName", event.target.value)}
                 />
               </label>
               <label>
-                Slug (optional)
+                {t("useCasesPage.formSlug")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  Short ID used in URLs and API calls. Auto-generated from the name if left blank.
+                  {t("useCasesPage.formSlugHelp")}
                 </span>
                 <input
                   value={useCaseWizardState.slug}
@@ -520,9 +524,9 @@ export default function ITAdminUseCasesPage() {
           {useCaseWizardStep === 2 ? (
             <div className="form-grid">
               <label>
-                Agent transfer message
+                {t("useCasesPage.formHandoff")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  What the AI tells the user when it hands off to this runbook's specialist agent.
+                  {t("useCasesPage.formHandoffHelp")}
                 </span>
                 <textarea
                   rows={3}
@@ -531,9 +535,9 @@ export default function ITAdminUseCasesPage() {
                 />
               </label>
               <label>
-                When to use this runbook
+                {t("useCasesPage.formRouting")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  Describes the types of issues this runbook handles. The AI uses this to pick the right runbook.
+                  {t("useCasesPage.formRoutingHelp")}
                 </span>
                 <textarea
                   rows={3}
@@ -542,7 +546,7 @@ export default function ITAdminUseCasesPage() {
                 />
               </label>
               <label>
-                Required fields (comma separated)
+                {t("useCasesPage.formRequiredFields")}
                 <input
                   value={useCaseWizardState.requiredFieldsText}
                   onChange={(event) => setUseCaseField("requiredFieldsText", event.target.value)}
@@ -553,12 +557,12 @@ export default function ITAdminUseCasesPage() {
 
           {useCaseWizardStep === 3 ? (
             <div>
-              <p className="helper">Pasos del flujo / Workflow steps.</p>
+              <p className="helper">{t("useCasesPage.workflowTitle")}</p>
               <div className="step-list">
                 {useCaseWizardState.steps.map((step, index) => (
                   <article key={`${step.step_id}-${index}`} className="step-item">
                     <label>
-                      Step
+                      {t("useCasesPage.workflowStep")}
                       <select
                         value={step.step_id}
                         onChange={(event) =>
@@ -579,7 +583,9 @@ export default function ITAdminUseCasesPage() {
                     {(step.step_id === "append_resolution_note" ||
                       step.step_id === "manual_instruction") && (
                       <label>
-                        {step.step_id === "append_resolution_note" ? "Note" : "Instruction"}
+                        {step.step_id === "append_resolution_note"
+                          ? t("useCasesPage.workflowNote")
+                          : t("useCasesPage.workflowInstruction")}
                         <input
                           value={
                             step.step_id === "append_resolution_note"
@@ -601,38 +607,38 @@ export default function ITAdminUseCasesPage() {
 
                     <div className="step-actions">
                       <button type="button" className="ghost" onClick={() => moveUseCaseStep(index, -1)}>
-                        Up
+                        {t("useCasesPage.workflowUp")}
                       </button>
                       <button type="button" className="ghost" onClick={() => moveUseCaseStep(index, 1)}>
-                        Down
+                        {t("useCasesPage.workflowDown")}
                       </button>
                       <button type="button" className="ghost" onClick={() => removeUseCaseStep(index)}>
-                        Remove
+                        {t("useCasesPage.workflowRemove")}
                       </button>
                     </div>
                   </article>
                 ))}
               </div>
               <button type="button" className="ghost" onClick={addUseCaseStep}>
-                Agregar paso / Add step
+                {t("useCasesPage.workflowAddStep")}
               </button>
             </div>
           ) : null}
 
           {useCaseWizardStep === 4 ? (
             <div className="review-box">
-              <h4>Review</h4>
+              <h4>{t("useCasesPage.reviewTitle")}</h4>
               <p>
-                <strong>Display:</strong> {useCaseWizardState.displayName}
+                <strong>{t("useCasesPage.reviewDisplay")}:</strong> {useCaseWizardState.displayName}
               </p>
               <p>
-                <strong>Category:</strong> {useCaseWizardState.categoryId || "none"}
+                <strong>{t("useCasesPage.reviewCategory")}:</strong> {useCaseWizardState.categoryId || t("common.none")}
               </p>
               <p>
-                <strong>Required fields:</strong> {useCaseWizardState.requiredFieldsText}
+                <strong>{t("useCasesPage.reviewRequiredFields")}:</strong> {useCaseWizardState.requiredFieldsText}
               </p>
               <p>
-                <strong>Steps:</strong> {useCaseWizardState.steps.map((step) => step.step_id).join(" -> ")}
+                <strong>{t("useCasesPage.reviewSteps")}:</strong> {useCaseWizardState.steps.map((step) => step.step_id).join(" -> ")}
               </p>
             </div>
           ) : null}

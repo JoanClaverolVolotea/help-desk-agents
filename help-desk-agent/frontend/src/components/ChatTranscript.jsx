@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 
+import { useI18n } from "../i18n/useI18n.js";
 import { normalizeEntryKind, normalizeEntryText } from "../utils/eventHelpers.js";
 
 const MARKDOWN_PLUGINS = [remarkGfm, remarkBreaks];
@@ -17,6 +18,7 @@ export default function ChatTranscript({
   showMeta = true,
   className = "",
 }) {
+  const { t } = useI18n();
   const hiddenSet = new Set(hiddenKinds);
   const allowedSet = allowedKinds ? new Set(allowedKinds) : null;
 
@@ -71,10 +73,10 @@ export default function ChatTranscript({
         <article key={`thinking-${thinkingAgent}`} className="entry entry-assistant kind-thinking">
           {showMeta ? (
             <div className="meta">
-              {thinkingAgent} <span>thinking</span>
+              {thinkingAgent} <span>{t("chat.thinking")}</span>
             </div>
           ) : null}
-          <div className="thinking-dots" aria-label="Model is thinking">
+          <div className="thinking-dots" aria-label={t("chat.thinkingAria")}>
             <span>.</span>
             <span>.</span>
             <span>.</span>

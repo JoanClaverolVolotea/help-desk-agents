@@ -5,6 +5,8 @@ import ChatTranscript from "../components/ChatTranscript.jsx";
 import Composer from "../components/Composer.jsx";
 import ErrorBanner from "../components/ErrorBanner.jsx";
 import StatusRow from "../components/StatusRow.jsx";
+import { withLanguageHint } from "../i18n/chatLanguage.js";
+import { useI18n } from "../i18n/useI18n.js";
 import { chatStream, readableError, resetConversation } from "../api.js";
 import { INTERNAL_EVENT_KINDS } from "../utils/eventHelpers.js";
 
@@ -17,13 +19,15 @@ function nextIdFactory() {
 }
 
 export default function UserPortalPage() {
+  const { language, t } = useI18n();
   const nextId = useMemo(() => nextIdFactory(), []);
   const transcriptRef = useRef(null);
+  const defaultAgent = t("userPortal.defaultAgent");
 
   const [chatInput, setChatInput] = useState("");
   const [entries, setEntries] = useState([]);
   const [conversationId, setConversationId] = useState(null);
-  const [currentAgent, setCurrentAgent] = useState("Help Desk Triage Agent");
+  const [currentAgent, setCurrentAgent] = useState(defaultAgent);
   const [isSending, setIsSending] = useState(false);
   const [chatError, setChatError] = useState("");
 
@@ -32,6 +36,12 @@ export default function UserPortalPage() {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     }
   }, [entries, isSending]);
+
+  useEffect(() => {
+    if (!conversationId && entries.length === 0) {
+      setCurrentAgent(defaultAgent);
+    }
+  }, [conversationId, defaultAgent, entries.length]);
 
   const sendMessage = async (messageText) => {
     const userEntry = {
@@ -56,9 +66,10 @@ export default function UserPortalPage() {
     setIsSending(true);
 
     let hasStreamedText = false;
+    const modelMessage = withLanguageHint(messageText, language);
 
     try {
-      const finalPayload = await chatStream(messageText, conversationId, (streamEvent) => {
+      const finalPayload = await chatStream(modelMessage, conversationId, (streamEvent) => {
         if (!streamEvent || typeof streamEvent !== "object") {
           return;
         }
@@ -152,14 +163,14 @@ export default function UserPortalPage() {
 
     setEntries([]);
     setConversationId(null);
-    setCurrentAgent("Help Desk Triage Agent");
+    setCurrentAgent(defaultAgent);
     setChatInput("");
   };
 
   const samplePrompts = [
-    "My laptop won't connect to WiFi",
-    "I need a password reset",
-    "Software installation request",
+    t("userPortal.sampleWifi"),
+    t("userPortal.samplePasswordReset"),
+    t("userPortal.sampleSoftware"),
   ];
 
   const handleSampleClick = (prompt) => {
@@ -172,11 +183,11 @@ export default function UserPortalPage() {
     <div className="app-shell user-portal-shell">
       <header className="header user-portal-header">
         <div>
-          <h1>User Portal / Portal Usuario</h1>
-          <p>Describe your issue in chat and send it directly to the help desk.</p>
+          <h1>{t("userPortal.title")}</h1>
+          <p>{t("userPortal.description")}</p>
         </div>
         <Link to="/" className="tab tab-link user-back-link">
-          Back to role selection
+          {t("common.backToRoleSelection")}
         </Link>
       </header>
 
@@ -184,8 +195,8 @@ export default function UserPortalPage() {
         <StatusRow
           className="user-portal-status"
           items={[
-            { label: "Conversation", value: conversationId ?? "new" },
-            { label: "Current agent", value: currentAgent },
+            { label: t("common.fieldConversation"), value: conversationId ?? t("common.newValue") },
+            { label: t("common.fieldCurrentAgent"), value: currentAgent },
           ]}
         />
 
@@ -194,7 +205,7 @@ export default function UserPortalPage() {
           entries={entries}
           isThinking={isSending}
           thinkingAgent={currentAgent}
-          emptyState="Hi! Describe your issue below, or try one of the quick prompts. / ¡Hola! Describe tu problema abajo, o prueba una de las opciones rápidas."
+          emptyState={t("userPortal.emptyState")}
           hiddenKinds={Array.from(INTERNAL_EVENT_KINDS)}
           allowedKinds={["message"]}
           showMeta={false}
@@ -221,11 +232,11 @@ export default function UserPortalPage() {
           onChange={setChatInput}
           onSubmit={handleSubmit}
           onReset={handleResetConversation}
-          placeholder="Describe your issue... / Describe tu problema..."
+          placeholder={t("userPortal.placeholder")}
           disabled={isSending}
-          submitLabel="Send"
-          sendingLabel="Sending..."
-          resetLabel="New conversation"
+          submitLabel={t("userPortal.submit")}
+          sendingLabel={t("userPortal.sending")}
+          resetLabel={t("userPortal.reset")}
           className="user-portal-composer"
         />
 

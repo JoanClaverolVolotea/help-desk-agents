@@ -4,6 +4,8 @@ import ChatTranscript from "./ChatTranscript.jsx";
 import Composer from "./Composer.jsx";
 import ErrorBanner from "./ErrorBanner.jsx";
 import StatusRow from "./StatusRow.jsx";
+import { withLanguageHint } from "../i18n/chatLanguage.js";
+import { useI18n } from "../i18n/useI18n.js";
 import {
   adminAssistantChat,
   readableError,
@@ -19,13 +21,15 @@ function nextIdFactory() {
 }
 
 export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} }) {
+  const { language, t } = useI18n();
   const nextId = useMemo(() => nextIdFactory(), []);
   const transcriptRef = useRef(null);
+  const defaultAgent = t("itConsole.assistant.defaultAgent");
 
   const [input, setInput] = useState("");
   const [entries, setEntries] = useState([]);
   const [conversationId, setConversationId] = useState(null);
-  const [currentAgent, setCurrentAgent] = useState("Tech Team Assistant Triage");
+  const [currentAgent, setCurrentAgent] = useState(defaultAgent);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -34,6 +38,12 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     }
   }, [entries, isSending]);
+
+  useEffect(() => {
+    if (!conversationId && entries.length === 0) {
+      setCurrentAgent(defaultAgent);
+    }
+  }, [conversationId, defaultAgent, entries.length]);
 
   const sendMessage = async (messageText) => {
     const userEntry = {
@@ -49,7 +59,7 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
     setIsSending(true);
 
     try {
-      const data = await adminAssistantChat(messageText, conversationId);
+      const data = await adminAssistantChat(withLanguageHint(messageText, language), conversationId);
       setConversationId(data.conversation_id);
       setCurrentAgent(data.current_agent);
 
@@ -90,7 +100,7 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
 
     setEntries([]);
     setConversationId(null);
-    setCurrentAgent("Tech Team Assistant Triage");
+    setCurrentAgent(defaultAgent);
     setInput("");
   };
 
@@ -104,7 +114,7 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
           aria-expanded={isOpen}
           aria-controls="it-console-assistant-pane"
         >
-          {isOpen ? "Hide chat" : "Open"}
+          {isOpen ? t("itConsole.assistant.hideChat") : t("itConsole.assistant.openChat")}
         </button>
       </div>
 
@@ -112,8 +122,8 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
         <>
           <StatusRow
             items={[
-              { label: "Tech Session", value: conversationId ?? "new" },
-              { label: "Current agent", value: currentAgent },
+              { label: t("itConsole.assistant.techSession"), value: conversationId ?? t("common.newValue") },
+              { label: t("itConsole.assistant.currentAgent"), value: currentAgent },
             ]}
           />
 
@@ -122,7 +132,7 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
             entries={entries}
             isThinking={isSending}
             thinkingAgent={currentAgent}
-            emptyState="Ask for help to manage categories and use-cases."
+            emptyState={t("itConsole.assistant.emptyState")}
           />
 
           <Composer
@@ -130,11 +140,11 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
             onChange={setInput}
             onSubmit={handleSubmit}
             onReset={handleReset}
-            placeholder="Pide ayuda para crear categorias... / Ask how to create categories..."
+            placeholder={t("itConsole.assistant.placeholder")}
             disabled={isSending}
-            submitLabel="Enviar"
-            sendingLabel="Enviando..."
-            resetLabel="Nueva sesion"
+            submitLabel={t("itConsole.assistant.submit")}
+            sendingLabel={t("itConsole.assistant.sending")}
+            resetLabel={t("itConsole.assistant.reset")}
           />
 
           <ErrorBanner message={errorMessage} />

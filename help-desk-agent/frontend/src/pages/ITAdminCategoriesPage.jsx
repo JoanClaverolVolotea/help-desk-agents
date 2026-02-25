@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import AdminTable from "../components/AdminTable.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import WizardModal from "../components/WizardModal.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import {
   archiveCategory,
   createCategory,
@@ -27,6 +28,7 @@ import {
 } from "../utils/adminPayloads.js";
 
 export default function ITAdminCategoriesPage() {
+  const { t } = useI18n();
   const [steps, setSteps] = useState([]);
   const [categories, setCategories] = useState([]);
   const [includeArchivedCategories, setIncludeArchivedCategories] = useState(false);
@@ -96,7 +98,7 @@ export default function ITAdminCategoriesPage() {
       const response = await getCategory(categoryId);
       const wizard = categoryWizardFromDetail(response.category);
       if (!wizard) {
-        throw new Error("Category has no draft or published definition.");
+        throw new Error(t("categoriesPage.noDefinition"));
       }
 
       setCategoryWizardMode("edit");
@@ -246,22 +248,22 @@ export default function ITAdminCategoriesPage() {
 
   const validateCategoryWizard = (wizardState) => {
     if (!wizardState.displayName.trim()) {
-      return "Nombre de categoria obligatorio. / Category display name is required.";
+      return t("categoriesPage.validationDisplayName");
     }
     if (!wizardState.description.trim()) {
-      return "Descripcion obligatoria. / Description is required.";
+      return t("categoriesPage.validationDescription");
     }
     if (!wizardState.defaultHandoffDescription.trim()) {
-      return "Agent transfer message is required.";
+      return t("categoriesPage.validationHandoff");
     }
     if (!wizardState.defaultRoutingDescription.trim()) {
-      return "\"When to use this category\" is required.";
+      return t("categoriesPage.validationRouting");
     }
     if (wizardState.allowedStepIds.length === 0) {
-      return "Selecciona al menos un paso permitido. / Select at least one allowed step.";
+      return t("categoriesPage.validationAllowed");
     }
     if (wizardState.defaultStepIds.length === 0) {
-      return "Selecciona al menos un paso por defecto. / Select at least one default step.";
+      return t("categoriesPage.validationDefault");
     }
     return "";
   };
@@ -310,9 +312,7 @@ export default function ITAdminCategoriesPage() {
       const response = await publishCategory(categoryId);
       await loadAdminData();
 
-      setCategoryPublishNotice(
-        "Caso predeterminado sincronizado y disponible en el chat de usuario. / Default use-case synced and available in user chat.",
-      );
+      setCategoryPublishNotice(t("categoriesPage.publishedNotice"));
 
       const latestUseCases = await listUseCases(false);
       const affected = latestUseCases.items.filter(
@@ -401,9 +401,7 @@ export default function ITAdminCategoriesPage() {
   };
 
   const handleReseedDefaults = async () => {
-    const confirmed = window.confirm(
-      "This action deletes current categories, use-cases, and ticket registry data, then reseeds defaults. Continue?",
-    );
+    const confirmed = window.confirm(t("categoriesPage.reseedConfirm"));
     if (!confirmed) {
       return;
     }
@@ -418,7 +416,14 @@ export default function ITAdminCategoriesPage() {
       await loadAdminData();
       const useCasesResponse = await listUseCases(false);
       setCategoryPublishNotice(
-        `Defaults reseeded. Deleted tickets/use-cases/categories: ${response.deleted_counts.tickets}/${response.deleted_counts.use_cases}/${response.deleted_counts.categories}. Seeded categories/use-cases: ${response.seeded_counts.categories}/${response.seeded_counts.use_cases}. Active use-cases now: ${useCasesResponse.items.length}.`,
+        t("categoriesPage.reseedNotice", {
+          tickets: response.deleted_counts.tickets,
+          useCases: response.deleted_counts.use_cases,
+          categories: response.deleted_counts.categories,
+          seededCategories: response.seeded_counts.categories,
+          seededUseCases: response.seeded_counts.use_cases,
+          activeUseCases: useCasesResponse.items.length,
+        }),
       );
     } catch (error) {
       setAdminError(readableError(error));
@@ -429,12 +434,12 @@ export default function ITAdminCategoriesPage() {
 
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-categories">
-      <Breadcrumb items={[{ label: "Dashboard", to: "/it/dashboard" }, { label: "Categories" }]} />
+      <Breadcrumb items={[{ label: t("common.dashboard"), to: "/it/dashboard" }, { label: t("common.categories") }]} />
       <div className="admin-toolbar">
-        <h2>Categories / Categorías</h2>
+        <h2>{t("categoriesPage.heading")}</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
-            Refresh
+            {t("common.refresh")}
           </button>
           <button
             type="button"
@@ -442,10 +447,10 @@ export default function ITAdminCategoriesPage() {
             onClick={handleReseedDefaults}
             disabled={adminLoading || reseedBusy}
           >
-            Reseed defaults
+            {t("categoriesPage.reseedDefaults")}
           </button>
           <button type="button" className="primary" onClick={openCreateCategoryWizard}>
-            Nueva categoría
+            {t("categoriesPage.create")}
           </button>
         </div>
       </div>
@@ -456,31 +461,28 @@ export default function ITAdminCategoriesPage() {
           checked={includeArchivedCategories}
           onChange={(event) => setIncludeArchivedCategories(event.target.checked)}
         />
-        <span>Mostrar archivadas / Show archived</span>
+        <span>{t("common.showArchived")}</span>
       </label>
       <section className="console-clarity-card">
-        <h3>What are Categories?</h3>
+        <h3>{t("categoriesPage.cardTitle")}</h3>
         <p>
-          Categories group related issues (e.g. "Network", "Software"). Each category defines what
-          steps are available and automatically creates a default runbook. When you publish changes,
-          linked runbooks can be updated too.
+          {t("categoriesPage.cardBody")}
         </p>
       </section>
 
-      {adminLoading ? <p className="helper">Cargando datos...</p> : null}
+      {adminLoading ? <p className="helper">{t("common.loadingData")}</p> : null}
       {categoryPublishNotice ? <p className="helper">{categoryPublishNotice}</p> : null}
       {adminError ? <p className="error-text">{adminError}</p> : null}
 
       {migrationPrompt ? (
         <section className="migration-box">
-          <h3>Migracion sugerida / Suggested migration</h3>
+          <h3>{t("categoriesPage.migrationTitle")}</h3>
           <p>
-            Categoria publicada con version <strong>{migrationPrompt.categoryVersionNumber}</strong>.
-            Selecciona los casos a migrar.
+            {t("categoriesPage.migrationBody", { version: migrationPrompt.categoryVersionNumber })}
           </p>
           <p className="helper">
-            This is a cross-entity action on linked use-cases. Review list/details in{" "}
-            <Link to="/it/admin/use-cases">Runbooks</Link>.
+            {t("categoriesPage.migrationHelp")}{" "}
+            <Link to="/it/admin/use-cases">{t("common.runbooks")}</Link>.
           </p>
           <div className="check-grid">
             {migrationPrompt.items.map((item, index) => (
@@ -502,10 +504,10 @@ export default function ITAdminCategoriesPage() {
           </div>
           <div className="wizard-submit">
             <button type="button" className="ghost" onClick={() => setMigrationPrompt(null)}>
-              Omitir
+              {t("categoriesPage.migrationSkip")}
             </button>
             <button type="button" className="primary" onClick={runMigration}>
-              Migrar seleccionados
+              {t("categoriesPage.migrationApply")}
             </button>
           </div>
         </section>
@@ -513,20 +515,20 @@ export default function ITAdminCategoriesPage() {
 
       <AdminTable
         columns={[
-          { key: "name", label: "Name", render: (row) => (
+          { key: "name", label: t("categoriesPage.tableName"), render: (row) => (
             <strong>{row.display_name}</strong>
           )},
-          { key: "status", label: "Status", render: (row) => (
+          { key: "status", label: t("categoriesPage.tableStatus"), render: (row) => (
             <div className="badge-row">
               <span className={row.archived ? "badge archived" : "badge published"}>
-                {row.archived ? "Archived" : "Active"}
+                {row.archived ? t("common.archived") : t("common.active")}
               </span>
               {row.draft_version_number ? (
-                <span className="badge draft">Unpublished changes</span>
+                <span className="badge draft">{t("common.unpublishedChanges")}</span>
               ) : null}
             </div>
           )},
-          { key: "use_cases", label: "Runbooks", render: (row) => (
+          { key: "use_cases", label: t("categoriesPage.tableRunbooks"), render: (row) => (
             <Link to={`/it/admin/use-cases?category_id=${row.category_id}`}>
               {useCaseCounts[row.category_id] || 0}
             </Link>
@@ -534,7 +536,7 @@ export default function ITAdminCategoriesPage() {
           { key: "actions", label: "", render: (row) => (
             <div className="use-case-actions" style={{ flexDirection: "row" }}>
               <button type="button" className="ghost" onClick={() => openEditCategoryWizard(row.category_id)}>
-                Edit
+                {t("common.edit")}
               </button>
               <button
                 type="button"
@@ -542,27 +544,27 @@ export default function ITAdminCategoriesPage() {
                 disabled={!row.draft_version_number || row.archived}
                 onClick={() => publishCategoryAndPromptMigration(row.category_id)}
               >
-                Publish
+                {t("common.publish")}
               </button>
               {row.archived ? (
                 <button type="button" className="ghost" onClick={() => restoreCategoryFromList(row.category_id)}>
-                  Restore
+                  {t("common.restore")}
                 </button>
               ) : (
                 <button type="button" className="ghost" onClick={() => archiveCategoryFromList(row.category_id)}>
-                  Archive
+                  {t("common.archive")}
                 </button>
               )}
             </div>
           )},
         ]}
         rows={categories.map((item) => ({ ...item, id: item.category_id }))}
-        emptyMessage="No categories yet."
+        emptyMessage={t("categoriesPage.emptyCategories")}
       />
 
       {showCategoryWizard && categoryWizardState ? (
         <WizardModal
-          title={categoryWizardMode === "create" ? "Nueva categoría" : "Editar categoría"}
+          title={categoryWizardMode === "create" ? t("categoriesPage.wizardNew") : t("categoriesPage.wizardEdit")}
           step={categoryWizardStep}
           totalSteps={4}
           onClose={closeCategoryWizard}
@@ -575,7 +577,7 @@ export default function ITAdminCategoriesPage() {
                 onClick={() => setCategoryWizardStep((prev) => Math.max(1, prev - 1))}
                 disabled={categoryWizardStep === 1}
               >
-                Anterior
+                {t("common.previous")}
               </button>
               <button
                 type="button"
@@ -583,7 +585,7 @@ export default function ITAdminCategoriesPage() {
                 onClick={() => setCategoryWizardStep((prev) => Math.min(4, prev + 1))}
                 disabled={categoryWizardStep === 4}
               >
-                Siguiente
+                {t("common.next")}
               </button>
             </>
           }
@@ -595,7 +597,7 @@ export default function ITAdminCategoriesPage() {
                 onClick={saveCategoryDraft}
                 disabled={categoryWizardBusy}
               >
-                Guardar draft
+                {t("common.saveDraft")}
               </button>
               <button
                 type="button"
@@ -603,7 +605,7 @@ export default function ITAdminCategoriesPage() {
                 onClick={publishCategoryFromWizard}
                 disabled={categoryWizardBusy}
               >
-                Guardar y publicar
+                {t("common.saveAndPublish")}
               </button>
             </>
           }
@@ -611,16 +613,16 @@ export default function ITAdminCategoriesPage() {
           {categoryWizardStep === 1 ? (
             <div className="form-grid">
               <label>
-                Nombre / Display name
+                {t("categoriesPage.formDisplayName")}
                 <input
                   value={categoryWizardState.displayName}
                   onChange={(event) => setCategoryField("displayName", event.target.value)}
                 />
               </label>
               <label>
-                Slug (optional)
+                {t("categoriesPage.formSlug")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  Short ID used in URLs and API calls. Auto-generated from the name if left blank.
+                  {t("categoriesPage.formSlugHelp")}
                 </span>
                 <input
                   value={categoryWizardState.slug}
@@ -628,7 +630,7 @@ export default function ITAdminCategoriesPage() {
                 />
               </label>
               <label>
-                Descripcion
+                {t("categoriesPage.formDescription")}
                 <textarea
                   rows={3}
                   value={categoryWizardState.description}
@@ -640,22 +642,20 @@ export default function ITAdminCategoriesPage() {
 
           {categoryWizardStep === 2 ? (
             <div className="step-selector-section">
-              <p className="helper">Pasos permitidos / Allowed steps.</p>
+              <p className="helper">{t("categoriesPage.stepAllowedTitle")}.</p>
               <p className="helper step-helper-copy">
-                Pick the actions this category can use. Think of this as the toolbox your team can
-                choose from later in runbooks. Use search with plain terms (for example "password",
-                "email", "manual") or a step ID.
+                {t("categoriesPage.stepAllowedHelp")}
               </p>
               <div className="step-selector-toolbar">
                 <input
                   type="search"
                   value={allowedStepSearch}
                   onChange={(event) => setAllowedStepSearch(event.target.value)}
-                  placeholder="Search allowed steps by name or ID..."
+                  placeholder={t("categoriesPage.stepAllowedSearchPlaceholder")}
                 />
                 <div className="step-selector-actions">
                   <span className="helper">
-                    Selected {allowedStepIds.length} of {steps.length}
+                    {t("categoriesPage.stepAllowedCount", { selected: allowedStepIds.length, total: steps.length })}
                   </span>
                   <button
                     type="button"
@@ -665,7 +665,7 @@ export default function ITAdminCategoriesPage() {
                     }
                     disabled={filteredAllowedStepOptions.length === 0}
                   >
-                    Select visible
+                    {t("categoriesPage.stepSelectVisible")}
                   </button>
                   <button
                     type="button"
@@ -675,13 +675,13 @@ export default function ITAdminCategoriesPage() {
                     }
                     disabled={filteredAllowedStepOptions.length === 0}
                   >
-                    Clear visible
+                    {t("categoriesPage.stepClearVisible")}
                   </button>
                 </div>
               </div>
               {filteredAllowedStepOptions.length === 0 ? (
                 <p className="helper step-selector-empty">
-                  No steps match this search. Try a broader keyword or clear the search.
+                  {t("categoriesPage.stepNoMatch")}
                 </p>
               ) : (
                 <div className="check-grid step-selector-grid">
@@ -698,22 +698,24 @@ export default function ITAdminCategoriesPage() {
                 </div>
               )}
 
-              <p className="helper">Pasos por defecto / Default steps.</p>
+              <p className="helper">{t("categoriesPage.stepDefaultTitle")}.</p>
               <p className="helper step-helper-copy">
-                These steps are pre-selected in new runbooks. Keep this short so non-technical team
-                members only see the most common path first.
+                {t("categoriesPage.stepDefaultHelp")}
               </p>
               <div className="step-selector-toolbar">
                 <input
                   type="search"
                   value={defaultStepSearch}
                   onChange={(event) => setDefaultStepSearch(event.target.value)}
-                  placeholder="Search default steps..."
+                  placeholder={t("categoriesPage.stepDefaultSearchPlaceholder")}
                   disabled={defaultStepOptions.length === 0}
                 />
                 <div className="step-selector-actions">
                   <span className="helper">
-                    Default {defaultStepIds.length} of {defaultStepOptions.length}
+                    {t("categoriesPage.stepDefaultCount", {
+                      selected: defaultStepIds.length,
+                      total: defaultStepOptions.length,
+                    })}
                   </span>
                   <button
                     type="button"
@@ -723,7 +725,7 @@ export default function ITAdminCategoriesPage() {
                     }
                     disabled={filteredDefaultStepOptions.length === 0}
                   >
-                    Select visible
+                    {t("categoriesPage.stepSelectVisible")}
                   </button>
                   <button
                     type="button"
@@ -733,17 +735,17 @@ export default function ITAdminCategoriesPage() {
                     }
                     disabled={filteredDefaultStepOptions.length === 0}
                   >
-                    Clear visible
+                    {t("categoriesPage.stepClearVisible")}
                   </button>
                 </div>
               </div>
               {defaultStepOptions.length === 0 ? (
                 <p className="helper step-selector-empty">
-                  Select allowed steps first. Then choose which of those should be defaults.
+                  {t("categoriesPage.stepNoDefaultsSource")}
                 </p>
               ) : filteredDefaultStepOptions.length === 0 ? (
                 <p className="helper step-selector-empty">
-                  No default steps match this search.
+                  {t("categoriesPage.stepNoDefaultMatch")}
                 </p>
               ) : (
                 <div className="check-grid step-selector-grid">
@@ -765,9 +767,9 @@ export default function ITAdminCategoriesPage() {
           {categoryWizardStep === 3 ? (
             <div className="form-grid">
               <label>
-                Agent transfer message
+                {t("categoriesPage.formHandoff")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  What the AI tells the user when it hands off to this category's specialist agent.
+                  {t("categoriesPage.formHandoffHelp")}
                 </span>
                 <textarea
                   rows={3}
@@ -776,9 +778,9 @@ export default function ITAdminCategoriesPage() {
                 />
               </label>
               <label>
-                When to use this category
+                {t("categoriesPage.formRouting")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  Describes the types of issues that should be routed here. The AI uses this to decide which category fits.
+                  {t("categoriesPage.formRoutingHelp")}
                 </span>
                 <textarea
                   rows={3}
@@ -787,10 +789,9 @@ export default function ITAdminCategoriesPage() {
                 />
               </label>
               <label>
-                Default required fields (comma separated)
+                {t("categoriesPage.formRequiredFields")}
                 <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
-                  Write the minimum data that agents need before execution. Examples:
-                  employee_id, ticket_id, target_system.
+                  {t("categoriesPage.formRequiredFieldsHelp")}
                 </span>
                 <input
                   value={categoryWizardState.defaultRequiredFieldsText}
@@ -804,21 +805,21 @@ export default function ITAdminCategoriesPage() {
 
           {categoryWizardStep === 4 ? (
             <div className="review-box">
-              <h4>Review</h4>
+              <h4>{t("categoriesPage.reviewTitle")}</h4>
               <p>
-                <strong>Display:</strong> {categoryWizardState.displayName}
+                <strong>{t("categoriesPage.reviewDisplay")}:</strong> {categoryWizardState.displayName}
               </p>
               <p>
-                <strong>Slug:</strong> {categoryWizardState.slug || "(auto)"}
+                <strong>{t("categoriesPage.reviewSlug")}:</strong> {categoryWizardState.slug || `(${t("common.auto")})`}
               </p>
               <p>
-                <strong>Allowed steps:</strong> {categoryWizardState.allowedStepIds.join(", ")}
+                <strong>{t("categoriesPage.reviewAllowed")}:</strong> {categoryWizardState.allowedStepIds.join(", ")}
               </p>
               <p>
-                <strong>Default steps:</strong> {categoryWizardState.defaultStepIds.join(", ")}
+                <strong>{t("categoriesPage.reviewDefault")}:</strong> {categoryWizardState.defaultStepIds.join(", ")}
               </p>
               <p>
-                <strong>Default fields:</strong> {categoryWizardState.defaultRequiredFieldsText}
+                <strong>{t("categoriesPage.reviewDefaultFields")}:</strong> {categoryWizardState.defaultRequiredFieldsText}
               </p>
             </div>
           ) : null}

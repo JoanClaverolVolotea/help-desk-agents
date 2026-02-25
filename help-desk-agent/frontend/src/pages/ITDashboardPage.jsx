@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { useI18n } from "../i18n/useI18n.js";
 import { listCategories, listTickets, listUseCases, readableError } from "../api.js";
 
 export default function ITDashboardPage() {
+  const { t } = useI18n();
   const [categories, setCategories] = useState([]);
   const [useCases, setUseCases] = useState([]);
   const [tickets, setTickets] = useState([]);
@@ -56,43 +58,43 @@ export default function ITDashboardPage() {
   return (
     <section className="tab-panel admin-panel it-console-panel">
       <div className="admin-toolbar">
-        <h2>Dashboard</h2>
+        <h2>{t("dashboardPage.title")}</h2>
         <div className="admin-toolbar-actions">
           <button type="button" className="ghost" onClick={loadAll} disabled={loading}>
-            Refresh
+            {t("common.refresh")}
           </button>
         </div>
       </div>
 
-      {loading ? <p className="helper">Loading dashboard...</p> : null}
+      {loading ? <p className="helper">{t("dashboardPage.loading")}</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
 
       <div className="dashboard-stats">
         <div className="stat-box">
           <span className="stat-value">{activeCategories.length}</span>
-          <span className="stat-label">Categories</span>
+          <span className="stat-label">{t("dashboardPage.statCategories")}</span>
         </div>
         <div className="stat-box">
           <span className="stat-value">{publishedRunbooks.length}</span>
-          <span className="stat-label">Published Runbooks</span>
+          <span className="stat-label">{t("dashboardPage.statPublishedRunbooks")}</span>
         </div>
         <div className="stat-box">
           <span className="stat-value">{openTickets.length}</span>
-          <span className="stat-label">Open</span>
+          <span className="stat-label">{t("dashboardPage.statOpen")}</span>
         </div>
         <div className="stat-box">
           <span className="stat-value">{inProgressTickets.length}</span>
-          <span className="stat-label">In Progress</span>
+          <span className="stat-label">{t("dashboardPage.statInProgress")}</span>
         </div>
         <div className="stat-box">
           <span className="stat-value">{resolvedTickets.length}</span>
-          <span className="stat-label">Resolved</span>
+          <span className="stat-label">{t("dashboardPage.statResolved")}</span>
         </div>
       </div>
 
       {!loading && categories.length > 0 ? (
         <div className="hierarchy-tree">
-          <h3>Categories &amp; Runbooks</h3>
+          <h3>{t("dashboardPage.hierarchyTitle")}</h3>
           {activeCategories.map((cat) => {
             const catUseCases = ucByCategory[cat.category_id] || [];
             return (
@@ -101,11 +103,13 @@ export default function ITDashboardPage() {
                   <Link to={`/it/admin/use-cases?category_id=${cat.category_id}`}>
                     {cat.display_name}
                   </Link>
-                  <span className="hierarchy-count">{catUseCases.length} runbooks</span>
+                  <span className="hierarchy-count">
+                    {t("dashboardPage.runbookCount", { count: catUseCases.length })}
+                  </span>
                 </summary>
                 <div className="hierarchy-children">
                   {catUseCases.length === 0 ? (
-                    <p className="helper">No runbooks under this category.</p>
+                    <p className="helper">{t("dashboardPage.noRunbooksUnderCategory")}</p>
                   ) : (
                     catUseCases.map((uc) => {
                       const ucTickets = ticketsByUseCase[uc.use_case_id] || [];
@@ -114,16 +118,16 @@ export default function ITDashboardPage() {
                           <span>{uc.display_name}</span>
                           <div className="hierarchy-leaf-meta">
                             <span className={`badge ${uc.published_version_number ? "published" : "draft"}`}>
-                              {uc.published_version_number ? "Published" : "Draft"}
+                              {uc.published_version_number ? t("common.published") : t("common.draft")}
                             </span>
                             {uc.is_system_default ? (
-                              <span className="badge default">Default</span>
+                              <span className="badge default">{t("common.default")}</span>
                             ) : null}
                             <Link
                               to={`/it/admin/tickets?use_case_id=${uc.use_case_id}`}
                               className="hierarchy-ticket-link"
                             >
-                              {ucTickets.length} tickets
+                              {t("dashboardPage.ticketCount", { count: ucTickets.length })}
                             </Link>
                           </div>
                         </div>
