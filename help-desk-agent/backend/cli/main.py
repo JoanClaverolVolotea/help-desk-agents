@@ -1,20 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 from typing import Any
 
-from import_paths import configure_backend_import_paths
-
-configure_backend_import_paths(__file__)
-
-from agent_runtime.bootstrap import (  # noqa: E402
-    build_snapshot_from_repository,
-    initialize_repositories,
-)
-from repository import CategoryRepository, UseCaseRepository  # noqa: E402
-
-from agents import (  # noqa: E402
+from agents import (
     Agent,
     HandoffOutputItem,
     ItemHelpers,
@@ -25,7 +16,22 @@ from agents import (  # noqa: E402
     TResponseInputItem,
     trace,
 )
-from examples.auto_mode import input_with_fallback, is_auto_mode  # noqa: E402
+from backend.runtime.bootstrap import (
+    build_snapshot_from_repository,
+    initialize_repositories,
+)
+from backend.storage import CategoryRepository, UseCaseRepository
+
+
+def is_auto_mode() -> bool:
+    return os.environ.get("EXAMPLES_INTERACTIVE_MODE", "").lower() == "auto"
+
+
+def input_with_fallback(prompt: str, fallback: str) -> str:
+    if is_auto_mode():
+        print(f"[auto-input] {prompt.strip()} -> {fallback}")
+        return fallback
+    return input(prompt)
 
 
 def _default_sample_ticket() -> str:

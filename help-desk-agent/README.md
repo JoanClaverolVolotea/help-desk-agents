@@ -9,45 +9,61 @@ This project is a non-technical help desk platform with:
 
 ## Project layout
 
-- `backend/backend.py`: FastAPI app (chat, admin, tech assistant APIs).
-- `backend/main.py`: Optional terminal chat runner.
-- `backend/db.py`: SQLite schema + migration-safe initialization.
-- `backend/repository.py`: Category/use-case repositories.
-- `backend/templates.py`: Step catalog, validators, and seed data.
-- `backend/agent_runtime/`: Runtime wiring split by goal (bootstrap, snapshot, triage, specialists).
-- `backend/workflows/`: Deterministic use-case step execution and tool bindings.
+- `backend/api/main.py`: FastAPI app factory + module entrypoint.
+- `backend/api/routes/`: HTTP routes grouped by feature.
+- `backend/api_internal/`: non-route API logic (state, runtime sync, event serialization).
+- `backend/runtime/`: runtime wiring split by goal (bootstrap, snapshot, triage, specialists).
+- `backend/workflows/`: deterministic use-case step execution and tool bindings.
+- `backend/storage/`: SQLite repositories split by entity.
+- `backend/domain/`: shared models, templates, and language policy.
+- `backend/cli/main.py`: optional terminal chat runner.
+- `data/`: SQLite data files at the same level as `backend/`.
 - `frontend/`: Vite + React app with `Chat`, `Admin`, and `Tech Assistant` tabs.
 
 ## Requirements
 
-- `.env` with `OPENAI_API_KEY=...`
+- `backend/.env` with `OPENAI_API_KEY=...`
+- Python 3.10+
+- `uv`
 - Node.js + npm
 
 ## Quick start
 
-From repository root:
+All commands below assume your current directory is `help-desk-agent/`.
 
-1. Create `.env`:
+1. Enter the project folder:
 
 ```bash
-echo 'OPENAI_API_KEY=sk-...' > .env
+cd help-desk-agent
 ```
 
-2. Start backend API:
+2. Create backend-local `.env`:
 
 ```bash
-uv run --env-file .env python help-desk-agent/backend/backend.py
+echo 'OPENAI_API_KEY=sk-...' > backend/.env
 ```
 
-3. Start frontend in another terminal:
+3. Start backend API:
 
 ```bash
-cd help-desk-agent/frontend
+uv run --env-file backend/.env python -m backend.api.main
+```
+
+4. Start frontend in another terminal:
+
+```bash
+cd frontend
 npm install
 npm run dev
 ```
 
-4. Open `http://127.0.0.1:5173`.
+5. Open `http://127.0.0.1:5173`.
+
+Optional CLI runner:
+
+```bash
+uv run --env-file backend/.env python -m backend.cli.main
+```
 
 ## Admin workflow
 
@@ -70,44 +86,38 @@ npm run dev
 
 ## API summary
 
-Stable chat APIs:
+Canonical API (v2):
 
-- `GET /api/health`
-- `POST /api/chat`
-- `POST /api/reset`
-
-Tech assistant APIs:
-
-- `POST /api/admin/assistant/chat`
-- `POST /api/admin/assistant/reset`
-
-Admin catalog APIs:
-
-- `GET /api/admin/steps`
-- `GET /api/admin/categories`
-- `GET /api/admin/categories/{category_id}`
-- `POST /api/admin/categories`
-- `PUT /api/admin/categories/{category_id}/draft`
-- `POST /api/admin/categories/{category_id}/publish`
-- `POST /api/admin/categories/{category_id}/archive`
-- `POST /api/admin/categories/{category_id}/restore`
-
-Admin use-case APIs:
-
-- `GET /api/admin/use-cases?include_archived=0|1`
-- `GET /api/admin/use-cases/{use_case_id}`
-- `POST /api/admin/use-cases`
-- `PUT /api/admin/use-cases/{use_case_id}/draft`
-- `POST /api/admin/use-cases/{use_case_id}/publish`
-- `POST /api/admin/use-cases/{use_case_id}/archive`
-- `POST /api/admin/use-cases/{use_case_id}/restore`
-- `POST /api/admin/use-cases/{use_case_id}/migrate-category-version`
+- `GET /api/v2/health`
+- `POST /api/v2/chat`
+- `POST /api/v2/chat/stream`
+- `POST /api/v2/reset`
+- `POST /api/v2/admin/assistant/chat`
+- `POST /api/v2/admin/assistant/reset`
+- `GET /api/v2/admin/steps`
+- `GET /api/v2/admin/categories?include_archived=true|false`
+- `GET /api/v2/admin/categories/{category_id}`
+- `POST /api/v2/admin/categories`
+- `PUT /api/v2/admin/categories/{category_id}/draft`
+- `POST /api/v2/admin/categories/{category_id}/publish`
+- `POST /api/v2/admin/categories/{category_id}/archive`
+- `POST /api/v2/admin/categories/{category_id}/restore`
+- `GET /api/v2/admin/use-cases?include_archived=true|false`
+- `GET /api/v2/admin/use-cases/{use_case_id}`
+- `POST /api/v2/admin/use-cases`
+- `PUT /api/v2/admin/use-cases/{use_case_id}/draft`
+- `POST /api/v2/admin/use-cases/{use_case_id}/publish`
+- `POST /api/v2/admin/use-cases/{use_case_id}/archive`
+- `POST /api/v2/admin/use-cases/{use_case_id}/restore`
+- `POST /api/v2/admin/use-cases/{use_case_id}/migrate-category-version`
 
 ## Validation commands
 
+Run from `help-desk-agent/`:
+
 ```bash
-uv run ruff check help-desk-agent/backend
-uv run mypy help-desk-agent/backend
-uv run pytest help-desk-agent/backend/tests -q
-cd help-desk-agent/frontend && npm run build
+uv run ruff check backend
+uv run mypy backend
+uv run pytest backend/tests -q
+cd frontend && npm run build
 ```

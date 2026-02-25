@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from repository import CategoryRepository, UseCaseRepository
-from templates import seed_category_definitions, seed_use_case_definitions
-
-from agent_runtime.snapshot import RuntimeSnapshot, build_runtime_snapshot
+from backend.domain.templates import seed_category_definitions, seed_use_case_definitions
+from backend.runtime.snapshot import RuntimeSnapshot, build_runtime_snapshot
+from backend.storage import CategoryRepository, UseCaseRepository
 
 
 def initialize_repositories(

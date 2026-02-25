@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from repository import CategoryRepository, UseCaseRepository
-from templates import seed_category_definitions, seed_use_case_definitions
+from backend.domain.templates import seed_category_definitions, seed_use_case_definitions
+from backend.storage import CategoryRepository, UseCaseRepository
 
 
 def test_repository_create_update_publish_keeps_version_sequence(tmp_path) -> None:

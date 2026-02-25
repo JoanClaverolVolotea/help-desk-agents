@@ -4,7 +4,7 @@ import os
 import pathlib
 import sqlite3
 
-DEFAULT_DB_PATH = pathlib.Path(__file__).resolve().parent / "data" / "helpdesk.db"
+DEFAULT_DB_PATH = pathlib.Path(__file__).resolve().parents[2] / "data" / "helpdesk.db"
 
 
 def resolve_db_path(path_override: str | None = None) -> pathlib.Path:

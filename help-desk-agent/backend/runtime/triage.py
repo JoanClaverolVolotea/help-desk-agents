@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from models import PublishedUseCaseSummary
-
 from agents import Agent
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+from backend.domain.models import PublishedUseCaseSummary
 
 
 def build_triage_agent(

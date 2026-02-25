@@ -5,11 +5,10 @@ import re
 import unicodedata
 from typing import Any
 
-from models import PublishedUseCaseSummary
-from workflows.tools import build_use_case_workflow_tool
-
 from agents import Agent
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+from backend.domain.models import PublishedUseCaseSummary
+from backend.workflows.tools import build_use_case_workflow_tool
 
 
 def build_specialist_agent(use_case: PublishedUseCaseSummary) -> Agent[Any]:

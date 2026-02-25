@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from agent_runtime.bootstrap import build_snapshot_from_repository, initialize_repositories
-from agent_runtime.snapshot import RuntimeSnapshot, build_runtime_snapshot
+from .bootstrap import build_snapshot_from_repository, initialize_repositories
+from .snapshot import RuntimeSnapshot, build_runtime_snapshot
 
 __all__ = [
     "RuntimeSnapshot",

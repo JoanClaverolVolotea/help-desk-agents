@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from models import (
+from backend.domain.models import (
     CategoryDefinitionDraft,
     CategoryDefinitionInput,
     StepCatalogItem,

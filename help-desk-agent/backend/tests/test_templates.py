@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-from models import CategoryDefinitionInput, UseCaseDefinitionInput, UseCaseStep
-from templates import validate_category_definition, validate_use_case_definition
+from backend.domain.models import (
+    CategoryDefinitionInput,
+    UseCaseDefinitionInput,
+    UseCaseStep,
+)
+from backend.domain.templates import (
+    validate_category_definition,
+    validate_use_case_definition,
+)
 
 
 def test_category_validation_rejects_unknown_step() -> None:

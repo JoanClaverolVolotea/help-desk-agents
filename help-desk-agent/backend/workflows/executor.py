@@ -3,9 +3,10 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
-from language_policy import detect_user_language, translate_backend_text
-from models import PublishedUseCaseSummary, UseCaseStep
 from pydantic import BaseModel, Field
+
+from backend.domain.language_policy import detect_user_language, translate_backend_text
+from backend.domain.models import PublishedUseCaseSummary, UseCaseStep
 
 TICKET_ID_PATTERN = re.compile(r"\b[A-Z]{2,10}-\d{2,10}\b")
 StepHandler = Callable[[UseCaseStep, dict[str, str], str], str]

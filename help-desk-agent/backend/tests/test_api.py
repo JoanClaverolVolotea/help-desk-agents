@@ -8,13 +8,19 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 
+def _clear_backend_modules() -> None:
+    module_names = [
+        name for name in sys.modules if name == "backend" or name.startswith("backend.")
+    ]
+    for name in module_names:
+        del sys.modules[name]
+
+
 def _load_backend_module(tmp_path, monkeypatch):
     db_path = tmp_path / "api.db"
     monkeypatch.setenv("HELP_DESK_DB_PATH", str(db_path))
-
-    if "backend" in sys.modules:
-        del sys.modules["backend"]
-    backend_module = importlib.import_module("backend")
+    _clear_backend_modules()
+    backend_module = importlib.import_module("backend.api.main")
     return importlib.reload(backend_module)
 
 
@@ -64,24 +70,66 @@ def test_admin_steps_endpoint(tmp_path, monkeypatch) -> None:
     backend_module = _load_backend_module(tmp_path, monkeypatch)
     client = TestClient(backend_module.app)
 
-    response = client.get("/api/admin/steps")
+    response = client.get("/api/v2/admin/steps")
     assert response.status_code == 200
     payload = response.json()
     assert "items" in payload
     assert any(item["step_id"] == "manual_instruction" for item in payload["items"])
 
 
+def test_health_endpoint(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    response = client.get("/api/v2/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_v2_use_case_list_accepts_boolean_include_archived(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    create_category_response = client.post(
+        "/api/v2/admin/categories",
+        json=_category_payload(display_name="Archived List Category"),
+    )
+    assert create_category_response.status_code == 200
+    category_id = create_category_response.json()["category"]["category_id"]
+    assert (
+        client.post(f"/api/v2/admin/categories/{category_id}/publish", json={}).status_code == 200
+    )
+
+    create_use_case_response = client.post(
+        "/api/v2/admin/use-cases",
+        json=_use_case_payload(category_id),
+    )
+    assert create_use_case_response.status_code == 200
+    use_case_id = create_use_case_response.json()["use_case"]["use_case_id"]
+    assert client.post(f"/api/v2/admin/use-cases/{use_case_id}/archive", json={}).status_code == 200
+
+    excluded = client.get("/api/v2/admin/use-cases?include_archived=false")
+    included = client.get("/api/v2/admin/use-cases?include_archived=true")
+
+    assert excluded.status_code == 200
+    assert included.status_code == 200
+    excluded_ids = {item["use_case_id"] for item in excluded.json()["items"]}
+    included_ids = {item["use_case_id"] for item in included.json()["items"]}
+    assert use_case_id not in excluded_ids
+    assert use_case_id in included_ids
+
+
 def test_category_crud_flow(tmp_path, monkeypatch) -> None:
     backend_module = _load_backend_module(tmp_path, monkeypatch)
     client = TestClient(backend_module.app)
 
-    create_response = client.post("/api/admin/categories", json=_category_payload())
+    create_response = client.post("/api/v2/admin/categories", json=_category_payload())
     assert create_response.status_code == 200
     category_id = create_response.json()["category"]["category_id"]
 
-    publish_response = client.post(f"/api/admin/categories/{category_id}/publish", json={})
+    publish_response = client.post(f"/api/v2/admin/categories/{category_id}/publish", json={})
     assert publish_response.status_code == 200
-    use_cases_response = client.get("/api/admin/use-cases")
+    use_cases_response = client.get("/api/v2/admin/use-cases")
     assert use_cases_response.status_code == 200
     use_cases = use_cases_response.json()["items"]
     assert any(
@@ -89,11 +137,11 @@ def test_category_crud_flow(tmp_path, monkeypatch) -> None:
         for item in use_cases
     )
 
-    archive_response = client.post(f"/api/admin/categories/{category_id}/archive", json={})
+    archive_response = client.post(f"/api/v2/admin/categories/{category_id}/archive", json={})
     assert archive_response.status_code == 200
     assert archive_response.json()["archived"] is True
 
-    restore_response = client.post(f"/api/admin/categories/{category_id}/restore", json={})
+    restore_response = client.post(f"/api/v2/admin/categories/{category_id}/restore", json={})
     assert restore_response.status_code == 200
     assert restore_response.json()["archived"] is False
 
@@ -103,40 +151,40 @@ def test_create_publish_archive_restore_use_case(tmp_path, monkeypatch) -> None:
     client = TestClient(backend_module.app)
 
     create_category_response = client.post(
-        "/api/admin/categories",
+        "/api/v2/admin/categories",
         json=_category_payload(display_name="UseCaseCategory"),
     )
     assert create_category_response.status_code == 200
     category_id = create_category_response.json()["category"]["category_id"]
 
     publish_category_response = client.post(
-        f"/api/admin/categories/{category_id}/publish",
+        f"/api/v2/admin/categories/{category_id}/publish",
         json={},
     )
     assert publish_category_response.status_code == 200
 
     create_use_case_response = client.post(
-        "/api/admin/use-cases",
+        "/api/v2/admin/use-cases",
         json=_use_case_payload(category_id),
     )
     assert create_use_case_response.status_code == 200
     use_case_id = create_use_case_response.json()["use_case"]["use_case_id"]
 
     publish_use_case_response = client.post(
-        f"/api/admin/use-cases/{use_case_id}/publish",
+        f"/api/v2/admin/use-cases/{use_case_id}/publish",
         json={},
     )
     assert publish_use_case_response.status_code == 200
 
     archive_use_case_response = client.post(
-        f"/api/admin/use-cases/{use_case_id}/archive",
+        f"/api/v2/admin/use-cases/{use_case_id}/archive",
         json={},
     )
     assert archive_use_case_response.status_code == 200
     assert archive_use_case_response.json()["archived"] is True
 
     restore_use_case_response = client.post(
-        f"/api/admin/use-cases/{use_case_id}/restore",
+        f"/api/v2/admin/use-cases/{use_case_id}/restore",
         json={},
     )
     assert restore_use_case_response.status_code == 200
@@ -148,18 +196,18 @@ def test_publish_category_and_migrate_use_case(tmp_path, monkeypatch) -> None:
     client = TestClient(backend_module.app)
 
     create_category_response = client.post(
-        "/api/admin/categories",
+        "/api/v2/admin/categories",
         json=_category_payload(display_name="MigrationCategory"),
     )
     assert create_category_response.status_code == 200
     category = create_category_response.json()["category"]
     category_id = category["category_id"]
 
-    publish_v1 = client.post(f"/api/admin/categories/{category_id}/publish", json={})
-    assert publish_v1.status_code == 200
+    publish_response = client.post(f"/api/v2/admin/categories/{category_id}/publish", json={})
+    assert publish_response.status_code == 200
 
     create_use_case_response = client.post(
-        "/api/admin/use-cases",
+        "/api/v2/admin/use-cases",
         json={
             **_use_case_payload(category_id, display_name="Migration case"),
             "slug": "migration-case",
@@ -168,11 +216,11 @@ def test_publish_category_and_migrate_use_case(tmp_path, monkeypatch) -> None:
     assert create_use_case_response.status_code == 200
     use_case_id = create_use_case_response.json()["use_case"]["use_case_id"]
 
-    publish_use_case = client.post(f"/api/admin/use-cases/{use_case_id}/publish", json={})
+    publish_use_case = client.post(f"/api/v2/admin/use-cases/{use_case_id}/publish", json={})
     assert publish_use_case.status_code == 200
 
     update_category_response = client.put(
-        f"/api/admin/categories/{category_id}/draft",
+        f"/api/v2/admin/categories/{category_id}/draft",
         json={
             "definition": {
                 **_category_payload(display_name="MigrationCategory")["definition"],
@@ -187,12 +235,14 @@ def test_publish_category_and_migrate_use_case(tmp_path, monkeypatch) -> None:
     )
     assert update_category_response.status_code == 200
 
-    publish_v2 = client.post(f"/api/admin/categories/{category_id}/publish", json={})
-    assert publish_v2.status_code == 200
-    published_version = publish_v2.json()["category"]["published_version_number"]
+    publish_updated_category = client.post(
+        f"/api/v2/admin/categories/{category_id}/publish", json={}
+    )
+    assert publish_updated_category.status_code == 200
+    published_version = publish_updated_category.json()["category"]["published_version_number"]
 
     migrate_response = client.post(
-        f"/api/admin/use-cases/{use_case_id}/migrate-category-version",
+        f"/api/v2/admin/use-cases/{use_case_id}/migrate-category-version",
         json={
             "category_id": category_id,
             "category_version_number": published_version,
@@ -226,7 +276,7 @@ def test_chat_endpoint_with_stubbed_runner(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(backend_module.Runner, "run", fake_run)
 
     client = TestClient(backend_module.app)
-    response = client.post("/api/chat", json={"message": "Unknown request, please help"})
+    response = client.post("/api/v2/chat", json={"message": "Unknown request, please help"})
 
     assert response.status_code == 200
     payload = response.json()
@@ -258,7 +308,7 @@ def test_chat_endpoint_localizes_backend_events_in_spanish(tmp_path, monkeypatch
     monkeypatch.setattr(backend_module.Runner, "run", fake_run)
 
     client = TestClient(backend_module.app)
-    response = client.post("/api/chat", json={"message": "Necesito ayuda con acceso"})
+    response = client.post("/api/v2/chat", json={"message": "Necesito ayuda con acceso"})
 
     assert response.status_code == 200
     payload = response.json()
@@ -309,7 +359,7 @@ def test_chat_stream_endpoint_with_stubbed_runner(tmp_path, monkeypatch) -> None
     monkeypatch.setattr(backend_module.Runner, "run_streamed", fake_run_streamed)
 
     client = TestClient(backend_module.app)
-    response = client.post("/api/chat/stream", json={"message": "hi"})
+    response = client.post("/api/v2/chat/stream", json={"message": "hi"})
 
     assert response.status_code == 200
     lines = [line for line in response.text.splitlines() if line.strip()]
@@ -344,25 +394,25 @@ def test_chat_rebinds_stale_triage_conversation_snapshot(tmp_path, monkeypatch) 
     monkeypatch.setattr(backend_module.Runner, "run", fake_run)
     client = TestClient(backend_module.app)
 
-    first_chat = client.post("/api/chat", json={"message": "initial ticket"})
+    first_chat = client.post("/api/v2/chat", json={"message": "initial ticket"})
     assert first_chat.status_code == 200
     conversation_id = first_chat.json()["conversation_id"]
     first_snapshot_id = backend_module.CONVERSATIONS[conversation_id].snapshot_id
 
     create_category_response = client.post(
-        "/api/admin/categories",
+        "/api/v2/admin/categories",
         json=_category_payload(display_name="Snapshot Refresh Category"),
     )
     assert create_category_response.status_code == 200
     category_id = create_category_response.json()["category"]["category_id"]
 
-    publish_response = client.post(f"/api/admin/categories/{category_id}/publish", json={})
+    publish_response = client.post(f"/api/v2/admin/categories/{category_id}/publish", json={})
     assert publish_response.status_code == 200
     current_snapshot_id = backend_module.RUNTIME_SNAPSHOT.snapshot_id
     assert current_snapshot_id != first_snapshot_id
 
     second_chat = client.post(
-        "/api/chat",
+        "/api/v2/chat",
         json={"message": "follow-up ticket", "conversation_id": conversation_id},
     )
     assert second_chat.status_code == 200
@@ -401,7 +451,7 @@ def test_chat_keeps_specialist_on_stale_snapshot(tmp_path, monkeypatch) -> None:
     )
 
     response = client.post(
-        "/api/chat",
+        "/api/v2/chat",
         json={"message": "continue specialist flow", "conversation_id": conversation_id},
     )
     assert response.status_code == 200
@@ -416,23 +466,23 @@ def test_category_archive_and_restore_updates_runtime_handoffs(tmp_path, monkeyp
 
     base_handoff_count = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
     create_response = client.post(
-        "/api/admin/categories",
+        "/api/v2/admin/categories",
         json=_category_payload(display_name="Runtime Count Category"),
     )
     assert create_response.status_code == 200
     category_id = create_response.json()["category"]["category_id"]
 
-    publish_response = client.post(f"/api/admin/categories/{category_id}/publish", json={})
+    publish_response = client.post(f"/api/v2/admin/categories/{category_id}/publish", json={})
     assert publish_response.status_code == 200
     after_publish = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
     assert after_publish == base_handoff_count + 1
 
-    archive_response = client.post(f"/api/admin/categories/{category_id}/archive", json={})
+    archive_response = client.post(f"/api/v2/admin/categories/{category_id}/archive", json={})
     assert archive_response.status_code == 200
     after_archive = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
     assert after_archive == base_handoff_count
 
-    restore_response = client.post(f"/api/admin/categories/{category_id}/restore", json={})
+    restore_response = client.post(f"/api/v2/admin/categories/{category_id}/restore", json={})
     assert restore_response.status_code == 200
     after_restore = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
     assert after_restore == base_handoff_count + 1
@@ -461,7 +511,7 @@ def test_admin_assistant_chat_endpoint(tmp_path, monkeypatch) -> None:
 
     client = TestClient(backend_module.app)
     response = client.post(
-        "/api/admin/assistant/chat",
+        "/api/v2/admin/assistant/chat",
         json={"message": "Ayudame a crear una categoria para nomina."},
     )
 

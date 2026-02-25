@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from agent_runtime.snapshot import build_runtime_snapshot
-from models import PublishedUseCaseSummary, UseCaseDefinitionPublished
-from templates import seed_use_case_definitions
+from backend.domain.models import PublishedUseCaseSummary, UseCaseDefinitionPublished
+from backend.domain.templates import seed_use_case_definitions
+from backend.runtime.snapshot import build_runtime_snapshot
 
 
 def _to_published_summary(

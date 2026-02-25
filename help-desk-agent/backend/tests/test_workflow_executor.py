@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from models import PublishedUseCaseSummary, UseCaseDefinitionPublished
-from templates import seed_use_case_definitions
-from workflows.executor import WorkflowExecutionInput, execute_workflow
+from backend.domain.models import PublishedUseCaseSummary, UseCaseDefinitionPublished
+from backend.domain.templates import seed_use_case_definitions
+from backend.workflows.executor import WorkflowExecutionInput, execute_workflow
 
 
 def _build_summary() -> PublishedUseCaseSummary:

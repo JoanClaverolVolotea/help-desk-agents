@@ -3,10 +3,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from models import PublishedUseCaseSummary
-
 from agents import function_tool
-from workflows.executor import WorkflowExecutionInput, execute_workflow
+from backend.domain.models import PublishedUseCaseSummary
+from backend.workflows.executor import WorkflowExecutionInput, execute_workflow
 
 
 def build_use_case_workflow_tool(use_case: PublishedUseCaseSummary):

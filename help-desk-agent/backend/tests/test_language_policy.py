@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from language_policy import detect_user_language, normalize_language
+from backend.domain.language_policy import detect_user_language, normalize_language
 
 
 def test_detect_user_language_returns_spanish() -> None:
