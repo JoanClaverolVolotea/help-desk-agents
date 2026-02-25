@@ -222,10 +222,10 @@ export default function ITAdminUseCasesPage() {
       return "Nombre del caso obligatorio. / Display name is required.";
     }
     if (!wizardState.handoffDescription.trim()) {
-      return "Handoff description is required.";
+      return "Agent transfer message is required.";
     }
     if (!wizardState.routingDescription.trim()) {
-      return "Routing description is required.";
+      return "\"When to use this runbook\" is required.";
     }
     if (wizardState.steps.length === 0) {
       return "Define al menos un paso. / Add at least one step.";
@@ -520,7 +520,10 @@ export default function ITAdminUseCasesPage() {
           {useCaseWizardStep === 2 ? (
             <div className="form-grid">
               <label>
-                Handoff description
+                Agent transfer message
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  What the AI tells the user when it hands off to this runbook's specialist agent.
+                </span>
                 <textarea
                   rows={3}
                   value={useCaseWizardState.handoffDescription}
@@ -528,7 +531,10 @@ export default function ITAdminUseCasesPage() {
                 />
               </label>
               <label>
-                Routing description
+                When to use this runbook
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  Describes the types of issues this runbook handles. The AI uses this to pick the right runbook.
+                </span>
                 <textarea
                   rows={3}
                   value={useCaseWizardState.routingDescription}

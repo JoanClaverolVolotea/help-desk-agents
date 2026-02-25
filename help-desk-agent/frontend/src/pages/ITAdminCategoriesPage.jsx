@@ -135,10 +135,10 @@ export default function ITAdminCategoriesPage() {
       return "Descripcion obligatoria. / Description is required.";
     }
     if (!wizardState.defaultHandoffDescription.trim()) {
-      return "Handoff description is required.";
+      return "Agent transfer message is required.";
     }
     if (!wizardState.defaultRoutingDescription.trim()) {
-      return "Routing description is required.";
+      return "\"When to use this category\" is required.";
     }
     if (wizardState.allowedStepIds.length === 0) {
       return "Selecciona al menos un paso permitido. / Select at least one allowed step.";
@@ -556,7 +556,10 @@ export default function ITAdminCategoriesPage() {
           {categoryWizardStep === 3 ? (
             <div className="form-grid">
               <label>
-                Handoff description
+                Agent transfer message
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  What the AI tells the user when it hands off to this category's specialist agent.
+                </span>
                 <textarea
                   rows={3}
                   value={categoryWizardState.defaultHandoffDescription}
@@ -564,7 +567,10 @@ export default function ITAdminCategoriesPage() {
                 />
               </label>
               <label>
-                Routing description
+                When to use this category
+                <span className="helper" style={{ fontSize: "0.78rem", fontWeight: 400 }}>
+                  Describes the types of issues that should be routed here. The AI uses this to decide which category fits.
+                </span>
                 <textarea
                   rows={3}
                   value={categoryWizardState.defaultRoutingDescription}
