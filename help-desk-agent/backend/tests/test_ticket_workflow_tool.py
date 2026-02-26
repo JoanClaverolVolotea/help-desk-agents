@@ -3,14 +3,14 @@ from __future__ import annotations
 import asyncio
 import json
 
-from backend.api_internal.request_context import (
+from backend.chats.shared.request_context import (
     CHANNEL_ADMIN_ASSISTANT,
-    CHANNEL_USER_CHAT,
+    CHANNEL_USER_ASSISTANT,
     CONVERSATION_ID_CONTEXT,
     REQUEST_CHANNEL_CONTEXT,
 )
+from backend.chats.user_assistant.bootstrap import initialize_repositories
 from backend.domain.models import TicketStatus
-from backend.runtime.bootstrap import initialize_repositories
 from backend.storage import CategoryRepository, TicketRepository, UseCaseRepository
 from backend.workflows.tools import build_use_case_workflow_tool
 
@@ -35,7 +35,7 @@ def test_use_case_workflow_tool_persists_ticket_in_user_chat_channel(tmp_path) -
     tool = build_use_case_workflow_tool(published_use_case, ticket_repository=ticket_repository)
 
     conversation_token = CONVERSATION_ID_CONTEXT.set("ticket-tool-conversation")
-    channel_token = REQUEST_CHANNEL_CONTEXT.set(CHANNEL_USER_CHAT)
+    channel_token = REQUEST_CHANNEL_CONTEXT.set(CHANNEL_USER_ASSISTANT)
     try:
         output = _invoke_tool(
             tool,

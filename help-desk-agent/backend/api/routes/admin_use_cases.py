@@ -14,8 +14,8 @@ from backend.api.schemas.admin import (
     UseCaseDetailResponse,
     UseCaseListResponse,
 )
-from backend.api_internal.runtime_sync import refresh_runtime_snapshot
-from backend.api_internal.validation import slugify, validate_use_case_payload
+from backend.api.validation import slugify, validate_use_case_payload
+from backend.chats.user_assistant.service import refresh_user_assistant_runtime_snapshot
 from backend.domain.templates import (
     to_use_case_draft_definition,
     validate_use_case_definition,
@@ -140,7 +140,7 @@ async def admin_publish_use_case(use_case_id: str) -> PublishUseCaseResponse:
     except NoDraftAvailableError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    await refresh_runtime_snapshot()
+    await refresh_user_assistant_runtime_snapshot()
     return PublishUseCaseResponse(use_case=detail)
 
 
@@ -155,7 +155,7 @@ async def admin_archive_use_case(use_case_id: str) -> ArchiveRestoreResponse:
 
     deps.USE_CASE_REPOSITORY.archive_use_case(use_case_id)
 
-    await refresh_runtime_snapshot()
+    await refresh_user_assistant_runtime_snapshot()
     return ArchiveRestoreResponse(success=True, entity_id=use_case_id, archived=True)
 
 
@@ -170,7 +170,7 @@ async def admin_restore_use_case(use_case_id: str) -> ArchiveRestoreResponse:
 
     deps.USE_CASE_REPOSITORY.restore_use_case(use_case_id)
 
-    await refresh_runtime_snapshot()
+    await refresh_user_assistant_runtime_snapshot()
     return ArchiveRestoreResponse(success=True, entity_id=use_case_id, archived=False)
 
 

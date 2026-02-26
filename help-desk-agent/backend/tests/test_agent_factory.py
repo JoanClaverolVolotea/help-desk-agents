@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from backend.chats.user_assistant.graph.snapshot import build_runtime_snapshot
 from backend.domain.models import PublishedUseCaseSummary, UseCaseDefinitionPublished
 from backend.domain.templates import seed_use_case_definitions
-from backend.runtime.snapshot import build_runtime_snapshot
 
 
 def _to_published_summary(

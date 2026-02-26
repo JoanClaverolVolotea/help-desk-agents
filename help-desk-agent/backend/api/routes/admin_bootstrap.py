@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from backend.api.schemas.admin import ReseedDefaultsRequest, ReseedDefaultsResponse
-from backend.api_internal.runtime_sync import reseed_defaults_and_refresh_runtime
+from backend.chats.user_assistant.service import reseed_defaults_and_refresh_runtime
 
 router = APIRouter()
 

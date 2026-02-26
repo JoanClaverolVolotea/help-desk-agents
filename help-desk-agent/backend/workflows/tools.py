@@ -4,8 +4,8 @@ import json
 from typing import Any
 
 from agents import function_tool
-from backend.api_internal.request_context import (
-    CHANNEL_USER_CHAT,
+from backend.chats.shared.request_context import (
+    CHANNEL_USER_ASSISTANT,
     current_conversation_id,
     current_request_channel,
 )
@@ -44,7 +44,7 @@ def build_use_case_workflow_tool(
         field_values = _parse_field_values(field_values_json)
         request_channel = current_request_channel()
         should_persist_ticket = (
-            request_channel == CHANNEL_USER_CHAT and ticket_repository is not None
+            request_channel == CHANNEL_USER_ASSISTANT and ticket_repository is not None
         )
         specialist_agent_name = f"{use_case.display_name} Specialist"
 

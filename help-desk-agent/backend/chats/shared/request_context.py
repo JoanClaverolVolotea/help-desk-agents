@@ -4,7 +4,7 @@ from contextvars import ContextVar
 
 CHANNEL_ADMIN_ASSISTANT = "admin_assistant"
 CHANNEL_UNKNOWN = "unknown"
-CHANNEL_USER_CHAT = "user_chat"
+CHANNEL_USER_ASSISTANT = "user_assistant"
 
 CONVERSATION_ID_CONTEXT: ContextVar[str | None] = ContextVar(
     "help_desk_conversation_id",

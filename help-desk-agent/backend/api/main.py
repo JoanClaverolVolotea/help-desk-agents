@@ -9,19 +9,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from agents import Runner
 from backend.api.routes import (
-    admin_assistant,
     admin_bootstrap,
     admin_categories,
     admin_tickets,
     admin_use_cases,
-    chat,
     health,
 )
-from backend.api_internal.conversation_state import (
-    ADMIN_ASSISTANT_CONVERSATIONS,
-    CONVERSATIONS,
-    ConversationState,
-)
+from backend.chats.admin_assistant import routes as admin_assistant_routes
+from backend.chats.admin_assistant.service import ADMIN_ASSISTANT_RUNTIME_SNAPSHOT
+from backend.chats.admin_assistant.state import ADMIN_ASSISTANT_CONVERSATIONS
+from backend.chats.shared.state import ConversationState
+from backend.chats.user_assistant import routes as user_assistant_routes
+from backend.chats.user_assistant.state import USER_ASSISTANT_CONVERSATIONS
 
 
 def create_app() -> FastAPI:
@@ -36,8 +35,8 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health.router)
-    app.include_router(chat.router)
-    app.include_router(admin_assistant.router)
+    app.include_router(user_assistant_routes.router)
+    app.include_router(admin_assistant_routes.router)
     app.include_router(admin_bootstrap.router)
     app.include_router(admin_categories.router)
     app.include_router(admin_use_cases.router)
@@ -53,14 +52,14 @@ def __getattr__(name: str) -> Any:
         "CATEGORY_REPOSITORY",
         "TICKET_REPOSITORY",
         "USE_CASE_REPOSITORY",
-        "RUNTIME_SNAPSHOT",
-        "RUNTIME_LOCK",
+        "USER_ASSISTANT_RUNTIME_SNAPSHOT",
+        "USER_ASSISTANT_RUNTIME_LOCK",
     }:
         from backend.api import deps
 
         return getattr(deps, name)
-    if name == "ADMIN_ASSISTANT_TRIAGE_AGENT":
-        return admin_assistant.ADMIN_ASSISTANT_TRIAGE_AGENT
+    if name == "ADMIN_ASSISTANT_RUNTIME_SNAPSHOT":
+        return ADMIN_ASSISTANT_RUNTIME_SNAPSHOT
     raise AttributeError(name)
 
 
@@ -69,7 +68,7 @@ __all__ = [
     "create_app",
     "Runner",
     "ConversationState",
-    "CONVERSATIONS",
+    "USER_ASSISTANT_CONVERSATIONS",
     "ADMIN_ASSISTANT_CONVERSATIONS",
 ]
 

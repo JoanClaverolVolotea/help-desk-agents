@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from agents import Agent, handoff
-from backend.domain.models import PublishedUseCaseSummary
-from backend.runtime.specialists import (
+from backend.chats.user_assistant.graph.specialists import (
     build_specialist_agent,
     specialist_handoff_tool_name,
 )
-from backend.runtime.triage import build_triage_agent
+from backend.chats.user_assistant.graph.triage import build_triage_agent
+from backend.domain.models import PublishedUseCaseSummary
 from backend.storage.ticket_repository import TicketRepository
 
 
