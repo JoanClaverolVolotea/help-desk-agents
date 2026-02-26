@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from backend.domain.models import (
+    ApproveTicketRequest,
     ArchiveRestoreResponse,
     CategoryDefinitionInput,
     CategoryDetail,
@@ -11,6 +12,7 @@ from backend.domain.models import (
     CreateUseCaseResponse,
     MigrateCategoryVersionRequest,
     PublishUseCaseResponse,
+    RejectTicketRequest,
     ReseedDefaultsRequest,
     ReseedDefaultsResponse,
     ReseedDeletedCounts,
@@ -36,6 +38,7 @@ from backend.domain.models import (
 )
 
 __all__ = [
+    "ApproveTicketRequest",
     "ArchiveRestoreResponse",
     "CategoryDefinitionInput",
     "CategoryDetail",
@@ -46,6 +49,7 @@ __all__ = [
     "CreateUseCaseResponse",
     "MigrateCategoryVersionRequest",
     "PublishUseCaseResponse",
+    "RejectTicketRequest",
     "ReseedDefaultsRequest",
     "ReseedDefaultsResponse",
     "ReseedDeletedCounts",

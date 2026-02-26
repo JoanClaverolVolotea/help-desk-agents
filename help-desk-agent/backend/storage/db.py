@@ -5,6 +5,7 @@ import pathlib
 import sqlite3
 
 DEFAULT_DB_PATH = pathlib.Path(__file__).resolve().parents[2] / "data" / "helpdesk.db"
+TICKET_STATUS_VALUES = ("open", "in_progress", "pending_review", "approved", "rejected")
 
 
 def resolve_db_path(path_override: str | None = None) -> pathlib.Path:
@@ -86,7 +87,9 @@ def init_schema(conn: sqlite3.Connection) -> None:
             conversation_id TEXT,
             external_ticket_id TEXT,
             use_case_id TEXT NOT NULL,
-            status TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved')),
+            status TEXT NOT NULL CHECK (
+                status IN ('open', 'in_progress', 'pending_review', 'approved', 'rejected')
+            ),
             language TEXT NOT NULL,
             ticket_context TEXT NOT NULL,
             error_message TEXT,
@@ -114,7 +117,9 @@ def init_schema(conn: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS ticket_status_history (
             id TEXT PRIMARY KEY,
             ticket_id TEXT NOT NULL,
-            status TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved')),
+            status TEXT NOT NULL CHECK (
+                status IN ('open', 'in_progress', 'pending_review', 'approved', 'rejected')
+            ),
             changed_at TEXT NOT NULL,
             reason TEXT,
             FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
@@ -166,6 +171,9 @@ def init_schema(conn: sqlite3.Connection) -> None:
         """
     )
 
+    _migrate_ticket_status_tables(conn)
+    _ensure_ticket_indexes(conn)
+
     _ensure_use_cases_column(conn, "category_id", "TEXT")
     _ensure_use_cases_column(conn, "category_version_number", "INTEGER")
     _ensure_use_cases_column(conn, "is_system_default", "INTEGER NOT NULL DEFAULT 0")
@@ -192,6 +200,183 @@ def _ensure_use_cases_column(
 def _table_has_column(conn: sqlite3.Connection, table_name: str, column_name: str) -> bool:
     rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
     return any(row["name"] == column_name for row in rows)
+
+
+def _migrate_ticket_status_tables(conn: sqlite3.Connection) -> None:
+    tickets_needs_migration = _ticket_status_table_needs_migration(conn, "tickets")
+    history_needs_migration = _ticket_status_table_needs_migration(conn, "ticket_status_history")
+    if not tickets_needs_migration and not history_needs_migration:
+        return
+
+    conn.commit()
+    foreign_keys_row = conn.execute("PRAGMA foreign_keys").fetchone()
+    foreign_keys_enabled = bool(foreign_keys_row[0]) if foreign_keys_row is not None else True
+    if foreign_keys_enabled:
+        conn.execute("PRAGMA foreign_keys = OFF;")
+    try:
+        conn.execute("BEGIN")
+        if tickets_needs_migration:
+            _rebuild_tickets_table(conn)
+        if history_needs_migration:
+            _rebuild_ticket_status_history_table(conn)
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        if foreign_keys_enabled:
+            conn.execute("PRAGMA foreign_keys = ON;")
+
+
+def _ticket_status_table_needs_migration(conn: sqlite3.Connection, table_name: str) -> bool:
+    sql_row = conn.execute(
+        """
+        SELECT sql
+        FROM sqlite_master
+        WHERE type = 'table' AND name = ?
+        """,
+        (table_name,),
+    ).fetchone()
+    table_sql = (str(sql_row["sql"]) if sql_row and sql_row["sql"] else "").lower()
+    has_current_statuses = all(f"'{status}'" in table_sql for status in TICKET_STATUS_VALUES)
+    if not has_current_statuses:
+        return True
+
+    resolved_count_row = conn.execute(
+        f"""
+        SELECT COUNT(1) AS count
+        FROM {table_name}
+        WHERE status = 'resolved'
+        """
+    ).fetchone()
+    if resolved_count_row is None:
+        return False
+    return int(resolved_count_row["count"]) > 0
+
+
+def _rebuild_tickets_table(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE tickets_migrated (
+            id TEXT PRIMARY KEY,
+            conversation_id TEXT,
+            external_ticket_id TEXT,
+            use_case_id TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (
+                status IN ('open', 'in_progress', 'pending_review', 'approved', 'rejected')
+            ),
+            language TEXT NOT NULL,
+            ticket_context TEXT NOT NULL,
+            error_message TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            resolved_at TEXT,
+            FOREIGN KEY (use_case_id) REFERENCES use_cases(id)
+        )
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO tickets_migrated(
+            id,
+            conversation_id,
+            external_ticket_id,
+            use_case_id,
+            status,
+            language,
+            ticket_context,
+            error_message,
+            created_at,
+            updated_at,
+            resolved_at
+        )
+        SELECT
+            id,
+            conversation_id,
+            external_ticket_id,
+            use_case_id,
+            CASE status
+                WHEN 'resolved' THEN 'approved'
+                ELSE status
+            END,
+            language,
+            ticket_context,
+            error_message,
+            created_at,
+            updated_at,
+            resolved_at
+        FROM tickets
+        """
+    )
+    conn.execute("DROP TABLE tickets")
+    conn.execute("ALTER TABLE tickets_migrated RENAME TO tickets")
+
+
+def _rebuild_ticket_status_history_table(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE ticket_status_history_migrated (
+            id TEXT PRIMARY KEY,
+            ticket_id TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (
+                status IN ('open', 'in_progress', 'pending_review', 'approved', 'rejected')
+            ),
+            changed_at TEXT NOT NULL,
+            reason TEXT,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        )
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO ticket_status_history_migrated(id, ticket_id, status, changed_at, reason)
+        SELECT
+            id,
+            ticket_id,
+            CASE status
+                WHEN 'resolved' THEN 'approved'
+                ELSE status
+            END,
+            changed_at,
+            reason
+        FROM ticket_status_history
+        """
+    )
+    conn.execute("DROP TABLE ticket_status_history")
+    conn.execute("ALTER TABLE ticket_status_history_migrated RENAME TO ticket_status_history")
+
+
+def _ensure_ticket_indexes(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE INDEX IF NOT EXISTS idx_tickets_created_at
+            ON tickets(created_at DESC);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_status
+            ON tickets(status);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_external_ticket_id
+            ON tickets(external_ticket_id);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_conversation_id
+            ON tickets(conversation_id);
+
+        CREATE INDEX IF NOT EXISTS idx_tickets_use_case_id
+            ON tickets(use_case_id);
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_status_history_ticket_id
+            ON ticket_status_history(ticket_id, changed_at ASC);
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_fields_ticket_id
+            ON ticket_fields(ticket_id, field_name ASC);
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_steps_ticket_id
+            ON ticket_steps(ticket_id, step_order ASC);
+
+        CREATE INDEX IF NOT EXISTS idx_ticket_events_ticket_id
+            ON ticket_events(ticket_id, created_at ASC);
+        """
+    )
 
 
 def _dedupe_active_default_use_cases(conn: sqlite3.Connection) -> None:

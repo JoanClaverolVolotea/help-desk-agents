@@ -3,6 +3,7 @@ from __future__ import annotations
 from .category_repository import CategoryRepository
 from .errors import (
     CategoryNotFoundError,
+    InvalidTicketStatusTransitionError,
     NoDraftAvailableError,
     TicketNotFoundError,
     UseCaseNotFoundError,
@@ -18,4 +19,5 @@ __all__ = [
     "UseCaseNotFoundError",
     "NoDraftAvailableError",
     "TicketNotFoundError",
+    "InvalidTicketStatusTransitionError",
 ]

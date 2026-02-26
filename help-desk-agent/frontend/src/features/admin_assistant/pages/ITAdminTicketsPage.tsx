@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import Breadcrumb from "../components/Breadcrumb";
 import { useI18n } from "../../../shared/i18n/useI18n";
 import { readableError } from "../../../shared/api/errors";
-import { getTicket, listTickets } from "../api/adminCatalogClient";
+import { approveTicket, getTicket, listTickets, rejectTicket } from "../api/adminCatalogClient";
 import type { LanguageCode } from "../../../shared/types";
 import type { TicketDetail, TicketStatus, TicketSummary } from "../types";
 
@@ -46,12 +46,18 @@ export default function ITAdminTicketsPage(): JSX.Element {
 
   const [listLoading, setListLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [reviewedBy, setReviewedBy] = useState("");
+  const [approveNote, setApproveNote] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const statusOptions = [
     { value: "", label: t("ticketPage.statusAll") },
     { value: "open", label: t("common.statusOpen") },
     { value: "in_progress", label: t("common.statusInProgress") },
-    { value: "resolved", label: t("common.statusResolved") },
+    { value: "pending_review", label: t("common.statusPendingReview") },
+    { value: "approved", label: t("common.statusApproved") },
+    { value: "rejected", label: t("common.statusRejected") },
   ];
 
   const statusLabel = (value: TicketStatus): string => {
@@ -61,11 +67,19 @@ export default function ITAdminTicketsPage(): JSX.Element {
     if (value === "in_progress") {
       return t("common.statusInProgress");
     }
-    if (value === "resolved") {
-      return t("common.statusResolved");
+    if (value === "pending_review") {
+      return t("common.statusPendingReview");
+    }
+    if (value === "approved") {
+      return t("common.statusApproved");
+    }
+    if (value === "rejected") {
+      return t("common.statusRejected");
     }
     return String(value);
   };
+
+  const selectedTicketIsPendingReview = selectedTicket?.status === "pending_review";
 
   const loadTickets = async (): Promise<void> => {
     setListLoading(true);
@@ -138,6 +152,72 @@ export default function ITAdminTicketsPage(): JSX.Element {
   const handleFilterSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     await loadTickets();
+  };
+
+  const validateReviewerName = (): string | null => {
+    const normalized = reviewedBy.trim();
+    if (!normalized) {
+      setErrorMessage(t("ticketPage.reviewReviewerRequired"));
+      return null;
+    }
+    return normalized;
+  };
+
+  const handleApprove = async (): Promise<void> => {
+    if (!selectedTicket) {
+      return;
+    }
+    const normalizedReviewedBy = validateReviewerName();
+    if (!normalizedReviewedBy) {
+      return;
+    }
+    setActionLoading(true);
+    setErrorMessage("");
+    try {
+      const response = await approveTicket(selectedTicket.ticket_id, {
+        reviewed_by: normalizedReviewedBy,
+        note: approveNote.trim() || undefined,
+      });
+      setSelectedTicket(response.ticket);
+      setApproveNote("");
+      setRejectReason("");
+      await loadTickets();
+    } catch (error) {
+      setErrorMessage(readableError(error));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async (): Promise<void> => {
+    if (!selectedTicket) {
+      return;
+    }
+    const normalizedReviewedBy = validateReviewerName();
+    if (!normalizedReviewedBy) {
+      return;
+    }
+    const normalizedRejectReason = rejectReason.trim();
+    if (!normalizedRejectReason) {
+      setErrorMessage(t("ticketPage.reviewRejectReasonRequired"));
+      return;
+    }
+    setActionLoading(true);
+    setErrorMessage("");
+    try {
+      const response = await rejectTicket(selectedTicket.ticket_id, {
+        reviewed_by: normalizedReviewedBy,
+        reason: normalizedRejectReason,
+      });
+      setSelectedTicket(response.ticket);
+      setApproveNote("");
+      setRejectReason("");
+      await loadTickets();
+    } catch (error) {
+      setErrorMessage(readableError(error));
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -245,7 +325,7 @@ export default function ITAdminTicketsPage(): JSX.Element {
                 </span>
                 {selectedTicket.resolved_at ? (
                   <span>
-                    {t("common.fieldResolved")}: {formatTimestamp(selectedTicket.resolved_at, language)}
+                    {t("common.fieldFinalized")}: {formatTimestamp(selectedTicket.resolved_at, language)}
                   </span>
                 ) : null}
               </div>
@@ -253,6 +333,61 @@ export default function ITAdminTicketsPage(): JSX.Element {
                 <p className="error-text">
                   {t("common.fieldError")}: <code>{selectedTicket.error_message}</code>
                 </p>
+              ) : null}
+
+              {selectedTicketIsPendingReview ? (
+                <div className="ticket-review-panel">
+                  <h4>{t("ticketPage.reviewTitle")}</h4>
+                  <p className="helper">{t("ticketPage.reviewDescription")}</p>
+                  <label>
+                    {t("ticketPage.reviewReviewerLabel")}
+                    <input
+                      type="text"
+                      value={reviewedBy}
+                      onChange={(event) => setReviewedBy(event.target.value)}
+                      placeholder={t("ticketPage.reviewReviewerPlaceholder")}
+                      disabled={actionLoading}
+                    />
+                  </label>
+                  <label>
+                    {t("ticketPage.reviewApproveNoteLabel")}
+                    <textarea
+                      value={approveNote}
+                      onChange={(event) => setApproveNote(event.target.value)}
+                      placeholder={t("ticketPage.reviewApproveNotePlaceholder")}
+                      rows={2}
+                      disabled={actionLoading}
+                    />
+                  </label>
+                  <label>
+                    {t("ticketPage.reviewRejectReasonLabel")}
+                    <textarea
+                      value={rejectReason}
+                      onChange={(event) => setRejectReason(event.target.value)}
+                      placeholder={t("ticketPage.reviewRejectReasonPlaceholder")}
+                      rows={2}
+                      disabled={actionLoading}
+                    />
+                  </label>
+                  <div className="ticket-review-actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => void handleApprove()}
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? t("ticketPage.reviewSubmitting") : t("ticketPage.reviewApprove")}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => void handleReject()}
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? t("ticketPage.reviewSubmitting") : t("ticketPage.reviewReject")}
+                    </button>
+                  </div>
+                </div>
               ) : null}
 
               <div className="ticket-context-box">

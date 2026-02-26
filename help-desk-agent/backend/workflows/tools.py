@@ -9,7 +9,7 @@ from backend.chats.shared.request_context import (
     current_conversation_id,
     current_request_channel,
 )
-from backend.domain.language_policy import detect_user_language
+from backend.domain.language_policy import detect_user_language, translate_backend_text
 from backend.domain.models import PublishedUseCaseSummary
 from backend.storage.ticket_repository import (
     TicketEventWrite,
@@ -105,7 +105,13 @@ def build_use_case_workflow_tool(
                     steps=steps,
                     events=events,
                 )
-            return result.as_text()
+            ticket_reference = result.external_ticket_id or "<missing:ticket_id>"
+            pending_review_note = translate_backend_text(
+                "workflow_pending_review_note",
+                result.language,
+                ticket_id=ticket_reference,
+            )
+            return f"{result.as_text()}\n{pending_review_note}"
         except Exception as exc:
             if should_persist_ticket and ticket_id and ticket_repository is not None:
                 ticket_repository.complete_workflow_execution_failure(

@@ -15,3 +15,7 @@ class NoDraftAvailableError(ValueError):
 
 class TicketNotFoundError(ValueError):
     pass
+
+
+class InvalidTicketStatusTransitionError(ValueError):
+    pass

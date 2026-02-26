@@ -43,7 +43,9 @@ export default function ITDashboardPage(): JSX.Element {
   );
   const openTickets = tickets.filter((ticket) => ticket.status === "open");
   const inProgressTickets = tickets.filter((ticket) => ticket.status === "in_progress");
-  const resolvedTickets = tickets.filter((ticket) => ticket.status === "resolved");
+  const pendingReviewTickets = tickets.filter((ticket) => ticket.status === "pending_review");
+  const approvedTickets = tickets.filter((ticket) => ticket.status === "approved");
+  const rejectedTickets = tickets.filter((ticket) => ticket.status === "rejected");
 
   const ucByCategory: Record<string, UseCaseSummary[]> = {};
   for (const useCase of useCases) {
@@ -95,8 +97,16 @@ export default function ITDashboardPage(): JSX.Element {
           <span className="stat-label">{t("dashboardPage.statInProgress")}</span>
         </div>
         <div className="stat-box">
-          <span className="stat-value">{resolvedTickets.length}</span>
-          <span className="stat-label">{t("dashboardPage.statResolved")}</span>
+          <span className="stat-value">{pendingReviewTickets.length}</span>
+          <span className="stat-label">{t("dashboardPage.statPendingReview")}</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-value">{approvedTickets.length}</span>
+          <span className="stat-label">{t("dashboardPage.statApproved")}</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-value">{rejectedTickets.length}</span>
+          <span className="stat-label">{t("dashboardPage.statRejected")}</span>
         </div>
       </div>
 

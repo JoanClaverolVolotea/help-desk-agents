@@ -1,10 +1,12 @@
 import { requestJson } from "../../../shared/api/httpClient";
 import type {
+  ApproveTicketPayload,
   CategoryDetail,
   CategoryDraftPayload,
   CategorySummary,
   ListResponse,
   MigrateUseCaseCategoryVersionPayload,
+  RejectTicketPayload,
   ReseedDefaultsResponse,
   StepDefinition,
   TicketDetail,
@@ -56,6 +58,26 @@ export async function listTickets(
 
 export async function getTicket(ticketId: string): Promise<TicketResponse> {
   return requestJson<TicketResponse>(`/api/admin/tickets/${ticketId}`);
+}
+
+export async function approveTicket(
+  ticketId: string,
+  payload: ApproveTicketPayload,
+): Promise<TicketResponse> {
+  return requestJson<TicketResponse>(`/api/admin/tickets/${ticketId}/approve`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function rejectTicket(
+  ticketId: string,
+  payload: RejectTicketPayload,
+): Promise<TicketResponse> {
+  return requestJson<TicketResponse>(`/api/admin/tickets/${ticketId}/reject`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function reseedDefaults(): Promise<ReseedDefaultsResponse> {

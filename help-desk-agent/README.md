@@ -67,7 +67,8 @@ Flow:
 1. Ticket intake
 2. Routing policy selected by triage
 3. Runbook executed by specialist
-4. Execution persisted in ticket registry
+4. Ticket moved to IT review queue (`pending_review`)
+5. IT reviewer approves or rejects the ticket
 
 ## Operational notes
 
@@ -76,6 +77,11 @@ Flow:
 - Destructive reseed endpoint:
   - `POST /api/admin/bootstrap/reseed-defaults`
   - Payload: `{"confirm_token":"RESET_DEFAULTS"}`
+- Ticket review endpoints:
+  - `POST /api/admin/tickets/{ticket_id}/approve`
+  - Payload: `{"reviewed_by":"Jane Doe","note":"Looks correct"}`
+  - `POST /api/admin/tickets/{ticket_id}/reject`
+  - Payload: `{"reviewed_by":"Jane Doe","reason":"Requester ID mismatch"}`
 
 ## Validation
 

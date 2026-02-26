@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import pathlib
 import sqlite3
 import uuid
@@ -18,7 +19,7 @@ from backend.domain.models import (
 )
 
 from .db import connect, init_schema, resolve_db_path
-from .errors import TicketNotFoundError
+from .errors import InvalidTicketStatusTransitionError, TicketNotFoundError
 from .sql_helpers import _utc_now
 
 
@@ -146,10 +147,9 @@ class TicketRepository:
             self._update_ticket_status(
                 conn,
                 ticket_id=ticket_id,
-                status=TicketStatus.RESOLVED,
+                status=TicketStatus.PENDING_REVIEW,
                 changed_at=now,
-                reason="Workflow execution completed successfully.",
-                resolved_at=now,
+                reason="Workflow execution completed and pending IT review.",
                 clear_error_message=True,
             )
             conn.commit()
@@ -175,6 +175,96 @@ class TicketRepository:
                 error_message=error_message,
             )
             conn.commit()
+
+    def approve_ticket(
+        self,
+        *,
+        ticket_id: str,
+        reviewed_by: str,
+        note: str | None = None,
+    ) -> TicketDetail:
+        now = _utc_now()
+        with connect(self.db_path) as conn:
+            self._assert_ticket_status(
+                conn,
+                ticket_id=ticket_id,
+                expected=TicketStatus.PENDING_REVIEW,
+            )
+            payload: dict[str, str] = {"reviewed_by": reviewed_by}
+            if note:
+                payload["note"] = note
+            self._insert_events(
+                conn,
+                ticket_id=ticket_id,
+                events=[
+                    TicketEventWrite(
+                        event_type="ticket_approved",
+                        agent_name=reviewed_by,
+                        payload_json=json.dumps(payload, ensure_ascii=True),
+                    )
+                ],
+                created_at=now,
+            )
+            history_reason = f"Ticket approved by {reviewed_by}."
+            if note:
+                history_reason = f"{history_reason} Note: {note}"
+            self._update_ticket_status(
+                conn,
+                ticket_id=ticket_id,
+                status=TicketStatus.APPROVED,
+                changed_at=now,
+                reason=history_reason,
+                resolved_at=now,
+                clear_error_message=True,
+            )
+            conn.commit()
+
+        return self.get_ticket_detail(ticket_id)
+
+    def reject_ticket(
+        self,
+        *,
+        ticket_id: str,
+        reviewed_by: str,
+        reason: str,
+    ) -> TicketDetail:
+        now = _utc_now()
+        with connect(self.db_path) as conn:
+            self._assert_ticket_status(
+                conn,
+                ticket_id=ticket_id,
+                expected=TicketStatus.PENDING_REVIEW,
+            )
+            self._insert_events(
+                conn,
+                ticket_id=ticket_id,
+                events=[
+                    TicketEventWrite(
+                        event_type="ticket_rejected",
+                        agent_name=reviewed_by,
+                        payload_json=json.dumps(
+                            {
+                                "reviewed_by": reviewed_by,
+                                "reason": reason,
+                            },
+                            ensure_ascii=True,
+                        ),
+                    )
+                ],
+                created_at=now,
+            )
+            self._update_ticket_status(
+                conn,
+                ticket_id=ticket_id,
+                status=TicketStatus.REJECTED,
+                changed_at=now,
+                reason=f"Ticket rejected by {reviewed_by}: {reason}",
+                resolved_at=now,
+                error_message=reason,
+            )
+            conn.commit()
+
+        return self.get_ticket_detail(ticket_id)
 
     def list_tickets(
         self,
@@ -361,12 +451,28 @@ class TicketRepository:
 
     def _assert_ticket_exists(self, conn: sqlite3.Connection, ticket_id: str) -> sqlite3.Row:
         row = conn.execute(
-            "SELECT id FROM tickets WHERE id = ?",
+            "SELECT id, status FROM tickets WHERE id = ?",
             (ticket_id,),
         ).fetchone()
         if row is None:
             raise TicketNotFoundError(f"Unknown ticket_id={ticket_id}")
         return cast(sqlite3.Row, row)
+
+    def _assert_ticket_status(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        ticket_id: str,
+        expected: TicketStatus,
+    ) -> None:
+        row = self._assert_ticket_exists(conn, ticket_id)
+        current_status = TicketStatus(row["status"])
+        if current_status == expected:
+            return
+        raise InvalidTicketStatusTransitionError(
+            f"Ticket {ticket_id} must be {expected.value} for this action. "
+            f"Current status is {current_status.value}."
+        )
 
     def _insert_fields(
         self,

@@ -61,7 +61,7 @@ erDiagram
       text conversation_id
       text external_ticket_id
       text use_case_id FK
-      text status "open|in_progress|resolved"
+      text status "open|in_progress|pending_review|approved|rejected"
       text language
       text ticket_context
       text error_message
@@ -73,7 +73,7 @@ erDiagram
     TICKET_STATUS_HISTORY {
       text id PK
       text ticket_id FK
-      text status "open|in_progress|resolved"
+      text status "open|in_progress|pending_review|approved|rejected"
       text changed_at
       text reason
     }
@@ -128,7 +128,8 @@ In practice:
 
 - Ticket row is created when deterministic workflow execution starts.
 - Initial transitions are `open -> in_progress`.
-- Successful execution transitions to `resolved`.
+- Successful deterministic execution transitions to `pending_review`.
+- IT review transitions `pending_review -> approved` or `pending_review -> rejected`.
 - Failed execution remains `in_progress` and records failure details in `ticket_events` and `error_message`.
 
 ## Lookup indexes

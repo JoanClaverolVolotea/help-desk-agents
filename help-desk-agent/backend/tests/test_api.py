@@ -825,7 +825,7 @@ def test_admin_ticket_endpoints_list_and_detail(tmp_path, monkeypatch) -> None:
     list_payload = list_response.json()
     assert any(item["ticket_id"] == ticket_id for item in list_payload["items"])
 
-    filtered_response = client.get("/api/admin/tickets?status=resolved")
+    filtered_response = client.get("/api/admin/tickets?status=pending_review")
     assert filtered_response.status_code == 200
     filtered_payload = filtered_response.json()
     assert any(item["ticket_id"] == ticket_id for item in filtered_payload["items"])
@@ -834,7 +834,7 @@ def test_admin_ticket_endpoints_list_and_detail(tmp_path, monkeypatch) -> None:
     assert detail_response.status_code == 200
     detail_payload = detail_response.json()["ticket"]
     assert detail_payload["ticket_id"] == ticket_id
-    assert detail_payload["status"] == "resolved"
+    assert detail_payload["status"] == "pending_review"
     assert detail_payload["fields"][0]["field_name"] == "ticket_id"
     assert detail_payload["steps"][0]["step_id"] == "verify_requester"
 
@@ -845,3 +845,70 @@ def test_admin_ticket_detail_returns_404_for_unknown_ticket(tmp_path, monkeypatc
 
     response = client.get("/api/admin/tickets/unknown-ticket-id")
     assert response.status_code == 404
+
+
+def test_admin_ticket_approve_and_reject_endpoints(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+
+    approve_ticket_id = _seed_ticket_record(backend_module, external_ticket_id="USDV-177001")
+    approve_response = client.post(
+        f"/api/admin/tickets/{approve_ticket_id}/approve",
+        json={"reviewed_by": "Jane Doe", "note": "Looks good."},
+    )
+    assert approve_response.status_code == 200
+    approve_payload = approve_response.json()["ticket"]
+    assert approve_payload["status"] == "approved"
+    assert any(item["event_type"] == "ticket_approved" for item in approve_payload["events"])
+    approved_list = client.get("/api/admin/tickets?status=approved")
+    assert approved_list.status_code == 200
+    assert any(item["ticket_id"] == approve_ticket_id for item in approved_list.json()["items"])
+
+    reject_ticket_id = _seed_ticket_record(backend_module, external_ticket_id="USDV-177002")
+    reject_response = client.post(
+        f"/api/admin/tickets/{reject_ticket_id}/reject",
+        json={
+            "reviewed_by": "Jane Doe",
+            "reason": "Requester identity does not match.",
+        },
+    )
+    assert reject_response.status_code == 200
+    reject_payload = reject_response.json()["ticket"]
+    assert reject_payload["status"] == "rejected"
+    assert reject_payload["error_message"] == "Requester identity does not match."
+    assert any(item["event_type"] == "ticket_rejected" for item in reject_payload["events"])
+    rejected_list = client.get("/api/admin/tickets?status=rejected")
+    assert rejected_list.status_code == 200
+    assert any(item["ticket_id"] == reject_ticket_id for item in rejected_list.json()["items"])
+
+
+def test_admin_ticket_review_endpoints_validate_input_and_transitions(
+    tmp_path, monkeypatch
+) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+    client = TestClient(backend_module.app)
+    ticket_id = _seed_ticket_record(backend_module, external_ticket_id="USDV-177003")
+
+    missing_reviewer_response = client.post(
+        f"/api/admin/tickets/{ticket_id}/approve",
+        json={"reviewed_by": " ", "note": "bad"},
+    )
+    assert missing_reviewer_response.status_code == 422
+
+    missing_reason_response = client.post(
+        f"/api/admin/tickets/{ticket_id}/reject",
+        json={"reviewed_by": "Jane Doe", "reason": " "},
+    )
+    assert missing_reason_response.status_code == 422
+
+    first_approve = client.post(
+        f"/api/admin/tickets/{ticket_id}/approve",
+        json={"reviewed_by": "Jane Doe"},
+    )
+    assert first_approve.status_code == 200
+
+    second_approve = client.post(
+        f"/api/admin/tickets/{ticket_id}/approve",
+        json={"reviewed_by": "Jane Doe"},
+    )
+    assert second_approve.status_code == 409

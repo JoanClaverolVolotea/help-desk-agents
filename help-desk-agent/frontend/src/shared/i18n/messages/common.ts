@@ -39,6 +39,7 @@ export const COMMON_MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
       "fieldCurrentAgent": "Current agent",
       "fieldCreated": "Created",
       "fieldResolved": "Resolved",
+      "fieldFinalized": "Finalized",
       "fieldRunbook": "Runbook",
       "fieldError": "Error",
       "noCategory": "No category",
@@ -55,7 +56,9 @@ export const COMMON_MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
       "requiredSuffix": "(required)",
       "statusOpen": "Open",
       "statusInProgress": "In progress",
-      "statusResolved": "Resolved"
+      "statusPendingReview": "Pending review",
+      "statusApproved": "Approved",
+      "statusRejected": "Rejected"
     },
     "roleLanding": {
       "title": "Help Desk Agent",
@@ -110,6 +113,7 @@ export const COMMON_MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
       "fieldCurrentAgent": "Agente actual",
       "fieldCreated": "Creado",
       "fieldResolved": "Resuelto",
+      "fieldFinalized": "Finalizado",
       "fieldRunbook": "Procedimiento",
       "fieldError": "Error",
       "noCategory": "Sin categoría",
@@ -126,7 +130,9 @@ export const COMMON_MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
       "requiredSuffix": "(requerido)",
       "statusOpen": "Abierto",
       "statusInProgress": "En progreso",
-      "statusResolved": "Resuelto"
+      "statusPendingReview": "Pendiente de aprobacion",
+      "statusApproved": "Aprobado",
+      "statusRejected": "Rechazado"
     },
     "roleLanding": {
       "title": "Agente de Mesa de Ayuda",

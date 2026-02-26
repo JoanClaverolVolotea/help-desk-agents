@@ -1,4 +1,10 @@
-export type TicketStatus = "open" | "in_progress" | "resolved" | string;
+export type TicketStatus =
+  | "open"
+  | "in_progress"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | string;
 
 export interface ListResponse<T> {
   items: T[];
@@ -139,6 +145,16 @@ export interface TicketFilters {
   useCaseId?: string;
   limit?: number;
   offset?: number;
+}
+
+export interface ApproveTicketPayload {
+  reviewed_by: string;
+  note?: string;
+}
+
+export interface RejectTicketPayload {
+  reviewed_by: string;
+  reason: string;
 }
 
 export interface ReseedDefaultsResponse {

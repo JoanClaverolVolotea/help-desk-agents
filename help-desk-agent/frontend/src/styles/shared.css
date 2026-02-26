@@ -616,9 +616,19 @@ button:disabled {
   border-color: #9ebce0;
 }
 
-.badge.resolved {
+.badge.pending_review {
+  background: #fff3db;
+  border-color: #d5b27f;
+}
+
+.badge.approved {
   background: #ddf3e6;
   border-color: #96c8aa;
+}
+
+.badge.rejected {
+  background: #f8e9ec;
+  border-color: #d3a2ac;
 }
 
 .use-case-actions {
@@ -709,6 +719,37 @@ button:disabled {
   background: #f8fdfb;
   padding: 0.7rem 0.8rem;
   margin-bottom: 0.9rem;
+}
+
+.ticket-review-panel {
+  border: 1px solid #c8dcdf;
+  border-radius: 10px;
+  background: #f4faf8;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.9rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ticket-review-panel h4 {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.ticket-review-panel label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+}
+
+.ticket-review-panel textarea {
+  resize: vertical;
+  min-height: 56px;
+}
+
+.ticket-review-actions {
+  display: flex;
+  gap: 0.45rem;
 }
 
 .ticket-context-box h4 {

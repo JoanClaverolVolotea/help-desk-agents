@@ -104,6 +104,8 @@ Deprecated aliases (kept for this release, introduced February 26, 2026):
 - `POST /api/admin/use-cases/{use_case_id}/migrate-category-version`
 - `GET /api/admin/tickets`
 - `GET /api/admin/tickets/{ticket_id}`
+- `POST /api/admin/tickets/{ticket_id}/approve`
+- `POST /api/admin/tickets/{ticket_id}/reject`
 
 ## Assistant architecture
 
@@ -130,7 +132,7 @@ Deprecated aliases (kept for this release, introduced February 26, 2026):
 - Routing policies (`categories`) define allowed/default workflow templates.
 - Runbooks (`use_cases`) define executable deterministic steps and required fields.
 - Ticket registry captures:
-  - ticket status timeline
+  - ticket status timeline (`open` -> `in_progress` -> `pending_review` -> `approved|rejected`)
   - resolved fields and sources
   - executed workflow steps
   - workflow events/errors

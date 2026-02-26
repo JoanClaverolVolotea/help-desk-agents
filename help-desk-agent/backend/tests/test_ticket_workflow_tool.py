@@ -51,7 +51,7 @@ def test_use_case_workflow_tool_persists_ticket_in_user_chat_channel(tmp_path) -
     assert "USDV-176285" in output
     tickets = ticket_repository.list_tickets()
     assert len(tickets) == 1
-    assert tickets[0].status == TicketStatus.RESOLVED
+    assert tickets[0].status == TicketStatus.PENDING_REVIEW
     detail = ticket_repository.get_ticket_detail(tickets[0].ticket_id)
     assert detail.conversation_id == "ticket-tool-conversation"
     assert any(field.field_name == "ticket_id" for field in detail.fields)

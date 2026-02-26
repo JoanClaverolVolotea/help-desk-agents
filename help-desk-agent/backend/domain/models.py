@@ -239,7 +239,9 @@ class ReseedDefaultsResponse(BaseModel):
 class TicketStatus(str, Enum):
     OPEN = "open"
     IN_PROGRESS = "in_progress"
-    RESOLVED = "resolved"
+    PENDING_REVIEW = "pending_review"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 class TicketFieldSource(str, Enum):
@@ -304,6 +306,40 @@ class TicketListResponse(BaseModel):
 
 class TicketDetailResponse(BaseModel):
     ticket: TicketDetail
+
+
+class ApproveTicketRequest(BaseModel):
+    reviewed_by: str
+    note: str | None = None
+
+    @field_validator("reviewed_by")
+    @classmethod
+    def validate_reviewed_by(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("reviewed_by must not be empty")
+        return normalized
+
+    @field_validator("note")
+    @classmethod
+    def validate_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class RejectTicketRequest(BaseModel):
+    reviewed_by: str
+    reason: str
+
+    @field_validator("reviewed_by", "reason")
+    @classmethod
+    def validate_required_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("field must not be empty")
+        return normalized
 
 
 class ValidationErrorResponse(BaseModel):

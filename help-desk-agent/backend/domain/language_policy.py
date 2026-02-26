@@ -112,8 +112,10 @@ _TEXT_BY_LANGUAGE = {
         "workflow_default_manual_instruction": "Manual instruction completed.",
         "workflow_unsupported_step": "[{step_id}] Unsupported step id.",
         "workflow_closure": (
-            "[closure] Workflow completed with deterministic execution for ticket {ticket_id}."
+            "[closure] Deterministic workflow completed for ticket {ticket_id}. "
+            "Ticket submitted for IT approval."
         ),
+        "workflow_pending_review_note": "Ticket {ticket_id} is now pending IT approval.",
     },
     "es": {
         "handoff_event": "Transferido de {source} a {target}",
@@ -162,7 +164,11 @@ _TEXT_BY_LANGUAGE = {
         "workflow_default_manual_instruction": "Instruccion manual completada.",
         "workflow_unsupported_step": "[{step_id}] Id de paso no soportado.",
         "workflow_closure": (
-            "[closure] Flujo completado con ejecucion determinista para el ticket {ticket_id}."
+            "[closure] Flujo determinista completado para el ticket {ticket_id}. "
+            "Ticket enviado para aprobacion de IT."
+        ),
+        "workflow_pending_review_note": (
+            "El ticket {ticket_id} ahora esta pendiente de aprobacion de IT."
         ),
     },
 }

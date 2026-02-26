@@ -31,13 +31,14 @@ Routine:
 3. When ready, call execute_use_case_workflow exactly once.
 4. Pass the full ticket text as ticket_context.
 5. Pass a compact JSON object with collected required fields in field_values_json.
-6. Return a concise final answer.
+6. Return a concise final answer that confirms the ticket is pending IT review.
 
 Rules:
 - Use tool output as source of truth.
 - If the ticket does not match this use case, handoff back to triage.
 - Reply only in the language of the user's latest message.
 - Do not include translations or bilingual sections.
+- Do not claim the issue is fully resolved before IT approval.
 """
 
     specialist = Agent(

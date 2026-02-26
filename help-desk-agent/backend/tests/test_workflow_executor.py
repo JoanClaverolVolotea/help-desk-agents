@@ -40,7 +40,7 @@ def test_workflow_executor_runs_steps_deterministically_in_english() -> None:
     assert "verify_requester" in text
     assert "reset_ecrew_access" in text
     assert "USDV-176285" in text
-    assert "Workflow completed with deterministic execution" in text
+    assert "Ticket submitted for IT approval" in text
     assert "Flujo completado con ejecucion determinista" not in text
     assert "EN:" not in text
     assert "ES:" not in text
@@ -60,7 +60,7 @@ def test_workflow_executor_runs_steps_deterministically_in_spanish() -> None:
     assert "verify_requester" in text
     assert "reset_ecrew_access" in text
     assert "USDV-176285" in text
-    assert "Flujo completado con ejecucion determinista" in text
+    assert "Ticket enviado para aprobacion de IT" in text
     assert "Workflow completed with deterministic execution" not in text
     assert "EN:" not in text
     assert "ES:" not in text
