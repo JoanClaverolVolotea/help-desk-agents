@@ -1,0 +1,213 @@
+.admin-panel {
+  padding: 1rem 1.4rem 1.25rem;
+  overflow: auto;
+  background: linear-gradient(180deg, #fff7eb 0%, #f6fbfb 100%);
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.admin-toolbar h2 {
+  margin: 0;
+}
+
+.admin-toolbar-actions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.console-clarity-card {
+  margin-top: 0.85rem;
+  border: 1px solid #c8dcdf;
+  border-radius: 12px;
+  background: #f7fdfb;
+  padding: 0.7rem 0.8rem;
+}
+
+.toggle-row {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+.ticket-filter-row {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.wizard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(18 49 58 / 45%);
+  display: grid;
+  place-items: center;
+  padding: 1rem 1.5rem;
+  animation: overlay-fade 160ms ease-out;
+}
+
+.wizard-shell {
+  width: min(1120px, calc(100vw - 3rem));
+  max-height: calc(100dvh - 1.5rem);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #bdd2d7;
+  border-radius: 16px;
+  background: #fffdf7;
+  box-shadow: 0 20px 50px rgb(18 49 58 / 25%);
+  animation: modal-rise 180ms ease-out;
+}
+
+.wizard-header,
+.wizard-footer {
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid #d7e5e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+.wizard-footer {
+  border-bottom: 0;
+  border-top: 1px solid #d7e5e8;
+}
+
+.wizard-body {
+  padding: 1.4rem 1.5rem;
+  overflow-y: auto;
+  min-height: 420px;
+  flex: 1;
+}
+
+.wizard-error {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+}
+
+.it-console-shell {
+  border-color: #bfd4cc;
+  width: min(1760px, calc(100vw - 2.4rem));
+  max-height: none;
+}
+
+.it-console-header {
+  background: linear-gradient(100deg, #ebf7f0, #f6faef);
+}
+
+.it-console-tabs {
+  background: linear-gradient(90deg, #eef8f1, #f3f8ee);
+}
+
+.it-console-workspace {
+  --assistant-pane-width: clamp(360px, 32vw, 460px);
+  --assistant-collapsed-width: 74px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(680px, 1fr) var(--assistant-pane-width);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.it-console-workspace.assistant-collapsed {
+  grid-template-columns: minmax(0, 1fr) var(--assistant-collapsed-width);
+}
+
+.it-console-main-pane {
+  min-height: 0;
+  min-width: 680px;
+  display: flex;
+  flex-direction: column;
+}
+
+.it-console-main-pane > .it-console-panel {
+  height: 100%;
+}
+
+.it-console-assistant-pane {
+  min-height: 0;
+  display: flex;
+  border-left: 1px solid #c9ddd4;
+  background: linear-gradient(180deg, #fafffc 0%, #f5fbf8 100%);
+  overflow: hidden;
+  transition: width 190ms ease;
+}
+
+.it-console-assistant-panel {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.it-console-assistant-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.55rem 0.7rem 0.5rem;
+  border-bottom: 1px solid #c9ddd4;
+  background: linear-gradient(90deg, #f2fbf5, #eef9f4);
+}
+
+.assistant-visibility-toggle {
+  border: 1px solid #98bcc4;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  background: #f1fbfd;
+  color: #0e4c5b;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.assistant-visibility-toggle:hover {
+  background: #dff2f6;
+}
+
+.assistant-visibility-toggle.closed {
+  padding: 0.28rem 0.56rem;
+}
+
+.it-console-panel {
+  background: linear-gradient(180deg, #fbfffc 0%, #f7fbfa 100%);
+}
+
+.section-tabs {
+  border-bottom-color: #c9ddd4;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.76rem;
+  margin-bottom: 0.6rem;
+  color: var(--ink-soft);
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+}
+
+.admin-table-wrapper {
+  margin-top: 0.9rem;
+  overflow-x: auto;
+  border: 1px solid #c9dcdc;
+  border-radius: 12px;
+  background: #fffef8;
+}

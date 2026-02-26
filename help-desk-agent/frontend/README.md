@@ -37,7 +37,11 @@ Default UI URL:
 
 ## Environment
 
-Frontend calls backend APIs through `src/api.js`.
+Frontend calls backend APIs through context clients:
+
+- `src/features/user_assistant/api/userAssistantClient.ts`
+- `src/features/admin_assistant/api/adminAssistantClient.ts`
+- `src/features/admin_assistant/api/adminCatalogClient.ts`
 
 - Default API base URL: `http://127.0.0.1:8000`
 - Override with:
@@ -73,9 +77,8 @@ npm run preview
 
 ## Source map
 
-- `src/routes/AppRoutes.tsx`: route tree
-- `src/pages/`: page components
-- `src/components/`: reusable UI components
-- `src/api.ts`: backend API client helpers
-- `src/utils/`: payload and UI helper functions
-- `src/App.css`: styling
+- `src/app/`: app bootstrap and route composition
+- `src/features/user_assistant/`: user chat pages and API client
+- `src/features/admin_assistant/`: admin console pages, components, API clients, and admin-only types/utils
+- `src/shared/`: shared i18n, shared UI primitives, shared API helpers, and shared types/utils
+- `src/styles/`: `shared.css`, `user_assistant.css`, and `admin_assistant.css`

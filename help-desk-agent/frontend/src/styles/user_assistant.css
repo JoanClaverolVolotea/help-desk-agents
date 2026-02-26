@@ -1,0 +1,55 @@
+.user-portal-shell {
+  border-color: #b7ced4;
+}
+
+.user-portal-header {
+  background: linear-gradient(100deg, #e8f4f9, #edf8ef);
+}
+
+.user-back-link,
+.it-back-link {
+  white-space: nowrap;
+}
+
+.user-portal-panel {
+  background: linear-gradient(180deg, #f8fcff, #f7fdf6);
+}
+
+.user-portal-status {
+  border-bottom-color: #c6dce2;
+}
+
+.user-portal-composer {
+  background: #f8fdff;
+  border-top-color: #c6dce2;
+}
+
+.user-portal-transcript {
+  background: linear-gradient(180deg, #f3fbff 0%, #f6fcf7 100%);
+}
+
+.user-portal-transcript .entry-user {
+  background: #0f4665;
+}
+
+.user-portal-transcript .entry-assistant {
+  border-color: #c8dce3;
+}
+
+.user-portal-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding: 0.7rem 1.4rem;
+  border-bottom: 1px solid #c6dce2;
+  background: #f4fafd;
+}
+
+.user-portal-samples .sample-button {
+  border-color: #b3ced6;
+  background: #eef8fc;
+}
+
+.user-portal-samples .sample-button:hover {
+  background: #daf0f7;
+}
