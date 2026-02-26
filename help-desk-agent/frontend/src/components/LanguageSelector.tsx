@@ -1,6 +1,6 @@
 import { useI18n } from "../i18n/useI18n";
 
-export default function LanguageSelector() {
+export default function LanguageSelector(): JSX.Element {
   const { language, setLanguage, t } = useI18n();
 
   return (

@@ -8,7 +8,7 @@ import ITDashboardPage from "../pages/ITDashboardPage";
 import RoleLandingPage from "../pages/RoleLandingPage";
 import UserPortalPage from "../pages/UserPortalPage";
 
-export default function AppRoutes() {
+export default function AppRoutes(): JSX.Element {
   return (
     <Routes>
       <Route path="/" element={<RoleLandingPage />} />

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 
 import ChatTranscript from "./ChatTranscript";
 import Composer from "./Composer";
@@ -11,8 +12,9 @@ import {
   readableError,
   resetAdminAssistantConversation,
 } from "../api";
+import type { ConversationId, TranscriptEntry } from "../types";
 
-function nextIdFactory() {
+function nextIdFactory(): () => string {
   let count = 0;
   return () => {
     count += 1;
@@ -20,15 +22,23 @@ function nextIdFactory() {
   };
 }
 
-export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} }) {
+interface ITAssistantPanelProps {
+  isOpen?: boolean;
+  onToggle?: () => void;
+}
+
+export default function ITAssistantPanel({
+  isOpen = true,
+  onToggle = () => {},
+}: ITAssistantPanelProps): JSX.Element {
   const { language, t } = useI18n();
   const nextId = useMemo(() => nextIdFactory(), []);
-  const transcriptRef = useRef(null);
+  const transcriptRef = useRef<HTMLElement | null>(null);
   const defaultAgent = t("itConsole.assistant.defaultAgent");
 
   const [input, setInput] = useState("");
-  const [entries, setEntries] = useState([]);
-  const [conversationId, setConversationId] = useState(null);
+  const [entries, setEntries] = useState<TranscriptEntry[]>([]);
+  const [conversationId, setConversationId] = useState<ConversationId>(null);
   const [currentAgent, setCurrentAgent] = useState(defaultAgent);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -45,8 +55,8 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
     }
   }, [conversationId, defaultAgent, entries.length]);
 
-  const sendMessage = async (messageText) => {
-    const userEntry = {
+  const sendMessage = async (messageText: string): Promise<void> => {
+    const userEntry: TranscriptEntry = {
       id: nextId(),
       role: "user",
       kind: "user",
@@ -63,11 +73,11 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
       setConversationId(data.conversation_id);
       setCurrentAgent(data.current_agent);
 
-      const agentEntries = data.events.map((event) => ({
+      const agentEntries: TranscriptEntry[] = data.events.map((event) => ({
         id: nextId(),
         role: "assistant",
-        kind: event.kind,
-        agent: event.agent,
+        kind: typeof event.kind === "string" ? event.kind : "message",
+        agent: typeof event.agent === "string" ? event.agent : data.current_agent,
         text: event.text,
       }));
 
@@ -79,7 +89,7 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     const messageText = input.trim();
     if (!messageText || isSending) {
@@ -89,7 +99,7 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
     await sendMessage(messageText);
   };
 
-  const handleReset = async () => {
+  const handleReset = async (): Promise<void> => {
     if (conversationId) {
       try {
         await resetAdminAssistantConversation(conversationId);
@@ -105,7 +115,9 @@ export default function ITAssistantPanel({ isOpen = true, onToggle = () => {} })
   };
 
   return (
-    <section className={`tab-panel tech-panel it-console-panel it-console-assistant-panel ${isOpen ? "" : "collapsed"}`.trim()}>
+    <section
+      className={`tab-panel tech-panel it-console-panel it-console-assistant-panel ${isOpen ? "" : "collapsed"}`.trim()}
+    >
       <div className="it-console-assistant-toolbar">
         <button
           type="button"

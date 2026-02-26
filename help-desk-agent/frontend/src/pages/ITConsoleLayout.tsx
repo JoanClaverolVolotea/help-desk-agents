@@ -5,7 +5,7 @@ import ITAssistantPanel from "../components/ITAssistantPanel";
 import SectionTabs from "../components/SectionTabs";
 import { useI18n } from "../i18n/useI18n";
 
-export default function ITConsoleLayout() {
+export default function ITConsoleLayout(): JSX.Element {
   const { t } = useI18n();
   const [isAssistantOpen, setIsAssistantOpen] = useState(true);
   const itTabs = [

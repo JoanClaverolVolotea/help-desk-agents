@@ -1,21 +1,29 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, MESSAGES, SUPPORTED_LANGUAGES } from "./messages";
+import type { I18nContextValue, LanguageCode, MessageVariables } from "../types";
 
-function getMessageValue(dictionary, key) {
+type MessageDictionary = Record<string, unknown>;
+
+function getMessageValue(dictionary: MessageDictionary | undefined, key: string): unknown {
   if (!dictionary) {
     return undefined;
   }
 
-  return key.split(".").reduce((acc, part) => {
-    if (acc && Object.prototype.hasOwnProperty.call(acc, part)) {
-      return acc[part];
+  return key.split(".").reduce<unknown>((acc, part) => {
+    if (
+      typeof acc === "object" &&
+      acc !== null &&
+      Object.prototype.hasOwnProperty.call(acc, part)
+    ) {
+      return (acc as MessageDictionary)[part];
     }
     return undefined;
   }, dictionary);
 }
 
-function interpolateMessage(template, vars) {
+function interpolateMessage(template: string, vars?: MessageVariables): string {
   if (!vars) {
     return template;
   }
@@ -28,29 +36,33 @@ function interpolateMessage(template, vars) {
   });
 }
 
-function initialLanguage() {
+function initialLanguage(): LanguageCode {
   if (typeof window === "undefined") {
     return DEFAULT_LANGUAGE;
   }
 
   const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (stored && SUPPORTED_LANGUAGES.includes(stored)) {
-    return stored;
+  if (stored && SUPPORTED_LANGUAGES.includes(stored as LanguageCode)) {
+    return stored as LanguageCode;
   }
 
   return DEFAULT_LANGUAGE;
 }
 
-const LanguageContext = createContext({
+const LanguageContext = createContext<I18nContextValue>({
   language: DEFAULT_LANGUAGE,
   setLanguage: () => {},
   t: (key) => key,
 });
 
-export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(initialLanguage);
+interface LanguageProviderProps {
+  children: ReactNode;
+}
 
-  const setLanguage = useCallback((nextLanguage) => {
+export function LanguageProvider({ children }: LanguageProviderProps): JSX.Element {
+  const [language, setLanguageState] = useState<LanguageCode>(initialLanguage);
+
+  const setLanguage = useCallback((nextLanguage: LanguageCode) => {
     if (!SUPPORTED_LANGUAGES.includes(nextLanguage)) {
       return;
     }
@@ -63,7 +75,7 @@ export function LanguageProvider({ children }) {
   }, []);
 
   const t = useCallback(
-    (key, vars) => {
+    (key: string, vars?: MessageVariables) => {
       const current = getMessageValue(MESSAGES[language], key);
       const fallback = getMessageValue(MESSAGES[DEFAULT_LANGUAGE], key);
       const resolved = typeof current === "string" ? current : typeof fallback === "string" ? fallback : key;
@@ -72,7 +84,7 @@ export function LanguageProvider({ children }) {
     [language],
   );
 
-  const value = useMemo(
+  const value = useMemo<I18nContextValue>(
     () => ({
       language,
       setLanguage,
@@ -84,6 +96,6 @@ export function LanguageProvider({ children }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
-export function useLanguageContext() {
+export function useLanguageContext(): I18nContextValue {
   return useContext(LanguageContext);
 }

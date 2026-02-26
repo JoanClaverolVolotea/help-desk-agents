@@ -1,6 +1,15 @@
 import { Link } from "react-router-dom";
 
-export default function Breadcrumb({ items }) {
+interface BreadcrumbItem {
+  label: string;
+  to?: string;
+}
+
+interface BreadcrumbProps {
+  items: BreadcrumbItem[];
+}
+
+export default function Breadcrumb({ items }: BreadcrumbProps): JSX.Element {
   return (
     <nav className="breadcrumb">
       {items.map((item, index) => (

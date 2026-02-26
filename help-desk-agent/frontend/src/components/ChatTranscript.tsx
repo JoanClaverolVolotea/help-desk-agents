@@ -1,11 +1,25 @@
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
+import type { RefObject } from "react";
 
 import { useI18n } from "../i18n/useI18n";
 import { normalizeEntryKind, normalizeEntryText } from "../utils/eventHelpers";
+import type { TranscriptEntry } from "../types";
 
 const MARKDOWN_PLUGINS = [remarkGfm, remarkBreaks];
+
+interface ChatTranscriptProps {
+  entries: TranscriptEntry[];
+  transcriptRef: RefObject<HTMLElement | null>;
+  isThinking?: boolean;
+  thinkingAgent?: string;
+  emptyState: string;
+  hiddenKinds?: string[];
+  allowedKinds?: string[] | null;
+  showMeta?: boolean;
+  className?: string;
+}
 
 export default function ChatTranscript({
   entries,
@@ -17,7 +31,7 @@ export default function ChatTranscript({
   allowedKinds = null,
   showMeta = true,
   className = "",
-}) {
+}: ChatTranscriptProps): JSX.Element {
   const { t } = useI18n();
   const hiddenSet = new Set(hiddenKinds);
   const allowedSet = allowedKinds ? new Set(allowedKinds) : null;

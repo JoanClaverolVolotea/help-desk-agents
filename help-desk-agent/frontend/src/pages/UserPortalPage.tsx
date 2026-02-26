@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 
 import ChatTranscript from "../components/ChatTranscript";
@@ -9,8 +10,9 @@ import { withLanguageHint } from "../i18n/chatLanguage";
 import { useI18n } from "../i18n/useI18n";
 import { chatStream, readableError, resetConversation } from "../api";
 import { INTERNAL_EVENT_KINDS } from "../utils/eventHelpers";
+import type { ChatStreamEvent, ConversationId, TranscriptEntry } from "../types";
 
-function nextIdFactory() {
+function nextIdFactory(): () => string {
   let count = 0;
   return () => {
     count += 1;
@@ -18,15 +20,15 @@ function nextIdFactory() {
   };
 }
 
-export default function UserPortalPage() {
+export default function UserPortalPage(): JSX.Element {
   const { language, t } = useI18n();
   const nextId = useMemo(() => nextIdFactory(), []);
-  const transcriptRef = useRef(null);
+  const transcriptRef = useRef<HTMLElement | null>(null);
   const defaultAgent = t("userPortal.defaultAgent");
 
   const [chatInput, setChatInput] = useState("");
-  const [entries, setEntries] = useState([]);
-  const [conversationId, setConversationId] = useState(null);
+  const [entries, setEntries] = useState<TranscriptEntry[]>([]);
+  const [conversationId, setConversationId] = useState<ConversationId>(null);
   const [currentAgent, setCurrentAgent] = useState(defaultAgent);
   const [isSending, setIsSending] = useState(false);
   const [chatError, setChatError] = useState("");
@@ -43,8 +45,8 @@ export default function UserPortalPage() {
     }
   }, [conversationId, defaultAgent, entries.length]);
 
-  const sendMessage = async (messageText) => {
-    const userEntry = {
+  const sendMessage = async (messageText: string): Promise<void> => {
+    const userEntry: TranscriptEntry = {
       id: nextId(),
       role: "user",
       kind: "user",
@@ -53,7 +55,7 @@ export default function UserPortalPage() {
     };
 
     const streamingEntryId = nextId();
-    const streamingEntry = {
+    const streamingEntry: TranscriptEntry = {
       id: streamingEntryId,
       role: "assistant",
       kind: "message",
@@ -69,61 +71,74 @@ export default function UserPortalPage() {
     const modelMessage = withLanguageHint(messageText, language);
 
     try {
-      const finalPayload = await chatStream(modelMessage, conversationId, (streamEvent) => {
-        if (!streamEvent || typeof streamEvent !== "object") {
-          return;
-        }
-
-        if (streamEvent.type === "start") {
-          if (streamEvent.conversation_id) {
-            setConversationId(streamEvent.conversation_id);
-          }
-          if (streamEvent.current_agent) {
-            setCurrentAgent(streamEvent.current_agent);
-          }
-          return;
-        }
-
-        if (streamEvent.type === "agent_updated") {
-          if (streamEvent.agent) {
-            setCurrentAgent(streamEvent.agent);
-          }
-          return;
-        }
-
-        if (streamEvent.type === "text_delta") {
-          const delta = typeof streamEvent.delta === "string" ? streamEvent.delta : "";
-          if (!delta) {
+      const finalPayload = await chatStream(
+        modelMessage,
+        conversationId,
+        (streamEvent: ChatStreamEvent) => {
+          if (!streamEvent || typeof streamEvent !== "object") {
             return;
           }
-          hasStreamedText = true;
-          setEntries((prev) =>
-            prev.map((entry) =>
-              entry.id === streamingEntryId ? { ...entry, text: `${entry.text}${delta}` } : entry,
-            ),
-          );
-          return;
-        }
 
-        if (streamEvent.type === "event" && streamEvent.event?.kind === "message") {
-          const assistantText = typeof streamEvent.event.text === "string" ? streamEvent.event.text : "";
-          if (!hasStreamedText && assistantText) {
+          if (streamEvent.type === "start") {
+            if (streamEvent.conversation_id) {
+              setConversationId(streamEvent.conversation_id);
+            }
+            if (streamEvent.current_agent) {
+              setCurrentAgent(streamEvent.current_agent);
+            }
+            return;
+          }
+
+          if (streamEvent.type === "agent_updated") {
+            if (streamEvent.agent) {
+              setCurrentAgent(streamEvent.agent);
+            }
+            return;
+          }
+
+          if (streamEvent.type === "text_delta") {
+            const delta = typeof streamEvent.delta === "string" ? streamEvent.delta : "";
+            if (!delta) {
+              return;
+            }
             hasStreamedText = true;
             setEntries((prev) =>
               prev.map((entry) =>
-                entry.id === streamingEntryId
-                  ? {
-                      ...entry,
-                      agent: streamEvent.event.agent ?? entry.agent,
-                      kind: streamEvent.event.kind ?? entry.kind,
-                      text: assistantText,
-                    }
-                  : entry,
+                entry.id === streamingEntryId ? { ...entry, text: `${entry.text ?? ""}${delta}` } : entry,
               ),
             );
+            return;
           }
-        }
-      });
+
+          if (
+            streamEvent.type === "event" &&
+            streamEvent.event?.kind === "message"
+          ) {
+            const assistantText = typeof streamEvent.event.text === "string" ? streamEvent.event.text : "";
+            if (!hasStreamedText && assistantText) {
+              hasStreamedText = true;
+              setEntries((prev) =>
+                prev.map((entry) =>
+                  entry.id === streamingEntryId
+                    ? {
+                        ...entry,
+                        agent:
+                          typeof streamEvent.event?.agent === "string"
+                            ? streamEvent.event.agent
+                            : entry.agent,
+                        kind:
+                          typeof streamEvent.event?.kind === "string"
+                            ? streamEvent.event.kind
+                            : entry.kind,
+                        text: assistantText,
+                      }
+                    : entry,
+                ),
+              );
+            }
+          }
+        },
+      );
 
       if (finalPayload?.conversation_id) {
         setConversationId(finalPayload.conversation_id);
@@ -142,7 +157,7 @@ export default function UserPortalPage() {
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     const messageText = chatInput.trim();
     if (!messageText || isSending) {
@@ -152,7 +167,7 @@ export default function UserPortalPage() {
     await sendMessage(messageText);
   };
 
-  const handleResetConversation = async () => {
+  const handleResetConversation = async (): Promise<void> => {
     if (conversationId) {
       try {
         await resetConversation(conversationId);
@@ -173,10 +188,12 @@ export default function UserPortalPage() {
     t("userPortal.sampleSoftware"),
   ];
 
-  const handleSampleClick = (prompt) => {
-    if (isSending) return;
+  const handleSampleClick = (prompt: string): void => {
+    if (isSending) {
+      return;
+    }
     setChatInput("");
-    sendMessage(prompt);
+    void sendMessage(prompt);
   };
 
   return (

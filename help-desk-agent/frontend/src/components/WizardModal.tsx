@@ -1,6 +1,18 @@
 import { useEffect } from "react";
+import type { ReactNode } from "react";
 
 import { useI18n } from "../i18n/useI18n";
+
+interface WizardModalProps {
+  title: string;
+  step: number;
+  totalSteps: number;
+  onClose: () => void;
+  children: ReactNode;
+  navActions: ReactNode;
+  submitActions: ReactNode;
+  error: string;
+}
 
 export default function WizardModal({
   title,
@@ -11,12 +23,14 @@ export default function WizardModal({
   navActions,
   submitActions,
   error,
-}) {
+}: WizardModalProps): JSX.Element {
   const { t } = useI18n();
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -24,10 +38,10 @@ export default function WizardModal({
 
   return (
     <div className="wizard-overlay" onClick={onClose}>
-      <section className="wizard-shell" onClick={(e) => e.stopPropagation()}>
+      <section className="wizard-shell" onClick={(event) => event.stopPropagation()}>
         <header className="wizard-header">
           <h3>
-            {title} — {t("common.step")} {step}/{totalSteps}
+            {title} - {t("common.step")} {step}/{totalSteps}
           </h3>
           <button type="button" className="ghost" onClick={onClose}>
             {t("common.close")}

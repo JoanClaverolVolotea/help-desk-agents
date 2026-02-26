@@ -1,4 +1,16 @@
-export default function StatusRow({ items, className = "" }) {
+import type { ReactNode } from "react";
+
+interface StatusItem {
+  label: string;
+  value: ReactNode;
+}
+
+interface StatusRowProps {
+  items: StatusItem[];
+  className?: string;
+}
+
+export default function StatusRow({ items, className = "" }: StatusRowProps): JSX.Element {
   return (
     <section className={`status-row ${className}`.trim()}>
       {items.map((item) => (

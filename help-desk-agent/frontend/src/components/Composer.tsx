@@ -1,3 +1,19 @@
+import type { FormEvent, KeyboardEvent } from "react";
+
+interface ComposerProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>;
+  onReset?: () => void | Promise<void>;
+  placeholder: string;
+  disabled: boolean;
+  submitLabel: string;
+  sendingLabel: string;
+  resetLabel?: string;
+  rows?: number;
+  className?: string;
+}
+
 export default function Composer({
   value,
   onChange,
@@ -10,8 +26,8 @@ export default function Composer({
   resetLabel,
   rows = 4,
   className = "",
-}) {
-  const onKeyDown = (event) => {
+}: ComposerProps): JSX.Element {
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && event.ctrlKey) {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
