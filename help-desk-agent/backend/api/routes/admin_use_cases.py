@@ -14,7 +14,7 @@ from backend.api.schemas.admin import (
     UseCaseDetailResponse,
     UseCaseListResponse,
 )
-from backend.api_internal.validation import slugify, validate_use_case_payload
+from backend.api.validation import slugify, validate_use_case_payload
 from backend.chats.user_assistant.service import refresh_user_assistant_runtime_snapshot
 from backend.domain.templates import (
     to_use_case_draft_definition,

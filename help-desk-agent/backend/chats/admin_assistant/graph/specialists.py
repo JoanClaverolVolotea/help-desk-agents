@@ -5,7 +5,7 @@ from typing import Any
 import backend.api.deps as deps
 from agents import Agent, function_tool
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
-from backend.api_internal.validation import parse_csv_list, slugify
+from backend.api.validation import parse_csv_list, slugify
 from backend.chats.shared.state import current_response_language
 from backend.chats.user_assistant.service import publish_category_and_sync
 from backend.domain.language_policy import translate_backend_text

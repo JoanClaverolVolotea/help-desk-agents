@@ -13,8 +13,7 @@ It provides:
 
 ## Directory map
 
-- `api/`: FastAPI app entrypoint and HTTP routes
-- `api_internal/`: validation helpers
+- `api/`: FastAPI app entrypoint, HTTP routes, and request validation helpers
 - `chats/`: assistant contexts (`user_assistant`, `admin_assistant`) and shared chat internals
 - `domain/`: models, language policy, seed templates
 - `storage/`: SQLite schema and repositories

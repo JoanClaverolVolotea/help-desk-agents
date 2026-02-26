@@ -11,7 +11,7 @@ from backend.api.schemas.admin import (
     StepCatalogResponse,
     UpdateCategoryDraftRequest,
 )
-from backend.api_internal.validation import slugify
+from backend.api.validation import slugify
 from backend.chats.user_assistant.service import (
     archive_category_and_sync,
     publish_category_and_sync,
