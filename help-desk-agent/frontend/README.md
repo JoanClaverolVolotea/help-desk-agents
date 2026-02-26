@@ -73,9 +73,9 @@ npm run preview
 
 ## Source map
 
-- `src/routes/AppRoutes.jsx`: route tree
+- `src/routes/AppRoutes.tsx`: route tree
 - `src/pages/`: page components
 - `src/components/`: reusable UI components
-- `src/api.js`: backend API client helpers
+- `src/api.ts`: backend API client helpers
 - `src/utils/`: payload and UI helper functions
 - `src/App.css`: styling

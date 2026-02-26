@@ -20,36 +20,63 @@ import {
   updateCategoryDraft,
 } from "../api";
 import {
+  type CategoryWizardState,
   STEP_LABELS,
   buildCategoryPayload,
   categoryWizardFromDetail,
   defaultCategoryWizard,
   parseValidationError,
 } from "../utils/adminPayloads";
+import type {
+  CategoryDetail,
+  CategorySummary,
+  StepDefinition,
+  UseCaseSummary,
+} from "../types";
 
-export default function ITAdminCategoriesPage() {
+type CategoryRow = CategorySummary & { id: string };
+
+interface MigrationPromptItem {
+  use_case_id: string;
+  display_name: string;
+  selected: boolean;
+}
+
+interface MigrationPrompt {
+  categoryId: string;
+  categoryVersionNumber: number | null;
+  items: MigrationPromptItem[];
+}
+
+interface StepOption {
+  stepId: string;
+  label: string;
+  searchText: string;
+}
+
+export default function ITAdminCategoriesPage(): JSX.Element {
   const { t } = useI18n();
-  const [steps, setSteps] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [steps, setSteps] = useState<StepDefinition[]>([]);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [includeArchivedCategories, setIncludeArchivedCategories] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
   const [categoryPublishNotice, setCategoryPublishNotice] = useState("");
   const [reseedBusy, setReseedBusy] = useState(false);
-  const [useCaseCounts, setUseCaseCounts] = useState({});
+  const [useCaseCounts, setUseCaseCounts] = useState<Record<string, number>>({});
 
   const [showCategoryWizard, setShowCategoryWizard] = useState(false);
-  const [categoryWizardMode, setCategoryWizardMode] = useState("create");
+  const [categoryWizardMode, setCategoryWizardMode] = useState<"create" | "edit">("create");
   const [categoryWizardStep, setCategoryWizardStep] = useState(1);
   const [categoryWizardBusy, setCategoryWizardBusy] = useState(false);
   const [categoryWizardError, setCategoryWizardError] = useState("");
-  const [categoryWizardState, setCategoryWizardState] = useState(null);
+  const [categoryWizardState, setCategoryWizardState] = useState<CategoryWizardState | null>(null);
   const [allowedStepSearch, setAllowedStepSearch] = useState("");
   const [defaultStepSearch, setDefaultStepSearch] = useState("");
 
-  const [migrationPrompt, setMigrationPrompt] = useState(null);
+  const [migrationPrompt, setMigrationPrompt] = useState<MigrationPrompt | null>(null);
 
-  const loadAdminData = async () => {
+  const loadAdminData = async (): Promise<void> => {
     setAdminLoading(true);
     setAdminError("");
 
@@ -62,10 +89,10 @@ export default function ITAdminCategoriesPage() {
       setSteps(stepsResponse.items);
       setCategories(categoriesResponse.items);
 
-      const counts = {};
-      for (const uc of useCasesResponse.items) {
-        if (uc.category_id) {
-          counts[uc.category_id] = (counts[uc.category_id] || 0) + 1;
+      const counts: Record<string, number> = {};
+      for (const useCase of useCasesResponse.items as UseCaseSummary[]) {
+        if (useCase.category_id) {
+          counts[useCase.category_id] = (counts[useCase.category_id] || 0) + 1;
         }
       }
       setUseCaseCounts(counts);
@@ -77,10 +104,11 @@ export default function ITAdminCategoriesPage() {
   };
 
   useEffect(() => {
-    loadAdminData();
+    void loadAdminData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [includeArchivedCategories]);
 
-  const openCreateCategoryWizard = () => {
+  const openCreateCategoryWizard = (): void => {
     setCategoryWizardMode("create");
     setCategoryWizardStep(1);
     setCategoryWizardError("");
@@ -90,7 +118,7 @@ export default function ITAdminCategoriesPage() {
     setShowCategoryWizard(true);
   };
 
-  const openEditCategoryWizard = async (categoryId) => {
+  const openEditCategoryWizard = async (categoryId: string): Promise<void> => {
     setCategoryWizardBusy(true);
     setCategoryWizardError("");
 
@@ -114,7 +142,7 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
-  const closeCategoryWizard = () => {
+  const closeCategoryWizard = (): void => {
     setShowCategoryWizard(false);
     setCategoryWizardState(null);
     setCategoryWizardStep(1);
@@ -123,11 +151,17 @@ export default function ITAdminCategoriesPage() {
     setDefaultStepSearch("");
   };
 
-  const setCategoryField = (key, value) => {
-    setCategoryWizardState((prev) => ({ ...prev, [key]: value }));
+  const setCategoryField = <K extends keyof CategoryWizardState>(
+    key: K,
+    value: CategoryWizardState[K],
+  ): void => {
+    setCategoryWizardState((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
-  const toggleCategoryStep = (stepId, key = "allowedStepIds") => {
+  const toggleCategoryStep = (
+    stepId: string,
+    key: "allowedStepIds" | "defaultStepIds" = "allowedStepIds",
+  ): void => {
     setCategoryWizardState((prev) => {
       if (!prev) {
         return prev;
@@ -149,7 +183,7 @@ export default function ITAdminCategoriesPage() {
     });
   };
 
-  const addVisibleAllowedSteps = (stepIds) => {
+  const addVisibleAllowedSteps = (stepIds: string[]): void => {
     setCategoryWizardState((prev) => {
       if (!prev) {
         return prev;
@@ -162,7 +196,7 @@ export default function ITAdminCategoriesPage() {
     });
   };
 
-  const clearVisibleAllowedSteps = (stepIds) => {
+  const clearVisibleAllowedSteps = (stepIds: string[]): void => {
     setCategoryWizardState((prev) => {
       if (!prev) {
         return prev;
@@ -178,7 +212,7 @@ export default function ITAdminCategoriesPage() {
     });
   };
 
-  const addVisibleDefaultSteps = (stepIds) => {
+  const addVisibleDefaultSteps = (stepIds: string[]): void => {
     setCategoryWizardState((prev) => {
       if (!prev) {
         return prev;
@@ -194,7 +228,7 @@ export default function ITAdminCategoriesPage() {
     });
   };
 
-  const clearVisibleDefaultSteps = (stepIds) => {
+  const clearVisibleDefaultSteps = (stepIds: string[]): void => {
     setCategoryWizardState((prev) => {
       if (!prev) {
         return prev;
@@ -207,7 +241,7 @@ export default function ITAdminCategoriesPage() {
     });
   };
 
-  const stepOptions = useMemo(
+  const stepOptions = useMemo<StepOption[]>(
     () =>
       steps.map((step) => {
         const label = STEP_LABELS[step.step_id] ?? step.step_id;
@@ -226,10 +260,7 @@ export default function ITAdminCategoriesPage() {
   const defaultStepIds = categoryWizardState?.defaultStepIds ?? [];
 
   const filteredAllowedStepOptions = useMemo(
-    () =>
-      stepOptions.filter(
-        (option) => !allowedSearchValue || option.searchText.includes(allowedSearchValue),
-      ),
+    () => stepOptions.filter((option) => !allowedSearchValue || option.searchText.includes(allowedSearchValue)),
     [allowedSearchValue, stepOptions],
   );
 
@@ -239,14 +270,11 @@ export default function ITAdminCategoriesPage() {
   }, [allowedStepIds, stepOptions]);
 
   const filteredDefaultStepOptions = useMemo(
-    () =>
-      defaultStepOptions.filter(
-        (option) => !defaultSearchValue || option.searchText.includes(defaultSearchValue),
-      ),
+    () => defaultStepOptions.filter((option) => !defaultSearchValue || option.searchText.includes(defaultSearchValue)),
     [defaultSearchValue, defaultStepOptions],
   );
 
-  const validateCategoryWizard = (wizardState) => {
+  const validateCategoryWizard = (wizardState: CategoryWizardState): string => {
     if (!wizardState.displayName.trim()) {
       return t("categoriesPage.validationDisplayName");
     }
@@ -268,7 +296,7 @@ export default function ITAdminCategoriesPage() {
     return "";
   };
 
-  const saveCategoryDraft = async () => {
+  const saveCategoryDraft = async (): Promise<CategoryDetail | null> => {
     if (!categoryWizardState) {
       return null;
     }
@@ -293,7 +321,9 @@ export default function ITAdminCategoriesPage() {
       }
 
       const response = await createCategory(buildCategoryPayload(categoryWizardState));
-      setCategoryWizardState((prev) => ({ ...prev, categoryId: response.category.category_id }));
+      setCategoryWizardState((prev) =>
+        prev ? { ...prev, categoryId: response.category.category_id } : prev,
+      );
       await loadAdminData();
       return response.category;
     } catch (error) {
@@ -304,7 +334,7 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
-  const publishCategoryAndPromptMigration = async (categoryId) => {
+  const publishCategoryAndPromptMigration = async (categoryId: string): Promise<void> => {
     setAdminError("");
     setCategoryPublishNotice("");
 
@@ -340,7 +370,7 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
-  const publishCategoryFromWizard = async () => {
+  const publishCategoryFromWizard = async (): Promise<void> => {
     const saved = await saveCategoryDraft();
     if (!saved) {
       return;
@@ -349,7 +379,7 @@ export default function ITAdminCategoriesPage() {
     closeCategoryWizard();
   };
 
-  const archiveCategoryFromList = async (categoryId) => {
+  const archiveCategoryFromList = async (categoryId: string): Promise<void> => {
     setAdminError("");
 
     try {
@@ -360,7 +390,7 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
-  const restoreCategoryFromList = async (categoryId) => {
+  const restoreCategoryFromList = async (categoryId: string): Promise<void> => {
     setAdminError("");
 
     try {
@@ -371,7 +401,7 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
-  const runMigration = async () => {
+  const runMigration = async (): Promise<void> => {
     if (!migrationPrompt) {
       return;
     }
@@ -400,7 +430,7 @@ export default function ITAdminCategoriesPage() {
     }
   };
 
-  const handleReseedDefaults = async () => {
+  const handleReseedDefaults = async (): Promise<void> => {
     const confirmed = window.confirm(t("categoriesPage.reseedConfirm"));
     if (!confirmed) {
       return;
@@ -434,17 +464,22 @@ export default function ITAdminCategoriesPage() {
 
   return (
     <section className="tab-panel admin-panel it-console-panel it-console-categories">
-      <Breadcrumb items={[{ label: t("common.dashboard"), to: "/it/dashboard" }, { label: t("common.categories") }]} />
+      <Breadcrumb
+        items={[
+          { label: t("common.dashboard"), to: "/it/dashboard" },
+          { label: t("common.categories") },
+        ]}
+      />
       <div className="admin-toolbar">
         <h2>{t("categoriesPage.heading")}</h2>
         <div className="admin-toolbar-actions">
-          <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
+          <button type="button" className="ghost" onClick={() => void loadAdminData()} disabled={adminLoading}>
             {t("common.refresh")}
           </button>
           <button
             type="button"
             className="ghost"
-            onClick={handleReseedDefaults}
+            onClick={() => void handleReseedDefaults()}
             disabled={adminLoading || reseedBusy}
           >
             {t("categoriesPage.reseedDefaults")}
@@ -465,9 +500,7 @@ export default function ITAdminCategoriesPage() {
       </label>
       <section className="console-clarity-card">
         <h3>{t("categoriesPage.cardTitle")}</h3>
-        <p>
-          {t("categoriesPage.cardBody")}
-        </p>
+        <p>{t("categoriesPage.cardBody")}</p>
       </section>
 
       {adminLoading ? <p className="helper">{t("common.loadingData")}</p> : null}
@@ -477,12 +510,9 @@ export default function ITAdminCategoriesPage() {
       {migrationPrompt ? (
         <section className="migration-box">
           <h3>{t("categoriesPage.migrationTitle")}</h3>
-          <p>
-            {t("categoriesPage.migrationBody", { version: migrationPrompt.categoryVersionNumber })}
-          </p>
+          <p>{t("categoriesPage.migrationBody", { version: migrationPrompt.categoryVersionNumber ?? 0 })}</p>
           <p className="helper">
-            {t("categoriesPage.migrationHelp")}{" "}
-            <Link to="/it/admin/use-cases">{t("common.runbooks")}</Link>.
+            {t("categoriesPage.migrationHelp")} <Link to="/it/admin/use-cases">{t("common.runbooks")}</Link>.
           </p>
           <div className="check-grid">
             {migrationPrompt.items.map((item, index) => (
@@ -492,6 +522,9 @@ export default function ITAdminCategoriesPage() {
                   checked={item.selected}
                   onChange={() =>
                     setMigrationPrompt((prev) => {
+                      if (!prev) {
+                        return prev;
+                      }
                       const items = [...prev.items];
                       items[index] = { ...items[index], selected: !items[index].selected };
                       return { ...prev, items };
@@ -506,57 +539,83 @@ export default function ITAdminCategoriesPage() {
             <button type="button" className="ghost" onClick={() => setMigrationPrompt(null)}>
               {t("categoriesPage.migrationSkip")}
             </button>
-            <button type="button" className="primary" onClick={runMigration}>
+            <button type="button" className="primary" onClick={() => void runMigration()}>
               {t("categoriesPage.migrationApply")}
             </button>
           </div>
         </section>
       ) : null}
 
-      <AdminTable
+      <AdminTable<CategoryRow>
         columns={[
-          { key: "name", label: t("categoriesPage.tableName"), render: (row) => (
-            <strong>{row.display_name}</strong>
-          )},
-          { key: "status", label: t("categoriesPage.tableStatus"), render: (row) => (
-            <div className="badge-row">
-              <span className={row.archived ? "badge archived" : "badge published"}>
-                {row.archived ? t("common.archived") : t("common.active")}
-              </span>
-              {row.draft_version_number ? (
-                <span className="badge draft">{t("common.unpublishedChanges")}</span>
-              ) : null}
-            </div>
-          )},
-          { key: "use_cases", label: t("categoriesPage.tableRunbooks"), render: (row) => (
-            <Link to={`/it/admin/use-cases?category_id=${row.category_id}`}>
-              {useCaseCounts[row.category_id] || 0}
-            </Link>
-          )},
-          { key: "actions", label: "", render: (row) => (
-            <div className="use-case-actions" style={{ flexDirection: "row" }}>
-              <button type="button" className="ghost" onClick={() => openEditCategoryWizard(row.category_id)}>
-                {t("common.edit")}
-              </button>
-              <button
-                type="button"
-                className="primary"
-                disabled={!row.draft_version_number || row.archived}
-                onClick={() => publishCategoryAndPromptMigration(row.category_id)}
-              >
-                {t("common.publish")}
-              </button>
-              {row.archived ? (
-                <button type="button" className="ghost" onClick={() => restoreCategoryFromList(row.category_id)}>
-                  {t("common.restore")}
+          {
+            key: "name",
+            label: t("categoriesPage.tableName"),
+            render: (row) => <strong>{row.display_name}</strong>,
+          },
+          {
+            key: "status",
+            label: t("categoriesPage.tableStatus"),
+            render: (row) => (
+              <div className="badge-row">
+                <span className={row.archived ? "badge archived" : "badge published"}>
+                  {row.archived ? t("common.archived") : t("common.active")}
+                </span>
+                {row.draft_version_number ? (
+                  <span className="badge draft">{t("common.unpublishedChanges")}</span>
+                ) : null}
+              </div>
+            ),
+          },
+          {
+            key: "use_cases",
+            label: t("categoriesPage.tableRunbooks"),
+            render: (row) => (
+              <Link to={`/it/admin/use-cases?category_id=${row.category_id}`}>
+                {useCaseCounts[row.category_id] || 0}
+              </Link>
+            ),
+          },
+          {
+            key: "actions",
+            label: "",
+            render: (row) => (
+              <div className="use-case-actions" style={{ flexDirection: "row" }}>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => void openEditCategoryWizard(row.category_id)}
+                >
+                  {t("common.edit")}
                 </button>
-              ) : (
-                <button type="button" className="ghost" onClick={() => archiveCategoryFromList(row.category_id)}>
-                  {t("common.archive")}
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={!row.draft_version_number || row.archived}
+                  onClick={() => void publishCategoryAndPromptMigration(row.category_id)}
+                >
+                  {t("common.publish")}
                 </button>
-              )}
-            </div>
-          )},
+                {row.archived ? (
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => void restoreCategoryFromList(row.category_id)}
+                  >
+                    {t("common.restore")}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => void archiveCategoryFromList(row.category_id)}
+                  >
+                    {t("common.archive")}
+                  </button>
+                )}
+              </div>
+            ),
+          },
         ]}
         rows={categories.map((item) => ({ ...item, id: item.category_id }))}
         emptyMessage={t("categoriesPage.emptyCategories")}
@@ -594,7 +653,7 @@ export default function ITAdminCategoriesPage() {
               <button
                 type="button"
                 className="ghost"
-                onClick={saveCategoryDraft}
+                onClick={() => void saveCategoryDraft()}
                 disabled={categoryWizardBusy}
               >
                 {t("common.saveDraft")}
@@ -602,7 +661,7 @@ export default function ITAdminCategoriesPage() {
               <button
                 type="button"
                 className="primary"
-                onClick={publishCategoryFromWizard}
+                onClick={() => void publishCategoryFromWizard()}
                 disabled={categoryWizardBusy}
               >
                 {t("common.saveAndPublish")}
@@ -643,9 +702,7 @@ export default function ITAdminCategoriesPage() {
           {categoryWizardStep === 2 ? (
             <div className="step-selector-section">
               <p className="helper">{t("categoriesPage.stepAllowedTitle")}.</p>
-              <p className="helper step-helper-copy">
-                {t("categoriesPage.stepAllowedHelp")}
-              </p>
+              <p className="helper step-helper-copy">{t("categoriesPage.stepAllowedHelp")}</p>
               <div className="step-selector-toolbar">
                 <input
                   type="search"
@@ -655,7 +712,10 @@ export default function ITAdminCategoriesPage() {
                 />
                 <div className="step-selector-actions">
                   <span className="helper">
-                    {t("categoriesPage.stepAllowedCount", { selected: allowedStepIds.length, total: steps.length })}
+                    {t("categoriesPage.stepAllowedCount", {
+                      selected: allowedStepIds.length,
+                      total: steps.length,
+                    })}
                   </span>
                   <button
                     type="button"
@@ -680,9 +740,7 @@ export default function ITAdminCategoriesPage() {
                 </div>
               </div>
               {filteredAllowedStepOptions.length === 0 ? (
-                <p className="helper step-selector-empty">
-                  {t("categoriesPage.stepNoMatch")}
-                </p>
+                <p className="helper step-selector-empty">{t("categoriesPage.stepNoMatch")}</p>
               ) : (
                 <div className="check-grid step-selector-grid">
                   {filteredAllowedStepOptions.map((option) => (
@@ -699,9 +757,7 @@ export default function ITAdminCategoriesPage() {
               )}
 
               <p className="helper">{t("categoriesPage.stepDefaultTitle")}.</p>
-              <p className="helper step-helper-copy">
-                {t("categoriesPage.stepDefaultHelp")}
-              </p>
+              <p className="helper step-helper-copy">{t("categoriesPage.stepDefaultHelp")}</p>
               <div className="step-selector-toolbar">
                 <input
                   type="search"
@@ -740,13 +796,9 @@ export default function ITAdminCategoriesPage() {
                 </div>
               </div>
               {defaultStepOptions.length === 0 ? (
-                <p className="helper step-selector-empty">
-                  {t("categoriesPage.stepNoDefaultsSource")}
-                </p>
+                <p className="helper step-selector-empty">{t("categoriesPage.stepNoDefaultsSource")}</p>
               ) : filteredDefaultStepOptions.length === 0 ? (
-                <p className="helper step-selector-empty">
-                  {t("categoriesPage.stepNoDefaultMatch")}
-                </p>
+                <p className="helper step-selector-empty">{t("categoriesPage.stepNoDefaultMatch")}</p>
               ) : (
                 <div className="check-grid step-selector-grid">
                   {filteredDefaultStepOptions.map((option) => (
@@ -774,7 +826,9 @@ export default function ITAdminCategoriesPage() {
                 <textarea
                   rows={3}
                   value={categoryWizardState.defaultHandoffDescription}
-                  onChange={(event) => setCategoryField("defaultHandoffDescription", event.target.value)}
+                  onChange={(event) =>
+                    setCategoryField("defaultHandoffDescription", event.target.value)
+                  }
                 />
               </label>
               <label>
@@ -785,7 +839,9 @@ export default function ITAdminCategoriesPage() {
                 <textarea
                   rows={3}
                   value={categoryWizardState.defaultRoutingDescription}
-                  onChange={(event) => setCategoryField("defaultRoutingDescription", event.target.value)}
+                  onChange={(event) =>
+                    setCategoryField("defaultRoutingDescription", event.target.value)
+                  }
                 />
               </label>
               <label>
@@ -810,16 +866,20 @@ export default function ITAdminCategoriesPage() {
                 <strong>{t("categoriesPage.reviewDisplay")}:</strong> {categoryWizardState.displayName}
               </p>
               <p>
-                <strong>{t("categoriesPage.reviewSlug")}:</strong> {categoryWizardState.slug || `(${t("common.auto")})`}
+                <strong>{t("categoriesPage.reviewSlug")}:</strong>{" "}
+                {categoryWizardState.slug || `(${t("common.auto")})`}
               </p>
               <p>
-                <strong>{t("categoriesPage.reviewAllowed")}:</strong> {categoryWizardState.allowedStepIds.join(", ")}
+                <strong>{t("categoriesPage.reviewAllowed")}:</strong>{" "}
+                {categoryWizardState.allowedStepIds.join(", ")}
               </p>
               <p>
-                <strong>{t("categoriesPage.reviewDefault")}:</strong> {categoryWizardState.defaultStepIds.join(", ")}
+                <strong>{t("categoriesPage.reviewDefault")}:</strong>{" "}
+                {categoryWizardState.defaultStepIds.join(", ")}
               </p>
               <p>
-                <strong>{t("categoriesPage.reviewDefaultFields")}:</strong> {categoryWizardState.defaultRequiredFieldsText}
+                <strong>{t("categoriesPage.reviewDefaultFields")}:</strong>{" "}
+                {categoryWizardState.defaultRequiredFieldsText}
               </p>
             </div>
           ) : null}

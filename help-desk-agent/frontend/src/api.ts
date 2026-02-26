@@ -149,13 +149,16 @@ export async function chatStream(
     onEvent?.(event);
 
     if (event.type === "error") {
-      throw new Error(event.detail || "Streaming error.");
+      const detail = typeof rawEvent.detail === "string" ? rawEvent.detail : "Streaming error.";
+      throw new Error(detail);
     }
 
     if (event.type === "final") {
       finalPayload = {
-        conversation_id: event.conversation_id,
-        current_agent: event.current_agent,
+        conversation_id:
+          typeof rawEvent.conversation_id === "string" ? rawEvent.conversation_id : undefined,
+        current_agent:
+          typeof rawEvent.current_agent === "string" ? rawEvent.current_agent : undefined,
       };
     }
   };

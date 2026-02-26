@@ -2,19 +2,19 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../i18n/useI18n";
 
-export interface AdminTableColumn<T extends Record<string, unknown>> {
+export interface AdminTableColumn<T extends object> {
   key: string;
   label: ReactNode;
   render?: (row: T) => ReactNode;
 }
 
-interface AdminTableProps<T extends Record<string, unknown>> {
+interface AdminTableProps<T extends object> {
   columns: AdminTableColumn<T>[];
   rows: T[];
   emptyMessage?: string;
 }
 
-export default function AdminTable<T extends Record<string, unknown>>({
+export default function AdminTable<T extends object>({
   columns,
   rows,
   emptyMessage,
@@ -38,11 +38,14 @@ export default function AdminTable<T extends Record<string, unknown>>({
         </thead>
         <tbody>
           {rows.map((row, rowIndex) => {
-            const rowKey = (row.id as string | number | undefined) ?? rowIndex;
+            const rowRecord = row as Record<string, unknown>;
+            const rowKey = (rowRecord.id as string | number | undefined) ?? rowIndex;
             return (
               <tr key={rowKey}>
                 {columns.map((col) => (
-                  <td key={col.key}>{col.render ? col.render(row) : (row[col.key] as ReactNode)}</td>
+                  <td key={col.key}>
+                    {col.render ? col.render(row) : (rowRecord[col.key] as ReactNode)}
+                  </td>
                 ))}
               </tr>
             );

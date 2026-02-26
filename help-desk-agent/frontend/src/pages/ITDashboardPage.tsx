@@ -3,16 +3,17 @@ import { Link } from "react-router-dom";
 
 import { useI18n } from "../i18n/useI18n";
 import { listCategories, listTickets, listUseCases, readableError } from "../api";
+import type { CategorySummary, TicketSummary, UseCaseSummary } from "../types";
 
-export default function ITDashboardPage() {
+export default function ITDashboardPage(): JSX.Element {
   const { t } = useI18n();
-  const [categories, setCategories] = useState([]);
-  const [useCases, setUseCases] = useState([]);
-  const [tickets, setTickets] = useState([]);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [useCases, setUseCases] = useState<UseCaseSummary[]>([]);
+  const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const loadAll = async () => {
+  const loadAll = async (): Promise<void> => {
     setLoading(true);
     setError("");
     try {
@@ -32,27 +33,33 @@ export default function ITDashboardPage() {
   };
 
   useEffect(() => {
-    loadAll();
+    void loadAll();
   }, []);
 
-  const activeCategories = categories.filter((c) => !c.archived);
-  const publishedRunbooks = useCases.filter((u) => u.published_version_number !== null && !u.archived);
-  const openTickets = tickets.filter((t) => t.status === "open");
-  const inProgressTickets = tickets.filter((t) => t.status === "in_progress");
-  const resolvedTickets = tickets.filter((t) => t.status === "resolved");
+  const activeCategories = categories.filter((category) => !category.archived);
+  const publishedRunbooks = useCases.filter(
+    (useCase) => useCase.published_version_number !== null && !useCase.archived,
+  );
+  const openTickets = tickets.filter((ticket) => ticket.status === "open");
+  const inProgressTickets = tickets.filter((ticket) => ticket.status === "in_progress");
+  const resolvedTickets = tickets.filter((ticket) => ticket.status === "resolved");
 
-  const ucByCategory = {};
-  for (const uc of useCases) {
-    const key = uc.category_id || "_none";
-    if (!ucByCategory[key]) ucByCategory[key] = [];
-    ucByCategory[key].push(uc);
+  const ucByCategory: Record<string, UseCaseSummary[]> = {};
+  for (const useCase of useCases) {
+    const key = useCase.category_id || "_none";
+    if (!ucByCategory[key]) {
+      ucByCategory[key] = [];
+    }
+    ucByCategory[key].push(useCase);
   }
 
-  const ticketsByUseCase = {};
-  for (const t of tickets) {
-    const key = t.use_case_id || "_none";
-    if (!ticketsByUseCase[key]) ticketsByUseCase[key] = [];
-    ticketsByUseCase[key].push(t);
+  const ticketsByUseCase: Record<string, TicketSummary[]> = {};
+  for (const ticket of tickets) {
+    const key = ticket.use_case_id || "_none";
+    if (!ticketsByUseCase[key]) {
+      ticketsByUseCase[key] = [];
+    }
+    ticketsByUseCase[key].push(ticket);
   }
 
   return (
@@ -60,7 +67,7 @@ export default function ITDashboardPage() {
       <div className="admin-toolbar">
         <h2>{t("dashboardPage.title")}</h2>
         <div className="admin-toolbar-actions">
-          <button type="button" className="ghost" onClick={loadAll} disabled={loading}>
+          <button type="button" className="ghost" onClick={() => void loadAll()} disabled={loading}>
             {t("common.refresh")}
           </button>
         </div>
@@ -95,39 +102,43 @@ export default function ITDashboardPage() {
       {!loading && categories.length > 0 ? (
         <div className="hierarchy-tree">
           <h3>{t("dashboardPage.hierarchyTitle")}</h3>
-          {activeCategories.map((cat) => {
-            const catUseCases = ucByCategory[cat.category_id] || [];
+          {activeCategories.map((category) => {
+            const categoryUseCases = ucByCategory[category.category_id] || [];
             return (
-              <details key={cat.category_id} className="hierarchy-node">
+              <details key={category.category_id} className="hierarchy-node">
                 <summary>
-                  <Link to={`/it/admin/use-cases?category_id=${cat.category_id}`}>
-                    {cat.display_name}
+                  <Link to={`/it/admin/use-cases?category_id=${category.category_id}`}>
+                    {category.display_name}
                   </Link>
                   <span className="hierarchy-count">
-                    {t("dashboardPage.runbookCount", { count: catUseCases.length })}
+                    {t("dashboardPage.runbookCount", { count: categoryUseCases.length })}
                   </span>
                 </summary>
                 <div className="hierarchy-children">
-                  {catUseCases.length === 0 ? (
+                  {categoryUseCases.length === 0 ? (
                     <p className="helper">{t("dashboardPage.noRunbooksUnderCategory")}</p>
                   ) : (
-                    catUseCases.map((uc) => {
-                      const ucTickets = ticketsByUseCase[uc.use_case_id] || [];
+                    categoryUseCases.map((useCase) => {
+                      const useCaseTickets = ticketsByUseCase[useCase.use_case_id] || [];
                       return (
-                        <div key={uc.use_case_id} className="hierarchy-leaf">
-                          <span>{uc.display_name}</span>
+                        <div key={useCase.use_case_id} className="hierarchy-leaf">
+                          <span>{useCase.display_name}</span>
                           <div className="hierarchy-leaf-meta">
-                            <span className={`badge ${uc.published_version_number ? "published" : "draft"}`}>
-                              {uc.published_version_number ? t("common.published") : t("common.draft")}
+                            <span
+                              className={`badge ${useCase.published_version_number ? "published" : "draft"}`}
+                            >
+                              {useCase.published_version_number
+                                ? t("common.published")
+                                : t("common.draft")}
                             </span>
-                            {uc.is_system_default ? (
+                            {useCase.is_system_default ? (
                               <span className="badge default">{t("common.default")}</span>
                             ) : null}
                             <Link
-                              to={`/it/admin/tickets?use_case_id=${uc.use_case_id}`}
+                              to={`/it/admin/tickets?use_case_id=${useCase.use_case_id}`}
                               className="hierarchy-ticket-link"
                             >
-                              {t("dashboardPage.ticketCount", { count: ucTickets.length })}
+                              {t("dashboardPage.ticketCount", { count: useCaseTickets.length })}
                             </Link>
                           </div>
                         </div>

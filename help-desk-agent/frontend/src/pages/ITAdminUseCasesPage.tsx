@@ -19,34 +19,45 @@ import {
   updateUseCaseDraft,
 } from "../api";
 import {
+  type UseCaseWizardState,
+  type UseCaseWizardStep,
   STEP_LABELS,
   buildUseCasePayload,
   defaultUseCaseWizard,
   parseValidationError,
   useCaseWizardFromDetail,
 } from "../utils/adminPayloads";
+import type {
+  CategoryDetail,
+  CategorySummary,
+  TicketSummary,
+  UseCaseDetail,
+  UseCaseSummary,
+} from "../types";
 
-export default function ITAdminUseCasesPage() {
+type UseCaseRow = UseCaseSummary & { id: string };
+
+export default function ITAdminUseCasesPage(): JSX.Element {
   const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const filterCategoryId = searchParams.get("category_id") || "";
 
-  const [categories, setCategories] = useState([]);
-  const [useCases, setUseCases] = useState([]);
-  const [ticketCounts, setTicketCounts] = useState({});
-  const [categoryDetailsById, setCategoryDetailsById] = useState({});
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [useCases, setUseCases] = useState<UseCaseSummary[]>([]);
+  const [ticketCounts, setTicketCounts] = useState<Record<string, number>>({});
+  const [categoryDetailsById, setCategoryDetailsById] = useState<Record<string, CategoryDetail>>({});
   const [includeArchivedUseCases, setIncludeArchivedUseCases] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
 
   const [showUseCaseWizard, setShowUseCaseWizard] = useState(false);
-  const [useCaseWizardMode, setUseCaseWizardMode] = useState("create");
+  const [useCaseWizardMode, setUseCaseWizardMode] = useState<"create" | "edit">("create");
   const [useCaseWizardStep, setUseCaseWizardStep] = useState(1);
   const [useCaseWizardBusy, setUseCaseWizardBusy] = useState(false);
   const [useCaseWizardError, setUseCaseWizardError] = useState("");
-  const [useCaseWizardState, setUseCaseWizardState] = useState(null);
+  const [useCaseWizardState, setUseCaseWizardState] = useState<UseCaseWizardState | null>(null);
 
-  const loadAdminData = async () => {
+  const loadAdminData = async (): Promise<void> => {
     setAdminLoading(true);
     setAdminError("");
 
@@ -59,10 +70,10 @@ export default function ITAdminUseCasesPage() {
       setCategories(categoriesResponse.items);
       setUseCases(useCasesResponse.items);
 
-      const counts = {};
-      for (const t of ticketsResponse.items) {
-        if (t.use_case_id) {
-          counts[t.use_case_id] = (counts[t.use_case_id] || 0) + 1;
+      const counts: Record<string, number> = {};
+      for (const ticket of ticketsResponse.items as TicketSummary[]) {
+        if (ticket.use_case_id) {
+          counts[ticket.use_case_id] = (counts[ticket.use_case_id] || 0) + 1;
         }
       }
       setTicketCounts(counts);
@@ -74,10 +85,11 @@ export default function ITAdminUseCasesPage() {
   };
 
   useEffect(() => {
-    loadAdminData();
+    void loadAdminData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [includeArchivedUseCases]);
 
-  const ensureCategoryDetail = async (categoryId) => {
+  const ensureCategoryDetail = async (categoryId: string): Promise<CategoryDetail | null> => {
     if (!categoryId) {
       return null;
     }
@@ -91,7 +103,7 @@ export default function ITAdminUseCasesPage() {
     return response.category;
   };
 
-  const openCreateUseCaseWizard = async () => {
+  const openCreateUseCaseWizard = async (): Promise<void> => {
     const availableCategories = categories.filter(
       (category) => !category.archived && category.published_version_number !== null,
     );
@@ -112,7 +124,7 @@ export default function ITAdminUseCasesPage() {
     setShowUseCaseWizard(true);
   };
 
-  const openEditUseCaseWizard = async (useCaseId) => {
+  const openEditUseCaseWizard = async (useCaseId: string): Promise<void> => {
     setUseCaseWizardBusy(true);
     setUseCaseWizardError("");
 
@@ -138,15 +150,18 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
-  const closeUseCaseWizard = () => {
+  const closeUseCaseWizard = (): void => {
     setShowUseCaseWizard(false);
     setUseCaseWizardState(null);
     setUseCaseWizardStep(1);
     setUseCaseWizardError("");
   };
 
-  const setUseCaseField = (key, value) => {
-    setUseCaseWizardState((prev) => ({ ...prev, [key]: value }));
+  const setUseCaseField = <K extends keyof UseCaseWizardState>(
+    key: K,
+    value: UseCaseWizardState[K],
+  ): void => {
+    setUseCaseWizardState((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
   const selectedUseCaseCategory = useCaseWizardState?.categoryId
@@ -155,13 +170,17 @@ export default function ITAdminUseCasesPage() {
   const selectedUseCaseAllowedSteps =
     selectedUseCaseCategory?.published_definition?.allowed_step_ids ?? [];
 
-  const onUseCaseCategoryChange = async (categoryId) => {
+  const onUseCaseCategoryChange = async (categoryId: string): Promise<void> => {
     setUseCaseField("categoryId", categoryId);
 
     const detail = await ensureCategoryDetail(categoryId);
     const allowedStepIds = detail?.published_definition?.allowed_step_ids ?? [];
 
     setUseCaseWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
       const sanitizedSteps = prev.steps
         .filter((step) => allowedStepIds.includes(step.step_id))
         .map((step) => ({ ...step, params: { ...step.params } }));
@@ -179,31 +198,49 @@ export default function ITAdminUseCasesPage() {
     });
   };
 
-  const updateUseCaseStepAt = (index, updater) => {
+  const updateUseCaseStepAt = (
+    index: number,
+    updater: (step: UseCaseWizardStep) => UseCaseWizardStep,
+  ): void => {
     setUseCaseWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
       const nextSteps = [...prev.steps];
       nextSteps[index] = updater(nextSteps[index]);
       return { ...prev, steps: nextSteps };
     });
   };
 
-  const addUseCaseStep = () => {
+  const addUseCaseStep = (): void => {
     const fallbackStep = selectedUseCaseAllowedSteps[0] ?? "manual_instruction";
-    setUseCaseWizardState((prev) => ({
-      ...prev,
-      steps: [...prev.steps, { step_id: fallbackStep, params: {} }],
-    }));
+    setUseCaseWizardState((prev) =>
+      prev
+        ? {
+            ...prev,
+            steps: [...prev.steps, { step_id: fallbackStep, params: {} }],
+          }
+        : prev,
+    );
   };
 
-  const removeUseCaseStep = (index) => {
-    setUseCaseWizardState((prev) => ({
-      ...prev,
-      steps: prev.steps.filter((_, itemIndex) => itemIndex !== index),
-    }));
+  const removeUseCaseStep = (index: number): void => {
+    setUseCaseWizardState((prev) =>
+      prev
+        ? {
+            ...prev,
+            steps: prev.steps.filter((_, itemIndex) => itemIndex !== index),
+          }
+        : prev,
+    );
   };
 
-  const moveUseCaseStep = (index, direction) => {
+  const moveUseCaseStep = (index: number, direction: number): void => {
     setUseCaseWizardState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
       const targetIndex = index + direction;
       if (targetIndex < 0 || targetIndex >= prev.steps.length) {
         return prev;
@@ -216,7 +253,7 @@ export default function ITAdminUseCasesPage() {
     });
   };
 
-  const validateUseCaseWizard = (wizardState) => {
+  const validateUseCaseWizard = (wizardState: UseCaseWizardState): string => {
     if (!wizardState.categoryId) {
       return t("useCasesPage.validationSelectCategory");
     }
@@ -235,7 +272,7 @@ export default function ITAdminUseCasesPage() {
     return "";
   };
 
-  const saveUseCaseDraft = async () => {
+  const saveUseCaseDraft = async (): Promise<UseCaseDetail | null> => {
     if (!useCaseWizardState) {
       return null;
     }
@@ -261,7 +298,9 @@ export default function ITAdminUseCasesPage() {
       }
 
       const response = await createUseCase(payload);
-      setUseCaseWizardState((prev) => ({ ...prev, useCaseId: response.use_case.use_case_id }));
+      setUseCaseWizardState((prev) =>
+        prev ? { ...prev, useCaseId: response.use_case.use_case_id } : prev,
+      );
       await loadAdminData();
       return response.use_case;
     } catch (error) {
@@ -272,7 +311,7 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
-  const publishUseCaseFromWizard = async () => {
+  const publishUseCaseFromWizard = async (): Promise<void> => {
     const saved = await saveUseCaseDraft();
     if (!saved) {
       return;
@@ -287,7 +326,7 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
-  const publishUseCaseFromList = async (useCaseId) => {
+  const publishUseCaseFromList = async (useCaseId: string): Promise<void> => {
     setAdminError("");
     try {
       await publishUseCase(useCaseId);
@@ -297,7 +336,7 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
-  const archiveUseCaseFromList = async (useCaseId) => {
+  const archiveUseCaseFromList = async (useCaseId: string): Promise<void> => {
     setAdminError("");
     try {
       await archiveUseCase(useCaseId);
@@ -307,7 +346,7 @@ export default function ITAdminUseCasesPage() {
     }
   };
 
-  const restoreUseCaseFromList = async (useCaseId) => {
+  const restoreUseCaseFromList = async (useCaseId: string): Promise<void> => {
     setAdminError("");
     try {
       await restoreUseCase(useCaseId);
@@ -320,11 +359,9 @@ export default function ITAdminUseCasesPage() {
   const filteredUseCases = filterCategoryId
     ? useCases.filter((item) => item.category_id === filterCategoryId)
     : useCases;
-  const manualUseCases = filteredUseCases.filter((item) => !item.is_system_default);
-  const categoryDefaultUseCases = filteredUseCases.filter((item) => item.is_system_default);
 
   const filterCategoryName = filterCategoryId
-    ? categories.find((c) => c.category_id === filterCategoryId)?.display_name
+    ? categories.find((category) => category.category_id === filterCategoryId)?.display_name
     : null;
 
   return (
@@ -345,10 +382,10 @@ export default function ITAdminUseCasesPage() {
             : t("useCasesPage.heading")}
         </h2>
         <div className="admin-toolbar-actions">
-          <button type="button" className="ghost" onClick={loadAdminData} disabled={adminLoading}>
+          <button type="button" className="ghost" onClick={() => void loadAdminData()} disabled={adminLoading}>
             {t("common.refresh")}
           </button>
-          <button type="button" className="primary" onClick={openCreateUseCaseWizard}>
+          <button type="button" className="primary" onClick={() => void openCreateUseCaseWizard()}>
             {t("useCasesPage.create")}
           </button>
         </div>
@@ -364,72 +401,105 @@ export default function ITAdminUseCasesPage() {
       </label>
       <section className="console-clarity-card">
         <h3>{t("useCasesPage.cardTitle")}</h3>
-        <p>
-          {t("useCasesPage.cardBody")}
-        </p>
+        <p>{t("useCasesPage.cardBody")}</p>
       </section>
 
       {adminLoading ? <p className="helper">{t("common.loadingData")}</p> : null}
       {adminError ? <p className="error-text">{adminError}</p> : null}
 
-      <AdminTable
+      <AdminTable<UseCaseRow>
         columns={[
-          { key: "name", label: t("useCasesPage.tableName"), render: (row) => (
-            <>
-              <strong>{row.display_name}</strong>
-              {row.is_system_default ? (
-                <span className="badge default" style={{ marginLeft: "0.4rem" }}>{t("common.auto")}</span>
-              ) : null}
-            </>
-          )},
-          { key: "category", label: t("useCasesPage.tableCategory"), render: (row) => (
-            row.category_id ? (
-              <Link to={`/it/admin/categories`}>
-                {categories.find((c) => c.category_id === row.category_id)?.display_name || row.category_id}
-              </Link>
-            ) : <span className="badge detached">{t("common.noCategory")}</span>
-          )},
-          { key: "status", label: t("useCasesPage.tableStatus"), render: (row) => (
-            <div className="badge-row">
-              <span className={row.archived ? "badge archived" : "badge published"}>
-                {row.archived ? t("common.archived") : t("common.active")}
-              </span>
-              {row.draft_version_number && !row.is_system_default ? (
-                <span className="badge draft">{t("common.unpublishedChanges")}</span>
-              ) : null}
-            </div>
-          )},
-          { key: "tickets", label: t("useCasesPage.tableTickets"), render: (row) => (
-            <Link to={`/it/admin/tickets?use_case_id=${row.use_case_id}`}>
-              {ticketCounts[row.use_case_id] || 0}
-            </Link>
-          )},
-          { key: "actions", label: "", render: (row) => (
-            row.is_system_default ? null : (
-              <div className="use-case-actions" style={{ flexDirection: "row" }}>
-                <button type="button" className="ghost" onClick={() => openEditUseCaseWizard(row.use_case_id)}>
-                  {t("common.edit")}
-                </button>
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={!row.draft_version_number || row.archived}
-                  onClick={() => publishUseCaseFromList(row.use_case_id)}
-                >
-                  {t("common.publish")}
-                </button>
-                {row.archived ? (
-                  <button type="button" className="ghost" onClick={() => restoreUseCaseFromList(row.use_case_id)}>
-                    {t("common.restore")}
-                  </button>
-                ) : (
-                  <button type="button" className="ghost" onClick={() => archiveUseCaseFromList(row.use_case_id)}>
-                    {t("common.archive")}
-                  </button>
-                )}
+          {
+            key: "name",
+            label: t("useCasesPage.tableName"),
+            render: (row) => (
+              <>
+                <strong>{row.display_name}</strong>
+                {row.is_system_default ? (
+                  <span className="badge default" style={{ marginLeft: "0.4rem" }}>
+                    {t("common.auto")}
+                  </span>
+                ) : null}
+              </>
+            ),
+          },
+          {
+            key: "category",
+            label: t("useCasesPage.tableCategory"),
+            render: (row) =>
+              row.category_id ? (
+                <Link to="/it/admin/categories">
+                  {categories.find((category) => category.category_id === row.category_id)?.display_name ||
+                    row.category_id}
+                </Link>
+              ) : (
+                <span className="badge detached">{t("common.noCategory")}</span>
+              ),
+          },
+          {
+            key: "status",
+            label: t("useCasesPage.tableStatus"),
+            render: (row) => (
+              <div className="badge-row">
+                <span className={row.archived ? "badge archived" : "badge published"}>
+                  {row.archived ? t("common.archived") : t("common.active")}
+                </span>
+                {row.draft_version_number && !row.is_system_default ? (
+                  <span className="badge draft">{t("common.unpublishedChanges")}</span>
+                ) : null}
               </div>
-            )
-          )},
+            ),
+          },
+          {
+            key: "tickets",
+            label: t("useCasesPage.tableTickets"),
+            render: (row) => (
+              <Link to={`/it/admin/tickets?use_case_id=${row.use_case_id}`}>
+                {ticketCounts[row.use_case_id] || 0}
+              </Link>
+            ),
+          },
+          {
+            key: "actions",
+            label: "",
+            render: (row) =>
+              row.is_system_default ? null : (
+                <div className="use-case-actions" style={{ flexDirection: "row" }}>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => void openEditUseCaseWizard(row.use_case_id)}
+                  >
+                    {t("common.edit")}
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={!row.draft_version_number || row.archived}
+                    onClick={() => void publishUseCaseFromList(row.use_case_id)}
+                  >
+                    {t("common.publish")}
+                  </button>
+                  {row.archived ? (
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => void restoreUseCaseFromList(row.use_case_id)}
+                    >
+                      {t("common.restore")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => void archiveUseCaseFromList(row.use_case_id)}
+                    >
+                      {t("common.archive")}
+                    </button>
+                  )}
+                </div>
+              ),
+          },
         ]}
         rows={filteredUseCases.map((item) => ({ ...item, id: item.use_case_id }))}
         emptyMessage={t("useCasesPage.emptyRunbooks")}
@@ -467,7 +537,7 @@ export default function ITAdminUseCasesPage() {
               <button
                 type="button"
                 className="ghost"
-                onClick={saveUseCaseDraft}
+                onClick={() => void saveUseCaseDraft()}
                 disabled={useCaseWizardBusy}
               >
                 {t("common.saveDraft")}
@@ -475,7 +545,7 @@ export default function ITAdminUseCasesPage() {
               <button
                 type="button"
                 className="primary"
-                onClick={publishUseCaseFromWizard}
+                onClick={() => void publishUseCaseFromWizard()}
                 disabled={useCaseWizardBusy}
               >
                 {t("common.saveAndPublish")}
@@ -489,11 +559,13 @@ export default function ITAdminUseCasesPage() {
                 {t("useCasesPage.formCategoryPublished")}
                 <select
                   value={useCaseWizardState.categoryId}
-                  onChange={(event) => onUseCaseCategoryChange(event.target.value)}
+                  onChange={(event) => void onUseCaseCategoryChange(event.target.value)}
                 >
                   <option value="">{t("useCasesPage.formSelectCategory")}</option>
                   {categories
-                    .filter((category) => !category.archived && category.published_version_number !== null)
+                    .filter(
+                      (category) => !category.archived && category.published_version_number !== null,
+                    )
                     .map((category) => (
                       <option key={category.category_id} value={category.category_id}>
                         {category.display_name}
@@ -589,8 +661,8 @@ export default function ITAdminUseCasesPage() {
                         <input
                           value={
                             step.step_id === "append_resolution_note"
-                              ? step.params.note ?? ""
-                              : step.params.instruction ?? ""
+                              ? String(step.params.note ?? "")
+                              : String(step.params.instruction ?? "")
                           }
                           onChange={(event) =>
                             updateUseCaseStepAt(index, (previous) => ({
@@ -606,13 +678,25 @@ export default function ITAdminUseCasesPage() {
                     )}
 
                     <div className="step-actions">
-                      <button type="button" className="ghost" onClick={() => moveUseCaseStep(index, -1)}>
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => moveUseCaseStep(index, -1)}
+                      >
                         {t("useCasesPage.workflowUp")}
                       </button>
-                      <button type="button" className="ghost" onClick={() => moveUseCaseStep(index, 1)}>
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => moveUseCaseStep(index, 1)}
+                      >
                         {t("useCasesPage.workflowDown")}
                       </button>
-                      <button type="button" className="ghost" onClick={() => removeUseCaseStep(index)}>
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => removeUseCaseStep(index)}
+                      >
                         {t("useCasesPage.workflowRemove")}
                       </button>
                     </div>
@@ -632,13 +716,16 @@ export default function ITAdminUseCasesPage() {
                 <strong>{t("useCasesPage.reviewDisplay")}:</strong> {useCaseWizardState.displayName}
               </p>
               <p>
-                <strong>{t("useCasesPage.reviewCategory")}:</strong> {useCaseWizardState.categoryId || t("common.none")}
+                <strong>{t("useCasesPage.reviewCategory")}:</strong>{" "}
+                {useCaseWizardState.categoryId || t("common.none")}
               </p>
               <p>
-                <strong>{t("useCasesPage.reviewRequiredFields")}:</strong> {useCaseWizardState.requiredFieldsText}
+                <strong>{t("useCasesPage.reviewRequiredFields")}:</strong>{" "}
+                {useCaseWizardState.requiredFieldsText}
               </p>
               <p>
-                <strong>{t("useCasesPage.reviewSteps")}:</strong> {useCaseWizardState.steps.map((step) => step.step_id).join(" -> ")}
+                <strong>{t("useCasesPage.reviewSteps")}:</strong>{" "}
+                {useCaseWizardState.steps.map((step) => step.step_id).join(" -> ")}
               </p>
             </div>
           ) : null}

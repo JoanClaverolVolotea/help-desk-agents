@@ -78,20 +78,21 @@ export default function UserPortalPage(): JSX.Element {
           if (!streamEvent || typeof streamEvent !== "object") {
             return;
           }
+          const eventRecord = streamEvent as Record<string, unknown>;
 
           if (streamEvent.type === "start") {
-            if (streamEvent.conversation_id) {
-              setConversationId(streamEvent.conversation_id);
+            if (typeof eventRecord.conversation_id === "string") {
+              setConversationId(eventRecord.conversation_id);
             }
-            if (streamEvent.current_agent) {
-              setCurrentAgent(streamEvent.current_agent);
+            if (typeof eventRecord.current_agent === "string") {
+              setCurrentAgent(eventRecord.current_agent);
             }
             return;
           }
 
           if (streamEvent.type === "agent_updated") {
-            if (streamEvent.agent) {
-              setCurrentAgent(streamEvent.agent);
+            if (typeof eventRecord.agent === "string") {
+              setCurrentAgent(eventRecord.agent);
             }
             return;
           }
@@ -110,11 +111,17 @@ export default function UserPortalPage(): JSX.Element {
             return;
           }
 
-          if (
-            streamEvent.type === "event" &&
-            streamEvent.event?.kind === "message"
-          ) {
-            const assistantText = typeof streamEvent.event.text === "string" ? streamEvent.event.text : "";
+          if (streamEvent.type === "event") {
+            const streamPayload = eventRecord.event;
+            if (!streamPayload || typeof streamPayload !== "object") {
+              return;
+            }
+            const payload = streamPayload as Record<string, unknown>;
+            if (payload.kind !== "message") {
+              return;
+            }
+
+            const assistantText = typeof payload.text === "string" ? payload.text : "";
             if (!hasStreamedText && assistantText) {
               hasStreamedText = true;
               setEntries((prev) =>
@@ -122,14 +129,8 @@ export default function UserPortalPage(): JSX.Element {
                   entry.id === streamingEntryId
                     ? {
                         ...entry,
-                        agent:
-                          typeof streamEvent.event?.agent === "string"
-                            ? streamEvent.event.agent
-                            : entry.agent,
-                        kind:
-                          typeof streamEvent.event?.kind === "string"
-                            ? streamEvent.event.kind
-                            : entry.kind,
+                        agent: typeof payload.agent === "string" ? payload.agent : entry.agent,
+                        kind: typeof payload.kind === "string" ? payload.kind : entry.kind,
                         text: assistantText,
                       }
                     : entry,

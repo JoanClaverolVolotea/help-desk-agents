@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import Breadcrumb from "../components/Breadcrumb";
 import { useI18n } from "../i18n/useI18n";
 import { getTicket, listTickets, readableError } from "../api";
+import type { LanguageCode, TicketDetail, TicketStatus, TicketSummary } from "../types";
 
-function formatTimestamp(value, language) {
+function formatTimestamp(value: string | null | undefined, language: LanguageCode): string {
   if (!value) {
-    return language === "es" ? "-" : "-";
+    return "-";
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -16,7 +18,7 @@ function formatTimestamp(value, language) {
   return date.toLocaleString(language === "es" ? "es-ES" : "en-US");
 }
 
-function prettyPayload(raw) {
+function prettyPayload(raw: string): string {
   if (typeof raw !== "string" || raw.trim() === "") {
     return "";
   }
@@ -27,7 +29,7 @@ function prettyPayload(raw) {
   }
 }
 
-export default function ITAdminTicketsPage() {
+export default function ITAdminTicketsPage(): JSX.Element {
   const { language, t } = useI18n();
   const [searchParams] = useSearchParams();
   const filterUseCaseId = searchParams.get("use_case_id") || "";
@@ -36,9 +38,9 @@ export default function ITAdminTicketsPage() {
   const [conversationFilter, setConversationFilter] = useState("");
   const [externalTicketFilter, setExternalTicketFilter] = useState("");
 
-  const [tickets, setTickets] = useState([]);
-  const [selectedTicketId, setSelectedTicketId] = useState(null);
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [tickets, setTickets] = useState<TicketSummary[]>([]);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketDetail | null>(null);
 
   const [listLoading, setListLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -50,7 +52,7 @@ export default function ITAdminTicketsPage() {
     { value: "resolved", label: t("common.statusResolved") },
   ];
 
-  const statusLabel = (value) => {
+  const statusLabel = (value: TicketStatus): string => {
     if (value === "open") {
       return t("common.statusOpen");
     }
@@ -60,10 +62,10 @@ export default function ITAdminTicketsPage() {
     if (value === "resolved") {
       return t("common.statusResolved");
     }
-    return value;
+    return String(value);
   };
 
-  const loadTickets = async () => {
+  const loadTickets = async (): Promise<void> => {
     setListLoading(true);
     setErrorMessage("");
     try {
@@ -79,7 +81,10 @@ export default function ITAdminTicketsPage() {
       if (response.items.length === 0) {
         setSelectedTicketId(null);
         setSelectedTicket(null);
-      } else if (!selectedTicketId || !response.items.some((item) => item.ticket_id === selectedTicketId)) {
+      } else if (
+        !selectedTicketId ||
+        !response.items.some((item) => item.ticket_id === selectedTicketId)
+      ) {
         setSelectedTicketId(response.items[0].ticket_id);
       }
     } catch (error) {
@@ -90,7 +95,7 @@ export default function ITAdminTicketsPage() {
   };
 
   useEffect(() => {
-    loadTickets();
+    void loadTickets();
     // Reload when URL use_case_id param changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterUseCaseId]);
@@ -122,13 +127,13 @@ export default function ITAdminTicketsPage() {
       }
     };
 
-    loadDetail();
+    void loadDetail();
     return () => {
       isCancelled = true;
     };
   }, [selectedTicketId]);
 
-  const handleFilterSubmit = async (event) => {
+  const handleFilterSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     await loadTickets();
   };
@@ -147,7 +152,7 @@ export default function ITAdminTicketsPage() {
       <div className="admin-toolbar">
         <h2>{t("ticketPage.title")}</h2>
         <div className="admin-toolbar-actions">
-          <button type="button" className="ghost" onClick={loadTickets} disabled={listLoading}>
+          <button type="button" className="ghost" onClick={() => void loadTickets()} disabled={listLoading}>
             {t("common.refresh")}
           </button>
         </div>
@@ -222,14 +227,24 @@ export default function ITAdminTicketsPage() {
             <article className="ticket-detail-card">
               <div className="ticket-detail-header">
                 <h3>{selectedTicket.external_ticket_id || selectedTicket.ticket_id}</h3>
-                <span className={`badge ${selectedTicket.status}`}>{statusLabel(selectedTicket.status)}</span>
+                <span className={`badge ${selectedTicket.status}`}>
+                  {statusLabel(selectedTicket.status)}
+                </span>
               </div>
               <div className="ticket-detail-meta">
-                <span>{t("common.fieldRunbook")}: <strong>{selectedTicket.use_case_display_name || selectedTicket.use_case_id}</strong></span>
-                <span>{t("common.fieldConversation")}: <code>{selectedTicket.conversation_id || t("common.notAvailable")}</code></span>
-                <span>{t("common.fieldCreated")}: {formatTimestamp(selectedTicket.created_at, language)}</span>
+                <span>
+                  {t("common.fieldRunbook")}: <strong>{selectedTicket.use_case_display_name || selectedTicket.use_case_id}</strong>
+                </span>
+                <span>
+                  {t("common.fieldConversation")}: <code>{selectedTicket.conversation_id || t("common.notAvailable")}</code>
+                </span>
+                <span>
+                  {t("common.fieldCreated")}: {formatTimestamp(selectedTicket.created_at, language)}
+                </span>
                 {selectedTicket.resolved_at ? (
-                  <span>{t("common.fieldResolved")}: {formatTimestamp(selectedTicket.resolved_at, language)}</span>
+                  <span>
+                    {t("common.fieldResolved")}: {formatTimestamp(selectedTicket.resolved_at, language)}
+                  </span>
                 ) : null}
               </div>
               {selectedTicket.error_message ? (
@@ -249,13 +264,15 @@ export default function ITAdminTicketsPage() {
                   <div className="ticket-table">
                     {selectedTicket.status_history.length === 0 ? (
                       <p className="helper">{t("ticketPage.noStatusHistory")}</p>
-                    ) : selectedTicket.status_history.map((item, index) => (
-                      <div key={`${item.status}-${item.changed_at}-${index}`} className="ticket-table-row">
-                        <span className={`badge ${item.status}`}>{statusLabel(item.status)}</span>
-                        <span>{formatTimestamp(item.changed_at, language)}</span>
-                        <span>{item.reason || t("common.notAvailable")}</span>
-                      </div>
-                    ))}
+                    ) : (
+                      selectedTicket.status_history.map((item, index) => (
+                        <div key={`${item.status}-${item.changed_at}-${index}`} className="ticket-table-row">
+                          <span className={`badge ${item.status}`}>{statusLabel(item.status)}</span>
+                          <span>{formatTimestamp(item.changed_at, language)}</span>
+                          <span>{item.reason || t("common.notAvailable")}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -264,16 +281,20 @@ export default function ITAdminTicketsPage() {
                   <div className="ticket-table">
                     {selectedTicket.fields.length === 0 ? (
                       <p className="helper">{t("ticketPage.noFields")}</p>
-                    ) : selectedTicket.fields.map((item, index) => (
-                      <div key={`${item.field_name}-${index}`} className="ticket-table-row">
-                        <span><strong>{item.field_name}</strong></span>
-                        <span>{item.field_value}</span>
-                        <span>
-                          {item.source}
-                          {item.is_required ? ` ${t("common.requiredSuffix")}` : ""}
-                        </span>
-                      </div>
-                    ))}
+                    ) : (
+                      selectedTicket.fields.map((item, index) => (
+                        <div key={`${item.field_name}-${index}`} className="ticket-table-row">
+                          <span>
+                            <strong>{item.field_name}</strong>
+                          </span>
+                          <span>{item.field_value}</span>
+                          <span>
+                            {item.source}
+                            {item.is_required ? ` ${t("common.requiredSuffix")}` : ""}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -282,13 +303,17 @@ export default function ITAdminTicketsPage() {
                   <div className="ticket-table">
                     {selectedTicket.steps.length === 0 ? (
                       <p className="helper">{t("ticketPage.noSteps")}</p>
-                    ) : selectedTicket.steps.map((item, index) => (
-                      <div key={`${item.step_order}-${index}`} className="ticket-table-row">
-                        <span className="badge">{item.step_order}</span>
-                        <span><strong>{item.step_id}</strong></span>
-                        <span>{item.output_text}</span>
-                      </div>
-                    ))}
+                    ) : (
+                      selectedTicket.steps.map((item, index) => (
+                        <div key={`${item.step_order}-${index}`} className="ticket-table-row">
+                          <span className="badge">{item.step_order}</span>
+                          <span>
+                            <strong>{item.step_id}</strong>
+                          </span>
+                          <span>{item.output_text}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -297,15 +322,19 @@ export default function ITAdminTicketsPage() {
                   <div className="ticket-table">
                     {selectedTicket.events.length === 0 ? (
                       <p className="helper">{t("ticketPage.noEvents")}</p>
-                    ) : selectedTicket.events.map((item, index) => (
-                      <div key={`${item.event_type}-${item.created_at}-${index}`} className="ticket-table-row">
-                        <span><strong>{item.event_type}</strong></span>
-                        <span>{item.agent_name || t("common.notAvailable")}</span>
-                        <span>
-                          <pre>{prettyPayload(item.payload_json)}</pre>
-                        </span>
-                      </div>
-                    ))}
+                    ) : (
+                      selectedTicket.events.map((item, index) => (
+                        <div key={`${item.event_type}-${item.created_at}-${index}`} className="ticket-table-row">
+                          <span>
+                            <strong>{item.event_type}</strong>
+                          </span>
+                          <span>{item.agent_name || t("common.notAvailable")}</span>
+                          <span>
+                            <pre>{prettyPayload(item.payload_json)}</pre>
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
