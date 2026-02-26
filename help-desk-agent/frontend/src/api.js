@@ -25,7 +25,7 @@ async function request(path, options = {}) {
 }
 
 export async function chat(message, conversationId) {
-  return request("/api/chat", {
+  return request("/api/user/assistant/chat", {
     method: "POST",
     body: JSON.stringify({ message, conversation_id: conversationId }),
   });
@@ -62,7 +62,7 @@ function parseNdjsonLines(chunk, onLine) {
 }
 
 export async function chatStream(message, conversationId, onEvent) {
-  const response = await fetch(`${apiBaseUrl()}/api/chat/stream`, {
+  const response = await fetch(`${apiBaseUrl()}/api/user/assistant/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, conversation_id: conversationId }),
@@ -118,7 +118,7 @@ export async function chatStream(message, conversationId, onEvent) {
 }
 
 export async function resetConversation(conversationId) {
-  return request("/api/reset", {
+  return request("/api/user/assistant/reset", {
     method: "POST",
     body: JSON.stringify({ conversation_id: conversationId }),
   });

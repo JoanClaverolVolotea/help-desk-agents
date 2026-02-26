@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from backend.chats.user_assistant.bootstrap import initialize_repositories
 from backend.domain.models import TicketFieldSource, TicketStatus
-from backend.runtime.bootstrap import initialize_repositories
 from backend.storage import CategoryRepository, TicketRepository, UseCaseRepository
 from backend.storage.ticket_repository import TicketEventWrite, TicketFieldWrite, TicketStepWrite
 

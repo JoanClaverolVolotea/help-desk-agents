@@ -4,7 +4,7 @@ FastAPI backend for the Help Desk Agent PoC.
 
 It provides:
 
-- User chat APIs (`/api/chat`, `/api/chat/stream`, `/api/reset`)
+- User assistant chat APIs (`/api/user/assistant/chat`, `/api/user/assistant/chat/stream`, `/api/user/assistant/reset`)
 - IT admin assistant chat APIs
 - Routing policy/category lifecycle APIs
 - Runbook/use-case lifecycle APIs
@@ -14,9 +14,9 @@ It provides:
 ## Directory map
 
 - `api/`: FastAPI app entrypoint and HTTP routes
-- `api_internal/`: runtime sync, event serialization, request/conversation context
+- `api_internal/`: validation helpers
+- `chats/`: assistant contexts (`user_assistant`, `admin_assistant`) and shared chat internals
 - `domain/`: models, language policy, seed templates
-- `runtime/`: snapshot/bootstrap/triage/specialist wiring
 - `storage/`: SQLite schema and repositories
 - `workflows/`: deterministic workflow executor + tool integration
 - `tests/`: backend tests
@@ -61,12 +61,21 @@ curl http://127.0.0.1:8000/api/health
 
 ## API surface
 
-### User and assistant chat
+### User assistant chat
 
 - `GET /api/health`
+- `POST /api/user/assistant/chat`
+- `POST /api/user/assistant/chat/stream`
+- `POST /api/user/assistant/reset`
+
+Deprecated aliases (kept for this release, introduced February 26, 2026):
+
 - `POST /api/chat`
 - `POST /api/chat/stream`
 - `POST /api/reset`
+
+### Admin assistant chat
+
 - `POST /api/admin/assistant/chat`
 - `POST /api/admin/assistant/reset`
 
@@ -96,6 +105,26 @@ curl http://127.0.0.1:8000/api/health
 - `POST /api/admin/use-cases/{use_case_id}/migrate-category-version`
 - `GET /api/admin/tickets`
 - `GET /api/admin/tickets/{ticket_id}`
+
+## Assistant architecture
+
+- `chats/user_assistant/`:
+  - `graph/triage.py`: user triage agent ("Help Desk Triage Agent").
+  - `graph/specialists.py`: use-case specialist builders and workflow tool wiring.
+  - `graph/snapshot.py`: runtime graph snapshot assembly.
+  - `bootstrap.py`: repository initialization and reseed helpers.
+  - `service.py`: user assistant orchestration and runtime refresh/sync operations.
+  - `routes.py`: canonical `/api/user/assistant/*` routes plus temporary legacy aliases.
+  - `state.py`: conversation state store for user assistant sessions.
+- `chats/admin_assistant/`:
+  - `graph/triage.py`: admin triage agent ("Tech Team Assistant Triage").
+  - `graph/specialists.py`: admin specialist and tool definitions.
+  - `graph/snapshot.py`: admin runtime snapshot assembly.
+  - `service.py`: admin assistant chat orchestration.
+  - `routes.py`: `/api/admin/assistant/*` routes.
+  - `state.py`: conversation state store for admin assistant sessions.
+- `chats/shared/`:
+  - Shared event serialization, request context channel markers, and base conversation state.
 
 ## Data model notes
 

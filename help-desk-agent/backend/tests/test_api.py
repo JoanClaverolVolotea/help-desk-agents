@@ -416,7 +416,9 @@ def test_chat_endpoint_with_stubbed_runner(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(backend_module.Runner, "run", fake_run)
 
     client = TestClient(backend_module.app)
-    response = client.post("/api/chat", json={"message": "Unknown request, please help"})
+    response = client.post(
+        "/api/user/assistant/chat", json={"message": "Unknown request, please help"}
+    )
 
     assert response.status_code == 200
     payload = response.json()
@@ -424,6 +426,36 @@ def test_chat_endpoint_with_stubbed_runner(tmp_path, monkeypatch) -> None:
     assert isinstance(payload["events"], list)
     assert payload["events"][0]["kind"] == "info"
     assert "Skipping" in payload["events"][0]["text"]
+
+
+def test_legacy_user_assistant_chat_alias_still_works(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+
+    class UnknownRunItem:
+        def __init__(self, agent):
+            self.agent = agent
+
+    class FakeRunResult:
+        def __init__(self, agent, input_items):
+            self.new_items = [UnknownRunItem(agent)]
+            self.last_agent = agent
+            self._input_items = input_items
+
+        def to_input_list(self):
+            return self._input_items
+
+    async def fake_run(agent, input_items):
+        return FakeRunResult(agent, input_items)
+
+    monkeypatch.setattr(backend_module.Runner, "run", fake_run)
+
+    client = TestClient(backend_module.app)
+    response = client.post("/api/chat", json={"message": "Unknown request, please help"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["conversation_id"]
+    assert isinstance(payload["events"], list)
 
 
 def test_chat_endpoint_localizes_backend_events_in_spanish(tmp_path, monkeypatch) -> None:
@@ -448,7 +480,9 @@ def test_chat_endpoint_localizes_backend_events_in_spanish(tmp_path, monkeypatch
     monkeypatch.setattr(backend_module.Runner, "run", fake_run)
 
     client = TestClient(backend_module.app)
-    response = client.post("/api/chat", json={"message": "Necesito ayuda con acceso"})
+    response = client.post(
+        "/api/user/assistant/chat", json={"message": "Necesito ayuda con acceso"}
+    )
 
     assert response.status_code == 200
     payload = response.json()
@@ -499,7 +533,7 @@ def test_chat_stream_endpoint_with_stubbed_runner(tmp_path, monkeypatch) -> None
     monkeypatch.setattr(backend_module.Runner, "run_streamed", fake_run_streamed)
 
     client = TestClient(backend_module.app)
-    response = client.post("/api/chat/stream", json={"message": "hi"})
+    response = client.post("/api/user/assistant/chat/stream", json={"message": "hi"})
 
     assert response.status_code == 200
     lines = [line for line in response.text.splitlines() if line.strip()]
@@ -512,6 +546,79 @@ def test_chat_stream_endpoint_with_stubbed_runner(tmp_path, monkeypatch) -> None
     assert "event" in payload_types
     assert payloads[-1]["type"] == "final"
     assert payloads[-1]["conversation_id"]
+
+
+def test_legacy_user_assistant_chat_stream_alias_still_works(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+
+    class UnknownRunItem:
+        def __init__(self, agent):
+            self.agent = agent
+
+    class FakeStreamResult:
+        def __init__(self, agent, input_items):
+            self.last_agent = agent
+            self._input_items = input_items
+
+        async def stream_events(self):
+            raw_data = type(
+                "RawData",
+                (),
+                {"type": "response.output_text.delta", "delta": "Hola"},
+            )()
+            raw_event = type(
+                "RawEvent",
+                (),
+                {"type": "raw_response_event", "data": raw_data},
+            )()
+            yield raw_event
+
+        def to_input_list(self):
+            return self._input_items
+
+    def fake_run_streamed(agent, input_items):
+        return FakeStreamResult(agent, input_items)
+
+    monkeypatch.setattr(backend_module.Runner, "run_streamed", fake_run_streamed)
+
+    client = TestClient(backend_module.app)
+    response = client.post("/api/chat/stream", json={"message": "hi"})
+
+    assert response.status_code == 200
+    lines = [line for line in response.text.splitlines() if line.strip()]
+    payloads = [json.loads(line) for line in lines]
+    assert payloads[0]["type"] == "start"
+    assert payloads[-1]["type"] == "final"
+
+
+def test_legacy_user_assistant_reset_alias_still_works(tmp_path, monkeypatch) -> None:
+    backend_module = _load_backend_module(tmp_path, monkeypatch)
+
+    class FakeRunResult:
+        def __init__(self, agent, input_items):
+            self.new_items = []
+            self.last_agent = agent
+            self._input_items = input_items
+
+        def to_input_list(self):
+            return self._input_items
+
+    async def fake_run(agent, input_items):
+        return FakeRunResult(agent, input_items)
+
+    monkeypatch.setattr(backend_module.Runner, "run", fake_run)
+
+    client = TestClient(backend_module.app)
+    chat_response = client.post(
+        "/api/user/assistant/chat",
+        json={"message": "please help with access"},
+    )
+    assert chat_response.status_code == 200
+    conversation_id = chat_response.json()["conversation_id"]
+
+    reset_response = client.post("/api/reset", json={"conversation_id": conversation_id})
+    assert reset_response.status_code == 200
+    assert reset_response.json() == {"deleted": True}
 
 
 def test_chat_rebinds_stale_triage_conversation_snapshot(tmp_path, monkeypatch) -> None:
@@ -534,10 +641,10 @@ def test_chat_rebinds_stale_triage_conversation_snapshot(tmp_path, monkeypatch) 
     monkeypatch.setattr(backend_module.Runner, "run", fake_run)
     client = TestClient(backend_module.app)
 
-    first_chat = client.post("/api/chat", json={"message": "initial ticket"})
+    first_chat = client.post("/api/user/assistant/chat", json={"message": "initial ticket"})
     assert first_chat.status_code == 200
     conversation_id = first_chat.json()["conversation_id"]
-    first_snapshot_id = backend_module.CONVERSATIONS[conversation_id].snapshot_id
+    first_snapshot_id = backend_module.USER_ASSISTANT_CONVERSATIONS[conversation_id].snapshot_id
 
     create_category_response = client.post(
         "/api/admin/categories",
@@ -548,17 +655,17 @@ def test_chat_rebinds_stale_triage_conversation_snapshot(tmp_path, monkeypatch) 
 
     publish_response = client.post(f"/api/admin/categories/{category_id}/publish", json={})
     assert publish_response.status_code == 200
-    current_snapshot_id = backend_module.RUNTIME_SNAPSHOT.snapshot_id
+    current_snapshot_id = backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.snapshot_id
     assert current_snapshot_id != first_snapshot_id
 
     second_chat = client.post(
-        "/api/chat",
+        "/api/user/assistant/chat",
         json={"message": "follow-up ticket", "conversation_id": conversation_id},
     )
     assert second_chat.status_code == 200
-    state = backend_module.CONVERSATIONS[conversation_id]
+    state = backend_module.USER_ASSISTANT_CONVERSATIONS[conversation_id]
     assert state.snapshot_id == current_snapshot_id
-    assert seen_agents[-1] is backend_module.RUNTIME_SNAPSHOT.triage_agent
+    assert seen_agents[-1] is backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.triage_agent
 
 
 def test_chat_keeps_specialist_on_stale_snapshot(tmp_path, monkeypatch) -> None:
@@ -582,20 +689,20 @@ def test_chat_keeps_specialist_on_stale_snapshot(tmp_path, monkeypatch) -> None:
     client = TestClient(backend_module.app)
 
     specialist_agent = next(
-        iter(backend_module.RUNTIME_SNAPSHOT.specialists_by_use_case_id.values())
+        iter(backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.specialists_by_use_case_id.values())
     )
     conversation_id = "specialist-stale"
-    backend_module.CONVERSATIONS[conversation_id] = backend_module.ConversationState(
+    backend_module.USER_ASSISTANT_CONVERSATIONS[conversation_id] = backend_module.ConversationState(
         snapshot_id="outdated-snapshot",
         current_agent=specialist_agent,
     )
 
     response = client.post(
-        "/api/chat",
+        "/api/user/assistant/chat",
         json={"message": "continue specialist flow", "conversation_id": conversation_id},
     )
     assert response.status_code == 200
-    state = backend_module.CONVERSATIONS[conversation_id]
+    state = backend_module.USER_ASSISTANT_CONVERSATIONS[conversation_id]
     assert state.snapshot_id == "outdated-snapshot"
     assert seen_agents[-1] is specialist_agent
 
@@ -604,7 +711,7 @@ def test_category_archive_and_restore_updates_runtime_handoffs(tmp_path, monkeyp
     backend_module = _load_backend_module(tmp_path, monkeypatch)
     client = TestClient(backend_module.app)
 
-    base_handoff_count = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
+    base_handoff_count = len(backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.triage_agent.handoffs)
     create_response = client.post(
         "/api/admin/categories",
         json=_category_payload(display_name="Runtime Count Category"),
@@ -614,17 +721,17 @@ def test_category_archive_and_restore_updates_runtime_handoffs(tmp_path, monkeyp
 
     publish_response = client.post(f"/api/admin/categories/{category_id}/publish", json={})
     assert publish_response.status_code == 200
-    after_publish = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
+    after_publish = len(backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.triage_agent.handoffs)
     assert after_publish == base_handoff_count + 1
 
     archive_response = client.post(f"/api/admin/categories/{category_id}/archive", json={})
     assert archive_response.status_code == 200
-    after_archive = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
+    after_archive = len(backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.triage_agent.handoffs)
     assert after_archive == base_handoff_count
 
     restore_response = client.post(f"/api/admin/categories/{category_id}/restore", json={})
     assert restore_response.status_code == 200
-    after_restore = len(backend_module.RUNTIME_SNAPSHOT.triage_agent.handoffs)
+    after_restore = len(backend_module.USER_ASSISTANT_RUNTIME_SNAPSHOT.triage_agent.handoffs)
     assert after_restore == base_handoff_count + 1
 
 

@@ -16,7 +16,7 @@ from agents import (
     TResponseInputItem,
     trace,
 )
-from backend.runtime.bootstrap import (
+from backend.chats.user_assistant.bootstrap import (
     build_snapshot_from_repository,
     initialize_repositories,
 )

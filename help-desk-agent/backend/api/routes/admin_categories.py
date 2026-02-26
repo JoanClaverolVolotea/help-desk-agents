@@ -11,12 +11,12 @@ from backend.api.schemas.admin import (
     StepCatalogResponse,
     UpdateCategoryDraftRequest,
 )
-from backend.api_internal.runtime_sync import (
+from backend.api_internal.validation import slugify
+from backend.chats.user_assistant.service import (
     archive_category_and_sync,
     publish_category_and_sync,
     restore_category_and_sync,
 )
-from backend.api_internal.validation import slugify
 from backend.domain.templates import (
     list_step_catalog,
     to_category_draft_definition,

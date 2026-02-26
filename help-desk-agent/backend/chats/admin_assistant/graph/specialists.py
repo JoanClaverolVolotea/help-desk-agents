@@ -5,9 +5,9 @@ from typing import Any
 import backend.api.deps as deps
 from agents import Agent, function_tool
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
-from backend.api_internal.conversation_state import current_response_language
-from backend.api_internal.runtime_sync import publish_category_and_sync
 from backend.api_internal.validation import parse_csv_list, slugify
+from backend.chats.shared.state import current_response_language
+from backend.chats.user_assistant.service import publish_category_and_sync
 from backend.domain.language_policy import translate_backend_text
 from backend.domain.models import CategoryDefinitionInput, UseCaseStep
 from backend.domain.templates import (
@@ -18,7 +18,7 @@ from backend.domain.templates import (
 from backend.storage import CategoryNotFoundError, NoDraftAvailableError
 
 
-def build_admin_assistant_triage_agent() -> Agent[Any]:
+def build_specialists() -> list[Agent[Any]]:
     @function_tool(
         name_override="list_categories",
         description_override="List current categories and status.",
@@ -170,21 +170,4 @@ Do not include translations or bilingual sections.
         tools=[list_categories_tool],
     )
 
-    triage_agent = Agent(
-        name="Tech Team Assistant Triage",
-        handoff_description="Routes technical admin requests to the right specialist.",
-        instructions=f"""{RECOMMENDED_PROMPT_PREFIX}
-You triage technical admin requests.
-
-- Handoff to Category Creator Specialist for creating/publishing new categories.
-- Handoff to Category Lifecycle Specialist for inspection/maintenance.
-- Ask clarifying questions when intent is ambiguous.
-- Reply only in the language of the user's latest message.
-- Do not include translations or bilingual sections.
-""",
-        handoffs=[creator_agent, lifecycle_agent],
-    )
-
-    creator_agent.handoffs.append(triage_agent)
-    lifecycle_agent.handoffs.append(triage_agent)
-    return triage_agent
+    return [creator_agent, lifecycle_agent]

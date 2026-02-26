@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import sqlite3
 
+from backend.chats.user_assistant.graph.snapshot import (
+    RuntimeSnapshot,
+    build_runtime_snapshot,
+)
 from backend.domain.templates import seed_category_definitions, seed_use_case_definitions
-from backend.runtime.snapshot import RuntimeSnapshot, build_runtime_snapshot
 from backend.storage import CategoryRepository, TicketRepository, UseCaseRepository
 from backend.storage.db import connect
 
