@@ -1,6 +1,6 @@
-import AppRoutes from "./routes/AppRoutes.jsx";
-import LanguageSelector from "./components/LanguageSelector.jsx";
-import { LanguageProvider } from "./i18n/LanguageContext.jsx";
+import AppRoutes from "./routes/AppRoutes";
+import LanguageSelector from "./components/LanguageSelector";
+import { LanguageProvider } from "./i18n/LanguageContext";
 
 export default function App() {
   return (

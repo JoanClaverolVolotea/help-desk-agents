@@ -1,4 +1,4 @@
-import { useI18n } from "../i18n/useI18n.js";
+import { useI18n } from "../i18n/useI18n";
 
 export default function AdminTable({ columns, rows, emptyMessage }) {
   const { t } = useI18n();

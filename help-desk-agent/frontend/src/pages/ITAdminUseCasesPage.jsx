@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
-import AdminTable from "../components/AdminTable.jsx";
-import Breadcrumb from "../components/Breadcrumb.jsx";
-import WizardModal from "../components/WizardModal.jsx";
-import { useI18n } from "../i18n/useI18n.js";
+import AdminTable from "../components/AdminTable";
+import Breadcrumb from "../components/Breadcrumb";
+import WizardModal from "../components/WizardModal";
+import { useI18n } from "../i18n/useI18n";
 import {
   archiveUseCase,
   createUseCase,
@@ -17,14 +17,14 @@ import {
   readableError,
   restoreUseCase,
   updateUseCaseDraft,
-} from "../api.js";
+} from "../api";
 import {
   STEP_LABELS,
   buildUseCasePayload,
   defaultUseCaseWizard,
   parseValidationError,
   useCaseWizardFromDetail,
-} from "../utils/adminPayloads.js";
+} from "../utils/adminPayloads";
 
 export default function ITAdminUseCasesPage() {
   const { t } = useI18n();

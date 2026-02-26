@@ -1,4 +1,4 @@
-import { useLanguageContext } from "./LanguageContext.jsx";
+import { useLanguageContext } from "./LanguageContext";
 
 export function useI18n() {
   return useLanguageContext();

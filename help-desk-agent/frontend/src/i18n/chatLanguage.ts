@@ -1,9 +1,11 @@
-const LANGUAGE_HINTS = {
+import type { LanguageCode } from "../types";
+
+const LANGUAGE_HINTS: Record<LanguageCode, string> = {
   en: "Respond only in English.",
   es: "Responde solo en español.",
 };
 
-export function withLanguageHint(message, language) {
+export function withLanguageHint(message: unknown, language: LanguageCode): string {
   const normalizedMessage = typeof message === "string" ? message.trim() : "";
   if (!normalizedMessage) {
     return "";

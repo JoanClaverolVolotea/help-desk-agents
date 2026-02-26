@@ -1,4 +1,4 @@
-import ITAssistantPanel from "../components/ITAssistantPanel.jsx";
+import ITAssistantPanel from "../components/ITAssistantPanel";
 
 export default function ITAssistantPage() {
   return <ITAssistantPanel />;

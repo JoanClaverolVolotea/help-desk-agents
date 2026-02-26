@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, MESSAGES, SUPPORTED_LANGUAGES } from "./messages.js";
+import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, MESSAGES, SUPPORTED_LANGUAGES } from "./messages";
 
 function getMessageValue(dictionary, key) {
   if (!dictionary) {

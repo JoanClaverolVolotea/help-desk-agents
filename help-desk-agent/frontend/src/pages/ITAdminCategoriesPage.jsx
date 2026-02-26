@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import AdminTable from "../components/AdminTable.jsx";
-import Breadcrumb from "../components/Breadcrumb.jsx";
-import WizardModal from "../components/WizardModal.jsx";
-import { useI18n } from "../i18n/useI18n.js";
+import AdminTable from "../components/AdminTable";
+import Breadcrumb from "../components/Breadcrumb";
+import WizardModal from "../components/WizardModal";
+import { useI18n } from "../i18n/useI18n";
 import {
   archiveCategory,
   createCategory,
@@ -18,14 +18,14 @@ import {
   readableError,
   restoreCategory,
   updateCategoryDraft,
-} from "../api.js";
+} from "../api";
 import {
   STEP_LABELS,
   buildCategoryPayload,
   categoryWizardFromDetail,
   defaultCategoryWizard,
   parseValidationError,
-} from "../utils/adminPayloads.js";
+} from "../utils/adminPayloads";
 
 export default function ITAdminCategoriesPage() {
   const { t } = useI18n();

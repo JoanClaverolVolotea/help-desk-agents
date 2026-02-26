@@ -1,8 +1,10 @@
-export const DEFAULT_LANGUAGE = "en";
-export const LANGUAGE_STORAGE_KEY = "helpdesk_ui_lang";
-export const SUPPORTED_LANGUAGES = ["en", "es"];
+import type { LanguageCode } from "../types";
 
-export const MESSAGES = {
+export const DEFAULT_LANGUAGE: LanguageCode = "en";
+export const LANGUAGE_STORAGE_KEY = "helpdesk_ui_lang";
+export const SUPPORTED_LANGUAGES: LanguageCode[] = ["en", "es"];
+
+export const MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
   en: {
     language: {
       selectorLabel: "Language",

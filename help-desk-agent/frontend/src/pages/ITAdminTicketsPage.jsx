@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import Breadcrumb from "../components/Breadcrumb.jsx";
-import { useI18n } from "../i18n/useI18n.js";
-import { getTicket, listTickets, readableError } from "../api.js";
+import Breadcrumb from "../components/Breadcrumb";
+import { useI18n } from "../i18n/useI18n";
+import { getTicket, listTickets, readableError } from "../api";
 
 function formatTimestamp(value, language) {
   if (!value) {

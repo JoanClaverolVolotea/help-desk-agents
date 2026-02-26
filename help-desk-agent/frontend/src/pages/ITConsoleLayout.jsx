@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 
-import ITAssistantPanel from "../components/ITAssistantPanel.jsx";
-import SectionTabs from "../components/SectionTabs.jsx";
-import { useI18n } from "../i18n/useI18n.js";
+import ITAssistantPanel from "../components/ITAssistantPanel";
+import SectionTabs from "../components/SectionTabs";
+import { useI18n } from "../i18n/useI18n";
 
 export default function ITConsoleLayout() {
   const { t } = useI18n();

@@ -2,8 +2,8 @@ import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 
-import { useI18n } from "../i18n/useI18n.js";
-import { normalizeEntryKind, normalizeEntryText } from "../utils/eventHelpers.js";
+import { useI18n } from "../i18n/useI18n";
+import { normalizeEntryKind, normalizeEntryText } from "../utils/eventHelpers";
 
 const MARKDOWN_PLUGINS = [remarkGfm, remarkBreaks];
 

@@ -1,4 +1,4 @@
-import { useI18n } from "../i18n/useI18n.js";
+import { useI18n } from "../i18n/useI18n";
 
 export default function LanguageSelector() {
   const { language, setLanguage, t } = useI18n();

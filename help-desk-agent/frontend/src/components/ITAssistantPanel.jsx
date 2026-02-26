@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import ChatTranscript from "./ChatTranscript.jsx";
-import Composer from "./Composer.jsx";
-import ErrorBanner from "./ErrorBanner.jsx";
-import StatusRow from "./StatusRow.jsx";
-import { withLanguageHint } from "../i18n/chatLanguage.js";
-import { useI18n } from "../i18n/useI18n.js";
+import ChatTranscript from "./ChatTranscript";
+import Composer from "./Composer";
+import ErrorBanner from "./ErrorBanner";
+import StatusRow from "./StatusRow";
+import { withLanguageHint } from "../i18n/chatLanguage";
+import { useI18n } from "../i18n/useI18n";
 import {
   adminAssistantChat,
   readableError,
   resetAdminAssistantConversation,
-} from "../api.js";
+} from "../api";
 
 function nextIdFactory() {
   let count = 0;

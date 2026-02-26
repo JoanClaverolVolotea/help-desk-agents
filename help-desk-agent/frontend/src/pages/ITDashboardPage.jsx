@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { useI18n } from "../i18n/useI18n.js";
-import { listCategories, listTickets, listUseCases, readableError } from "../api.js";
+import { useI18n } from "../i18n/useI18n";
+import { listCategories, listTickets, listUseCases, readableError } from "../api";
 
 export default function ITDashboardPage() {
   const { t } = useI18n();

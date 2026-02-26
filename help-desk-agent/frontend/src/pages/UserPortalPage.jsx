@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import ChatTranscript from "../components/ChatTranscript.jsx";
-import Composer from "../components/Composer.jsx";
-import ErrorBanner from "../components/ErrorBanner.jsx";
-import StatusRow from "../components/StatusRow.jsx";
-import { withLanguageHint } from "../i18n/chatLanguage.js";
-import { useI18n } from "../i18n/useI18n.js";
-import { chatStream, readableError, resetConversation } from "../api.js";
-import { INTERNAL_EVENT_KINDS } from "../utils/eventHelpers.js";
+import ChatTranscript from "../components/ChatTranscript";
+import Composer from "../components/Composer";
+import ErrorBanner from "../components/ErrorBanner";
+import StatusRow from "../components/StatusRow";
+import { withLanguageHint } from "../i18n/chatLanguage";
+import { useI18n } from "../i18n/useI18n";
+import { chatStream, readableError, resetConversation } from "../api";
+import { INTERNAL_EVENT_KINDS } from "../utils/eventHelpers";
 
 function nextIdFactory() {
   let count = 0;

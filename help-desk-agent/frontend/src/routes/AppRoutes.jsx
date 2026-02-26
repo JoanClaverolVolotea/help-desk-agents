@@ -1,12 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import ITAdminCategoriesPage from "../pages/ITAdminCategoriesPage.jsx";
-import ITAdminTicketsPage from "../pages/ITAdminTicketsPage.jsx";
-import ITAdminUseCasesPage from "../pages/ITAdminUseCasesPage.jsx";
-import ITConsoleLayout from "../pages/ITConsoleLayout.jsx";
-import ITDashboardPage from "../pages/ITDashboardPage.jsx";
-import RoleLandingPage from "../pages/RoleLandingPage.jsx";
-import UserPortalPage from "../pages/UserPortalPage.jsx";
+import ITAdminCategoriesPage from "../pages/ITAdminCategoriesPage";
+import ITAdminTicketsPage from "../pages/ITAdminTicketsPage";
+import ITAdminUseCasesPage from "../pages/ITAdminUseCasesPage";
+import ITConsoleLayout from "../pages/ITConsoleLayout";
+import ITDashboardPage from "../pages/ITDashboardPage";
+import RoleLandingPage from "../pages/RoleLandingPage";
+import UserPortalPage from "../pages/UserPortalPage";
 
 export default function AppRoutes() {
   return (
