@@ -21,10 +21,19 @@ export default function ChatTranscript({
   const { t } = useI18n();
   const hiddenSet = new Set(hiddenKinds);
   const allowedSet = allowedKinds ? new Set(allowedKinds) : null;
+  const lastEntryIndex = entries.length - 1;
+  const lastEntry = lastEntryIndex >= 0 ? entries[lastEntryIndex] : null;
+  const lastEntryKind = lastEntry ? normalizeEntryKind(lastEntry.kind) : null;
+  const hideActiveMessageDuringThinking =
+    isThinking && lastEntry?.role === "assistant" && lastEntryKind === "message";
 
-  const visibleEntries = entries.filter((entry) => {
+  const visibleEntries = entries.filter((entry, index) => {
     const kind = normalizeEntryKind(entry.kind);
 
+    // Keep active assistant message and thinking indicator mutually exclusive while thinking.
+    if (hideActiveMessageDuringThinking && index === lastEntryIndex) {
+      return false;
+    }
     if (entry.role === "user") {
       return true;
     }
