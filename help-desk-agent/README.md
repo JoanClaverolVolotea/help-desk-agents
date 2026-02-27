@@ -18,6 +18,7 @@ Detailed component docs:
 
 - Backend guide: [`backend/README.md`](backend/README.md)
 - Frontend guide: [`frontend/README.md`](frontend/README.md)
+- Contributor rules for this folder: [`AGENTS.md`](AGENTS.md)
 - DB schema: [`docs/db/schema.md`](docs/db/schema.md)
 - Case references: [`docs/cases/README.md`](docs/cases/README.md)
 
@@ -32,6 +33,9 @@ Detailed component docs:
 
 From `help-desk-agent/`:
 
+> Backend commands can run directly from this directory.
+> The backend package bootstraps the repository `src/` path automatically so local `agents` imports resolve.
+
 1. Configure backend env:
 
 ```bash
@@ -41,7 +45,7 @@ echo 'OPENAI_API_KEY=sk-...' > backend/.env
 2. Start backend:
 
 ```bash
-uv run --env-file backend/.env python -m backend.api.main
+uv run --env-file backend/.env -m backend.api.main
 ```
 
 3. Start frontend (new terminal):

@@ -177,11 +177,14 @@ stateDiagram-v2
 
 ## Run + validate
 
+> Run these commands from `help-desk-agent/`.
+> The backend package bootstraps the repository `src/` path automatically so local `agents` imports resolve.
+
 ```mermaid
 flowchart TD
-    START["From repo root (`help-desk-agent/`)"]
+    START["From app root (`help-desk-agent/`)"]
     ENV["Create backend/.env with OPENAI_API_KEY"]
-    RUN["uv run --env-file backend/.env python -m backend.api.main"]
+    RUN["uv run --env-file backend/.env -m backend.api.main"]
     HEALTH["curl http://127.0.0.1:8000/api/health"]
     CHECKS["uv run ruff check backend\nuv run mypy backend\nuv run pytest backend/tests -q"]
 

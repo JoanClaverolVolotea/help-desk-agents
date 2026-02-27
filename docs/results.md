@@ -55,7 +55,11 @@ The [`input`][agents.result.RunResultBase.input] property contains the original 
 
 ### Interruptions and resuming runs
 
-If a run pauses for tool approval, pending approvals are exposed in [`interruptions`][agents.result.RunResultBase.interruptions]. Convert the result into a [`RunState`][agents.run_state.RunState] with `to_state()`, approve or reject the interruption(s), and resume with `Runner.run(...)` or `Runner.run_streamed(...)`.
+If a run pauses for tool approval, pending approvals are exposed in
+[`RunResult.interruptions`][agents.result.RunResult.interruptions] or
+[`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]. Convert the
+result into a [`RunState`][agents.run_state.RunState] with `to_state()`, approve or reject the
+interruption(s), and resume with `Runner.run(...)` or `Runner.run_streamed(...)`.
 
 ```python
 from agents import Agent, Runner
@@ -70,7 +74,9 @@ if result.interruptions:
     result = await Runner.run(agent, state)
 ```
 
-Both [`RunResult`][agents.result.RunResult] and [`RunResultStreaming`][agents.result.RunResultStreaming] support `to_state()`.
+Both [`RunResult`][agents.result.RunResult] and
+[`RunResultStreaming`][agents.result.RunResultStreaming] support `to_state()`. For durable
+approval workflows, see the [human-in-the-loop guide](human_in_the_loop.md).
 
 ### Convenience helpers
 

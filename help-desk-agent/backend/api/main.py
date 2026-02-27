@@ -1,11 +1,24 @@
 from __future__ import annotations
 
 import os
+import pathlib
+import sys
 from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+
+def _ensure_helpdesk_app_root_on_path() -> None:
+    """Add the app root so `backend.*` imports work from nested execution directories."""
+    app_root = pathlib.Path(__file__).resolve().parents[2]
+    app_root_str = str(app_root)
+    if app_root_str not in sys.path:
+        sys.path.insert(0, app_root_str)
+
+
+_ensure_helpdesk_app_root_on_path()
 
 from agents import Runner
 from backend.api.routes import (

@@ -25,7 +25,11 @@ Read more in the [results guide](results.md).
 
 ### The agent loop
 
-When you use the run method in `Runner`, you pass in a starting agent and input. The input can either be a string (which is considered a user message), or a list of input items, which are the items in the OpenAI Responses API.
+When you use the run method in `Runner`, you pass in a starting agent and input. The input can be:
+
+-   a string (treated as a user message),
+-   a list of input items in the OpenAI Responses API format, or
+-   a [`RunState`][agents.run_state.RunState] when resuming an interrupted run.
 
 The runner then runs a loop:
 
@@ -123,7 +127,7 @@ Use `RunConfig` to override behavior for a single run without changing each agen
 -   [`model_provider`][agents.run.RunConfig.model_provider]: A model provider for looking up model names, which defaults to OpenAI.
 -   [`model_settings`][agents.run.RunConfig.model_settings]: Overrides agent-specific settings. For example, you can set a global `temperature` or `top_p`.
 -   [`session_settings`][agents.run.RunConfig.session_settings]: Overrides session-level defaults (for example, `SessionSettings(limit=...)`) when retrieving history during a run.
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Customize how new user input is merged with session history before each turn when using Sessions.
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Customize how new user input is merged with session history before each turn when using Sessions. The callback can be sync or async.
 
 ##### Guardrails, handoffs, and model input shaping
 
@@ -345,6 +349,10 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
+If a run pauses for approval and you resume from a [`RunState`][agents.run_state.RunState], the
+SDK keeps the saved `conversation_id` / `previous_response_id` / `auto_previous_response_id`
+settings so the resumed turn continues in the same server-managed conversation.
+
 !!! note
 
     The SDK automatically retries `conversation_locked` errors with backoff. In server-managed
@@ -378,7 +386,7 @@ result = Runner.run_sync(
 )
 ```
 
-Set the hook per run via `run_config` or as a default on your `Runner` to redact sensitive data, trim long histories, or inject additional system guidance.
+Set the hook per run via `run_config` to redact sensitive data, trim long histories, or inject additional system guidance.
 
 ## Errors and recovery
 
