@@ -1,23 +1,38 @@
-# Help Desk Agent Rules
+# Help Desk Agent Contributor Guide
 
-This project folder is based on the OpenAI Agents Python repository:
-`https://github.com/openai/openai-agents-python`.
+## Purpose
 
-## Goal
+This workspace exists to develop and iterate on a Help Desk Agent MVP using the OpenAI Agents SDK for Python.
 
-Build and maintain the Help Desk Agent application contained in this folder.
+Reference upstream project:
+- https://github.com/openai/openai-agents-python
 
-Every model task should help the user understand how to use agents while building a help desk agent.
+The goal is to learn and apply best practices for building production-ready agents while keeping this MVP focused and practical.
 
-## Scope (Hard Boundary)
+## Scope Rules (Strict)
 
-- Read access can include surrounding repository context when needed.
-- Write access is restricted to files under `help-desk-agent/` only.
-- Do not modify, move, or delete files outside `help-desk-agent/`.
-- If a request requires edits outside this folder, stop and ask the user to confirm a scope exception first.
+- Only modify files inside `help-desk-agent/`.
+- Never create, edit, delete, or refactor files outside `help-desk-agent/`.
+- If a task would require changes outside `help-desk-agent/`, stop and report that constraint.
 
-## Working Guidance
+## Upstream Context Sync Policy
 
-- Keep implementation and explanations grounded in practical Help Desk Agent workflows.
-- Prefer changes that clarify agent usage patterns (agents, runners, tools, handoffs, guardrails, streaming, and testing).
-- Keep docs and examples focused on helping the user learn and operate this Help Desk Agent project.
+To keep implementation context current with the official OpenAI Agents SDK:
+
+- Pull from the official upstream repository regularly.
+- Minimum cadence: sync before starting new feature work and at least once per week.
+- Use upstream updates for reference and alignment only; local development changes remain confined to `help-desk-agent/`.
+
+## Working Objective
+
+Within `help-desk-agent/`, continuously improve the MVP by:
+
+- Building and refining agent behavior, tools, workflows, and API integration.
+- Validating patterns against upstream SDK evolution.
+- Documenting decisions that improve correctness, maintainability, and agent quality.
+
+## Non-Goals
+
+- General repository-wide refactors.
+- Changes to core SDK files outside `help-desk-agent/`.
+- Any edits unrelated to the Help Desk Agent MVP.
