@@ -1,0 +1,3 @@
+.agents/
+.mypy_cache/
+skills-lock.json

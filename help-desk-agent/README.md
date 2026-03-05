@@ -1,11 +1,26 @@
 # Help Desk Agent Platform
 
-Help Desk Agent is a PoC platform with:
+Help Desk Agent is an MVP workspace inside this repository.
 
-- User-facing guided ticket chat
-- IT console for routing policies and runbooks
-- Deterministic workflow execution
-- Ticket registry for execution traceability
+Its current goal is to design, test, and iterate on a practical help-desk automation agent built with the OpenAI Agents SDK while staying aligned with upstream SDK patterns and releases.
+
+In practice, this project focuses on:
+
+- User-facing guided ticket intake
+- IT-facing console for routing policies and runbooks
+- Deterministic runbook execution for repeatable outcomes
+- Ticket registry and event history for auditability and traceability
+
+## Repository goal and scope
+
+This folder exists to improve agent quality over time without turning into a broad monorepo refactor effort.
+
+- Primary objective: produce a production-minded Help Desk Agent MVP that is easy to run, inspect, and evolve.
+- Learning objective: apply current OpenAI Agents SDK best practices and keep this MVP synced with upstream behavior changes.
+- Scope boundary: only files under `help-desk-agent/` are in scope for implementation changes.
+- Non-goal: changing core SDK internals outside this folder.
+
+If upstream SDK behavior, setup steps, or APIs change, update this folder's docs and implementation notes so contributors can keep working from accurate guidance.
 
 ## Architecture
 
@@ -21,6 +36,16 @@ Detailed component docs:
 - Contributor rules for this folder: [`AGENTS.md`](AGENTS.md)
 - DB schema: [`docs/db/schema.md`](docs/db/schema.md)
 - Case references: [`docs/cases/README.md`](docs/cases/README.md)
+
+## How the MVP works
+
+1. A requester starts a ticket through the guided chat UI.
+2. The backend triages the request and selects a routing policy.
+3. A deterministic runbook executes with required fields and guardrails.
+4. The system records every key step in the ticket registry.
+5. The ticket enters IT review, where reviewers approve or reject.
+
+This keeps outcomes consistent for common requests while preserving human review for final control.
 
 ## Prerequisites
 
