@@ -1,3 +1,4 @@
 .agents/
 .mypy_cache/
 skills-lock.json
+*:Zone.Identifier
