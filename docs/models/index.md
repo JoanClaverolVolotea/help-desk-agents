@@ -85,6 +85,8 @@ set_default_openai_responses_transport("websocket")
 
 This affects OpenAI Responses models resolved by the default OpenAI provider (including string model names such as `"gpt-5.2"`).
 
+Transport selection happens when the SDK resolves a model name into a model instance. If you pass a concrete [`Model`][agents.models.interface.Model] object, its transport is already fixed: [`OpenAIResponsesWSModel`][agents.models.openai_responses.OpenAIResponsesWSModel] uses websocket, [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] uses HTTP, and [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] stays on Chat Completions. If you pass `RunConfig(model_provider=...)`, that provider controls transport selection instead of the global default.
+
 You can also configure websocket transport per provider or per run:
 
 ```python
@@ -106,9 +108,11 @@ result = await Runner.run(
 
 If you need prefix-based model routing (for example mixing `openai/...` and `litellm/...` model names in one run), use [`MultiProvider`][agents.MultiProvider] and set `openai_use_responses_websocket=True` there instead.
 
+If you use a custom OpenAI-compatible endpoint or proxy, websocket transport also requires a compatible websocket `/responses` endpoint. In those setups you may need to set `websocket_base_url` explicitly.
+
 Notes:
 
--   This is the Responses API over websocket transport, not the [Realtime API](../realtime/guide.md).
+-   This is the Responses API over websocket transport, not the [Realtime API](../realtime/guide.md). It does not apply to Chat Completions or non-OpenAI providers unless they support the Responses websocket `/responses` endpoint.
 -   Install the `websockets` package if it is not already available in your environment.
 -   You can use [`Runner.run_streamed()`][agents.run.Runner.run_streamed] directly after enabling websocket transport. For multi-turn workflows where you want to reuse the same websocket connection across turns (and nested agent-as-tool calls), the [`responses_websocket_session()`][agents.responses_websocket_session] helper is recommended. See the [Running agents](../running_agents.md) guide and [`examples/basic/stream_ws.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/stream_ws.py).
 
@@ -199,6 +203,36 @@ english_agent = Agent(
     model_settings=ModelSettings(temperature=0.1),
 )
 ```
+
+#### Common advanced `ModelSettings` options
+
+When you are using the OpenAI Responses API, several request fields already have direct `ModelSettings` fields, so you do not need `extra_args` for them.
+
+| Field | Use it for |
+| --- | --- |
+| `parallel_tool_calls` | Allow or forbid multiple tool calls in the same turn. |
+| `truncation` | Set `"auto"` to let the Responses API drop the oldest conversation items instead of failing when context would overflow. |
+| `prompt_cache_retention` | Keep cached prompt prefixes around longer, for example with `"24h"`. |
+| `response_include` | Request richer response payloads such as `web_search_call.action.sources`, `file_search_call.results`, or `reasoning.encrypted_content`. |
+| `top_logprobs` | Request top-token logprobs for output text. The SDK also adds `message.output_text.logprobs` automatically. |
+
+```python
+from agents import Agent, ModelSettings
+
+research_agent = Agent(
+    name="Research agent",
+    model="gpt-5.2",
+    model_settings=ModelSettings(
+        parallel_tool_calls=False,
+        truncation="auto",
+        prompt_cache_retention="24h",
+        response_include=["web_search_call.action.sources"],
+        top_logprobs=5,
+    ),
+)
+```
+
+Use `extra_args` when you need provider-specific or newer request fields that the SDK does not expose directly at the top level yet.
 
 Also, when you use OpenAI's Responses API, [there are a few other optional parameters](https://platform.openai.com/docs/api-reference/responses/create) (e.g., `user`, `service_tier`, and so on). If they are not available at the top level, you can use `extra_args` to pass them as well.
 

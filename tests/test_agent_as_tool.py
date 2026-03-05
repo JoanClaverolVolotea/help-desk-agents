@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
 from typing import Any, cast
 
@@ -15,10 +16,13 @@ from agents import (
     AgentToolStreamEvent,
     FunctionTool,
     MessageOutputItem,
+    ModelBehaviorError,
     RunConfig,
     RunContextWrapper,
     RunHooks,
     Runner,
+    RunResult,
+    RunResultStreaming,
     Session,
     SessionSettings,
     ToolApprovalItem,
@@ -30,6 +34,7 @@ from agents.agent_tool_state import (
     record_agent_tool_run_result,
     set_agent_tool_state_scope,
 )
+from agents.run_state import _build_agent_map
 from agents.stream_events import AgentUpdatedStreamEvent, RawResponsesStreamEvent
 from agents.tool_context import ToolContext
 from tests.utils.hitl import make_function_tool_call
@@ -390,6 +395,77 @@ async def test_agent_as_tool_custom_output_extractor(monkeypatch: pytest.MonkeyP
     output = await tool.on_invoke_tool(tool_context, '{"input": "summarize this"}')
 
     assert output == "custom output"
+
+
+@pytest.mark.asyncio
+async def test_agent_as_tool_extractor_can_access_agent_tool_invocation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    agent = Agent(name="nested_agent")
+    run_result = RunResult(
+        input="hello",
+        new_items=[],
+        raw_responses=[],
+        final_output="done",
+        input_guardrail_results=[],
+        output_guardrail_results=[],
+        tool_input_guardrail_results=[],
+        tool_output_guardrail_results=[],
+        context_wrapper=ToolContext(
+            context=None,
+            tool_name="nested_tool",
+            tool_call_id="call_abc_123",
+            tool_arguments='{"input": "hello"}',
+        ),
+        _last_agent=agent,
+    )
+
+    async def fake_run(
+        cls,
+        starting_agent,
+        input,
+        *,
+        context,
+        max_turns,
+        hooks,
+        run_config,
+        previous_response_id,
+        conversation_id,
+        session,
+    ):
+        del cls, starting_agent, input, context, max_turns, hooks, run_config
+        del previous_response_id, conversation_id, session
+        return run_result
+
+    monkeypatch.setattr(Runner, "run", classmethod(fake_run))
+
+    received_tool_call_id: str | None = None
+
+    async def extractor(result: RunResult | RunResultStreaming) -> str:
+        nonlocal received_tool_call_id
+        invocation = result.agent_tool_invocation
+        assert invocation is not None
+        received_tool_call_id = invocation.tool_call_id
+        assert invocation.tool_name == "nested_tool"
+        assert invocation.tool_arguments == '{"input": "hello"}'
+        return "extracted"
+
+    tool = agent.as_tool(
+        tool_name="nested_tool",
+        tool_description="A nested agent tool",
+        custom_output_extractor=extractor,
+    )
+
+    parent_tool_context = ToolContext(
+        context=None,
+        tool_name="nested_tool",
+        tool_call_id="call_abc_123",
+        tool_arguments='{"input": "hello"}',
+    )
+    output = await tool.on_invoke_tool(parent_tool_context, '{"input": "hello"}')
+
+    assert output == "extracted"
+    assert received_tool_call_id == "call_abc_123"
 
 
 @pytest.mark.asyncio
@@ -1254,18 +1330,29 @@ async def test_agent_as_tool_streaming_works_with_custom_extractor(
 ) -> None:
     agent = Agent(name="streamer")
     stream_events = [RawResponsesStreamEvent(data=cast(Any, {"type": "response_started"}))]
-    stream_events = [RawResponsesStreamEvent(data=cast(Any, {"type": "response_started"}))]
-
-    class DummyStreamingResult:
-        def __init__(self) -> None:
-            self.final_output = "raw output"
-            self.current_agent = agent
-
-        async def stream_events(self):
-            for ev in stream_events:
-                yield ev
-
-    streamed_instance = DummyStreamingResult()
+    streamed_instance = RunResultStreaming(
+        input="stream please",
+        new_items=[],
+        raw_responses=[],
+        final_output="raw output",
+        input_guardrail_results=[],
+        output_guardrail_results=[],
+        tool_input_guardrail_results=[],
+        tool_output_guardrail_results=[],
+        context_wrapper=ToolContext(
+            context=None,
+            tool_name="stream_tool",
+            tool_call_id="call-abc",
+            tool_arguments='{"input": "stream please"}',
+        ),
+        current_agent=agent,
+        current_turn=0,
+        max_turns=1,
+        _current_agent_output_schema=None,
+        trace=None,
+    )
+    streamed_instance._event_queue.put_nowait(stream_events[0])
+    streamed_instance.is_complete = True
 
     def fake_run_streamed(
         cls,
@@ -1327,6 +1414,85 @@ async def test_agent_as_tool_streaming_works_with_custom_extractor(
     assert output == "custom value"
     assert received == [streamed_instance]
     assert callbacks == stream_events
+
+
+@pytest.mark.asyncio
+async def test_agent_as_tool_streaming_extractor_can_access_agent_tool_invocation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    agent = Agent(name="streaming_tool_context_agent")
+    stream_event = RawResponsesStreamEvent(data=cast(Any, {"type": "response_started"}))
+    streamed_instance = RunResultStreaming(
+        input="go",
+        new_items=[],
+        raw_responses=[],
+        final_output="raw output",
+        input_guardrail_results=[],
+        output_guardrail_results=[],
+        tool_input_guardrail_results=[],
+        tool_output_guardrail_results=[],
+        context_wrapper=ToolContext(
+            context=None,
+            tool_name="stream_tool",
+            tool_call_id="call-stream-123",
+            tool_arguments='{"input": "go"}',
+        ),
+        current_agent=agent,
+        current_turn=0,
+        max_turns=1,
+        _current_agent_output_schema=None,
+        trace=None,
+    )
+    streamed_instance._event_queue.put_nowait(stream_event)
+    streamed_instance.is_complete = True
+
+    def fake_run_streamed(
+        cls,
+        /,
+        starting_agent,
+        input,
+        **kwargs,
+    ) -> RunResultStreaming:
+        del cls, starting_agent, input, kwargs
+        return streamed_instance
+
+    async def unexpected_run(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("Runner.run should not be called when on_stream is provided.")
+
+    monkeypatch.setattr(Runner, "run_streamed", classmethod(fake_run_streamed))
+    monkeypatch.setattr(Runner, "run", classmethod(unexpected_run))
+
+    received_call_id: str | None = None
+
+    async def extractor(result: RunResult | RunResultStreaming) -> str:
+        nonlocal received_call_id
+        invocation = result.agent_tool_invocation
+        assert invocation is not None
+        received_call_id = invocation.tool_call_id
+        assert invocation.tool_name == "stream_tool"
+        assert invocation.tool_arguments == '{"input": "go"}'
+        return "custom value"
+
+    async def on_stream(payload: AgentToolStreamEvent) -> None:
+        del payload
+
+    tool = agent.as_tool(
+        tool_name="stream_tool",
+        tool_description="Streams events",
+        custom_output_extractor=extractor,
+        on_stream=on_stream,
+    )
+
+    tool_context = ToolContext(
+        context=None,
+        tool_name="stream_tool",
+        tool_call_id="call-stream-123",
+        tool_arguments='{"input": "go"}',
+    )
+    output = await tool.on_invoke_tool(tool_context, '{"input": "go"}')
+
+    assert output == "custom value"
+    assert received_call_id == "call-stream-123"
 
 
 @pytest.mark.asyncio
@@ -1717,3 +1883,94 @@ async def test_agent_as_tool_failure_error_function_custom_handler(
 
     result = await tool.on_invoke_tool(tool_context, '{"input": "hello"}')
     assert result == "handled:ValueError:test failure"
+
+
+@pytest.mark.asyncio
+async def test_replaced_agent_as_tool_normal_failure_uses_replaced_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    agent = Agent(name="failing_agent")
+
+    async def fake_run(
+        cls,
+        starting_agent,
+        input,
+        *,
+        context,
+        max_turns,
+        hooks,
+        run_config,
+        previous_response_id,
+        conversation_id,
+        session,
+    ):
+        assert starting_agent is agent
+        assert input == "hello"
+        raise RuntimeError("test failure")
+
+    monkeypatch.setattr(Runner, "run", classmethod(fake_run))
+
+    tool = dataclasses.replace(
+        agent.as_tool(
+            tool_name="failing_agent_tool",
+            tool_description="Agent tool that raises",
+            is_enabled=True,
+        ),
+        _failure_error_function=None,
+        _use_default_failure_error_function=False,
+    )
+
+    tool_context = ToolContext(
+        context=None,
+        tool_name=tool.name,
+        tool_call_id="call_1",
+        tool_arguments='{"input": "hello"}',
+    )
+
+    with pytest.raises(RuntimeError, match="test failure"):
+        await tool.on_invoke_tool(tool_context, '{"input": "hello"}')
+
+
+@pytest.mark.asyncio
+async def test_replaced_agent_as_tool_invalid_input_uses_replaced_name() -> None:
+    nested_agent = Agent(name="nested_agent")
+    replaced_tool = dataclasses.replace(
+        nested_agent.as_tool(
+            tool_name="nested_agent_tool",
+            tool_description="Nested agent tool",
+            is_enabled=True,
+            failure_error_function=None,
+        ),
+        name="replaced_nested_agent_tool",
+    )
+
+    with pytest.raises(
+        ModelBehaviorError,
+        match="Invalid JSON input for tool replaced_nested_agent_tool",
+    ):
+        await replaced_tool.on_invoke_tool(
+            ToolContext(
+                context=None,
+                tool_name=replaced_tool.name,
+                tool_call_id="call_1",
+                tool_arguments="{}",
+            ),
+            "{}",
+        )
+
+
+def test_replaced_agent_as_tool_preserves_agent_markers_for_build_agent_map() -> None:
+    nested_agent = Agent(name="nested_agent")
+    replaced_tool = dataclasses.replace(
+        nested_agent.as_tool(
+            tool_name="nested_agent_tool",
+            tool_description="Nested agent tool",
+            is_enabled=True,
+        ),
+        name="replaced_nested_agent_tool",
+    )
+    parent_agent = Agent(name="parent_agent", tools=[replaced_tool])
+
+    agent_map = _build_agent_map(parent_agent)
+
+    assert agent_map["nested_agent"] is nested_agent

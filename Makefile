@@ -20,8 +20,19 @@ mypy:
 	uv run mypy . --exclude site
 
 .PHONY: tests
-tests: 
-	uv run pytest 
+tests: tests-parallel tests-serial
+
+.PHONY: tests-asyncio-stability
+tests-asyncio-stability:
+	bash .github/scripts/run-asyncio-teardown-stability.sh
+
+.PHONY: tests-parallel
+tests-parallel:
+	uv run pytest -n auto --dist loadfile -m "not serial"
+
+.PHONY: tests-serial
+tests-serial:
+	uv run pytest -m serial
 
 .PHONY: coverage
 coverage:
