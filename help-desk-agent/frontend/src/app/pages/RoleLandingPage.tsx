@@ -8,6 +8,7 @@ export default function RoleLandingPage(): JSX.Element {
   return (
     <div className="app-shell role-landing-shell">
       <section className="role-landing-hero">
+        <img src="/company-logo.webp" alt="Company logo" className="role-landing-logo" />
         <div className="role-landing-icon">✈</div>
         <h1>{t("roleLanding.title")}</h1>
         <p>{t("roleLanding.subtitle")}</p>

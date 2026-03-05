@@ -36,6 +36,20 @@ body {
   font-family: "Manrope", "Trebuchet MS", sans-serif;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  top: -78px;
+  right: 8%;
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, rgb(225 14 73 / 24%), rgb(225 14 73 / 4%));
+  transform: rotate(45deg);
+  border: 1px solid rgb(225 14 73 / 24%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 #root {
   height: 100dvh;
   display: grid;
@@ -43,6 +57,8 @@ body {
   padding: 1.2rem;
   box-sizing: border-box;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .language-selector-shell {
@@ -107,6 +123,17 @@ body {
 .header {
   padding: 1.2rem 1.4rem 1rem;
   border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgb(225 14 73 / 65%), rgb(225 14 73 / 8%) 40%, transparent 75%);
 }
 
 .user-portal-header,
@@ -123,6 +150,19 @@ body {
   font-size: 1.65rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+.header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.header-logo {
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 0.35rem;
+  box-shadow: 0 4px 10px rgb(69 35 37 / 18%);
 }
 
 .header p {
@@ -281,7 +321,7 @@ body {
   background: linear-gradient(150deg, #d60d45, #b90c3c);
   color: #fff8fa;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 8px 16px rgb(193 0 46 / 20%);
+  box-shadow: 0 8px 18px rgb(193 0 46 / 24%);
 }
 
 .entry-assistant {
@@ -552,7 +592,7 @@ button:disabled {
 
 .helper {
   color: var(--ink-soft);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
 }
 
 .console-clarity-card h3 {
@@ -685,50 +725,66 @@ button:disabled {
 .ticket-filter-row label {
   display: grid;
   gap: 0.25rem;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
+}
+
+.ticket-filter-row label > select,
+.ticket-filter-row label > input {
+  padding: 0.42rem 0.52rem;
+  font-size: 0.82rem;
 }
 
 .ticket-registry-layout {
   margin-top: 0.9rem;
   display: grid;
   grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.4fr);
-  gap: 0.9rem;
+  gap: 0.72rem;
   min-height: 320px;
 }
 
 .ticket-list-pane,
 .ticket-detail-pane {
-  border: 1px solid #cadcdf;
-  border-radius: 12px;
-  background: #fffefb;
-  padding: 0.75rem;
+  border: 1px solid #ddced1;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.68rem;
   overflow: auto;
 }
 
 .ticket-list {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
 .ticket-list-item {
-  border: 1px solid #c9d7dc;
-  border-radius: 10px;
-  background: #fcfffd;
-  padding: 0.6rem;
+  border: 1px solid #e1d4d6;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.52rem 0.56rem;
   display: grid;
-  gap: 0.35rem;
+  gap: 0.26rem;
   text-align: left;
   color: inherit;
+  font-size: 0.82rem;
+}
+
+.ticket-list-item strong {
+  font-size: 0.82rem;
+}
+
+.ticket-list-item .badge {
+  justify-self: start;
 }
 
 .ticket-list-item.selected {
-  border-color: #6f97a1;
-  box-shadow: inset 0 0 0 1px #6f97a1;
+  border-color: var(--brand-strong);
+  box-shadow: inset 0 0 0 1px var(--brand-strong);
 }
 
 .ticket-detail-card h3 {
   margin-top: 0;
   margin-bottom: 0;
+  font-size: 0.98rem;
 }
 
 .ticket-detail-card pre {
@@ -741,16 +797,22 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #fff;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee3e5;
 }
 
 .ticket-detail-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 1.2rem;
-  font-size: 0.82rem;
+  gap: 0.35rem 1rem;
+  font-size: 0.78rem;
   color: var(--ink-soft);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .ticket-detail-meta code {
@@ -759,21 +821,21 @@ button:disabled {
 }
 
 .ticket-context-box {
-  border: 1px solid #c8dcdf;
-  border-radius: 10px;
-  background: #f8fdfb;
-  padding: 0.7rem 0.8rem;
-  margin-bottom: 0.9rem;
+  border: 1px solid #e1d4d6;
+  border-radius: 8px;
+  background: #faf6f7;
+  padding: 0.62rem 0.72rem;
+  margin-bottom: 0.72rem;
 }
 
 .ticket-review-panel {
-  border: 1px solid #c8dcdf;
-  border-radius: 10px;
-  background: #f4faf8;
-  padding: 0.7rem 0.8rem;
-  margin-bottom: 0.9rem;
+  border: 1px solid #e1d4d6;
+  border-radius: 8px;
+  background: #faf6f7;
+  padding: 0.62rem 0.72rem;
+  margin-bottom: 0.72rem;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
 .ticket-review-panel h4 {
@@ -802,45 +864,77 @@ button:disabled {
   font-size: 0.88rem;
 }
 
+.ticket-context-box pre {
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
 .ticket-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: 0.62rem;
 }
 
 .ticket-detail-cell {
-  border: 1px solid #cadcdf;
-  border-radius: 10px;
-  background: #fcfffd;
-  padding: 0.7rem 0.8rem;
+  border: 1px solid #e1d4d6;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.62rem 0.72rem;
   min-height: 100px;
 }
 
 .ticket-detail-cell h4 {
   margin: 0 0 0.5rem;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .ticket-table {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.34rem;
 }
 
 .ticket-table-row {
-  border: 1px solid #cfdde1;
-  border-radius: 8px;
-  padding: 0.5rem;
-  background: #fcffff;
+  border: 1px solid #e4d8da;
+  border-radius: 6px;
+  padding: 0.4rem;
+  background: #fff;
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .ticket-table-row span {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
 }
 
 .ticket-table-row pre {
-  font-size: 0.76rem;
+  font-size: 0.73rem;
+}
+
+.it-console-tickets .breadcrumb {
+  margin-bottom: 0.42rem;
+}
+
+.it-console-tickets .admin-toolbar {
+  margin-bottom: 0.25rem;
+}
+
+.it-console-tickets .ticket-filter-row {
+  position: sticky;
+  top: -0.85rem;
+  z-index: 6;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid #e3d5d8;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fffafb, #f8f2f4);
+}
+
+.it-console-tickets .ticket-registry-layout {
+  margin-top: 0.6rem;
+}
+
+.it-console-tickets .ticket-list-pane,
+.it-console-tickets .ticket-detail-pane {
+  background: #fff;
 }
 
 .wizard-header h3 {
@@ -1019,6 +1113,14 @@ button:disabled {
   margin-bottom: 0.5rem;
   color: var(--primary);
   font-weight: 700;
+}
+
+.role-landing-logo {
+  width: 2.55rem;
+  height: 2.55rem;
+  margin-bottom: 0.55rem;
+  border-radius: 0.65rem;
+  box-shadow: 0 8px 16px rgb(69 35 37 / 18%);
 }
 
 .role-landing-hero h1 {
@@ -1298,7 +1400,7 @@ button:disabled {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
 }
 
 .admin-table th {
@@ -1308,15 +1410,15 @@ button:disabled {
   letter-spacing: 0.06em;
   color: var(--ink-soft);
   text-align: left;
-  padding: 0.6rem 0.7rem;
+  padding: 0.5rem 0.58rem;
   border-bottom: 1px solid #e3d5d8;
   background: #f9f2f4;
   white-space: nowrap;
 }
 
 .admin-table td {
-  padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid #e8eff0;
+  padding: 0.42rem 0.58rem;
+  border-bottom: 1px solid #eee3e5;
   vertical-align: middle;
 }
 
@@ -1429,6 +1531,10 @@ button:disabled {
     align-items: stretch;
   }
 
+  .header-brand {
+    justify-content: flex-start;
+  }
+
   .role-landing-grid {
     grid-template-columns: 1fr;
   }
@@ -1483,5 +1589,10 @@ button:disabled {
 
   .it-console-shell {
     width: 100%;
+  }
+
+  .it-console-tickets .ticket-filter-row {
+    top: 0;
+    border-radius: 8px;
   }
 }

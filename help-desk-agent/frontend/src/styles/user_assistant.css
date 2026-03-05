@@ -21,6 +21,50 @@
   border-bottom-color: #e1d2d4;
 }
 
+.user-portal-hero-strip {
+  margin: 0.8rem 1.4rem 0;
+  border: 1px solid #e4d3d6;
+  border-radius: 12px;
+  padding: 0.8rem 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  background:
+    linear-gradient(130deg, rgb(225 14 73 / 9%), transparent 50%),
+    linear-gradient(180deg, #fff, #faf4f6);
+}
+
+.user-portal-hero-strip h2 {
+  margin: 0;
+  font-family: "Barlow Condensed", "Trebuchet MS", sans-serif;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.user-portal-hero-strip p {
+  margin: 0.2rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.user-portal-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+}
+
+.user-portal-hero-tags span {
+  border-radius: 999px;
+  border: 1px solid #e5b9c7;
+  background: #fff;
+  padding: 0.2rem 0.52rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  color: #7a4f56;
+}
+
 .user-portal-composer {
   background: linear-gradient(180deg, #fdf8f9, #f7f1f2);
   border-top-color: #e1d2d4;
@@ -56,4 +100,13 @@
 
 .user-portal-samples .sample-button:hover {
   background: #fff1f5;
+}
+
+@media (max-width: 780px) {
+  .user-portal-hero-strip {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

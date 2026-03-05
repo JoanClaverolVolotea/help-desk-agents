@@ -202,7 +202,10 @@ export default function UserPortalPage(): JSX.Element {
     <div className="app-shell user-portal-shell">
       <header className="header user-portal-header">
         <div>
-          <h1>{t("userPortal.title")}</h1>
+          <div className="header-brand">
+            <img src="/company-logo.webp" alt="Company logo" className="header-logo" />
+            <h1>{t("userPortal.title")}</h1>
+          </div>
           <p>{t("userPortal.description")}</p>
         </div>
         <Link to="/" className="tab tab-link user-back-link">

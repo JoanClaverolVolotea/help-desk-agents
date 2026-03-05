@@ -19,7 +19,10 @@ export default function ITConsoleLayout(): JSX.Element {
     <div className="app-shell it-console-shell">
       <header className="header it-console-header">
         <div>
-          <h1>{t("itConsole.title")}</h1>
+          <div className="header-brand">
+            <img src="/company-logo.webp" alt="Company logo" className="header-logo" />
+            <h1>{t("itConsole.title")}</h1>
+          </div>
           <p>{t("itConsole.description")}</p>
           <div className="it-operating-model">
             <Link to="/it/dashboard">{t("itConsole.modelStep1")}</Link>
