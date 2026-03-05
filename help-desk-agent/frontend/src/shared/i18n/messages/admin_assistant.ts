@@ -28,6 +28,8 @@ export const ADMIN_ASSISTANT_MESSAGES: Record<LanguageCode, Record<string, unkno
     },
     "dashboardPage": {
       "title": "Dashboard",
+      "heroTitle": "Operations overview",
+      "heroSubtitle": "Monitor category coverage, runbook readiness, and ticket flow in real time.",
       "loading": "Loading dashboard...",
       "statCategories": "Categories",
       "statPublishedRunbooks": "Published runbooks",
@@ -204,6 +206,8 @@ export const ADMIN_ASSISTANT_MESSAGES: Record<LanguageCode, Record<string, unkno
     },
     "dashboardPage": {
       "title": "Panel",
+      "heroTitle": "Visión operativa",
+      "heroSubtitle": "Supervisa cobertura de categorías, preparación de procedimientos y flujo de tickets en tiempo real.",
       "loading": "Cargando panel...",
       "statCategories": "Categorías",
       "statPublishedRunbooks": "Procedimientos publicados",

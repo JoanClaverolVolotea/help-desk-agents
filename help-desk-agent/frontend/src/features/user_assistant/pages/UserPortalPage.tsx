@@ -219,6 +219,18 @@ export default function UserPortalPage(): JSX.Element {
           ]}
         />
 
+        <section className="user-portal-hero-strip">
+          <div>
+            <h2>{t("userPortal.heroTitle")}</h2>
+            <p>{t("userPortal.heroSubtitle")}</p>
+          </div>
+          <div className="user-portal-hero-tags" aria-hidden="true">
+            <span>TRIAGE</span>
+            <span>ROUTING</span>
+            <span>RESOLUTION</span>
+          </div>
+        </section>
+
         <ChatTranscript
           transcriptRef={transcriptRef}
           entries={entries}

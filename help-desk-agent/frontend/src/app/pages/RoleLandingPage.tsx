@@ -8,7 +8,7 @@ export default function RoleLandingPage(): JSX.Element {
   return (
     <div className="app-shell role-landing-shell">
       <section className="role-landing-hero">
-        <div className="role-landing-icon">?</div>
+        <div className="role-landing-icon">✈</div>
         <h1>{t("roleLanding.title")}</h1>
         <p>{t("roleLanding.subtitle")}</p>
       </section>

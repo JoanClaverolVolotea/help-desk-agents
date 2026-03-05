@@ -76,6 +76,18 @@ export default function ITDashboardPage(): JSX.Element {
         </div>
       </div>
 
+      <section className="dashboard-hero-strip">
+        <div>
+          <h3>{t("dashboardPage.heroTitle")}</h3>
+          <p>{t("dashboardPage.heroSubtitle")}</p>
+        </div>
+        <div className="dashboard-hero-tags" aria-hidden="true">
+          <span>LIVE OPS</span>
+          <span>SLA FLOW</span>
+          <span>AUTOMATION</span>
+        </div>
+      </section>
+
       {loading ? <p className="helper">{t("dashboardPage.loading")}</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
 

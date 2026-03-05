@@ -1,7 +1,7 @@
 .admin-panel {
   padding: 1rem 1.4rem 1.25rem;
   overflow: auto;
-  background: linear-gradient(180deg, #fff7eb 0%, #f6fbfb 100%);
+  background: linear-gradient(180deg, #fffafb 0%, #f5f1f2 100%);
 }
 
 .admin-toolbar {
@@ -22,9 +22,9 @@
 
 .console-clarity-card {
   margin-top: 0.85rem;
-  border: 1px solid #c8dcdf;
+  border: 1px solid #e3d6d8;
   border-radius: 12px;
-  background: #f7fdfb;
+  background: #fff;
   padding: 0.7rem 0.8rem;
 }
 
@@ -49,7 +49,7 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgb(18 49 58 / 45%);
+  background: rgb(69 35 37 / 42%);
   display: grid;
   place-items: center;
   padding: 1rem 1.5rem;
@@ -61,17 +61,17 @@
   max-height: calc(100dvh - 1.5rem);
   display: flex;
   flex-direction: column;
-  border: 1px solid #bdd2d7;
+  border: 1px solid #ddcfd1;
   border-radius: 16px;
-  background: #fffdf7;
-  box-shadow: 0 20px 50px rgb(18 49 58 / 25%);
+  background: #fff;
+  box-shadow: 0 20px 50px rgb(69 35 37 / 25%);
   animation: modal-rise 180ms ease-out;
 }
 
 .wizard-header,
 .wizard-footer {
   padding: 0.9rem 1.1rem;
-  border-bottom: 1px solid #d7e5e8;
+  border-bottom: 1px solid #e5d8da;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -81,7 +81,7 @@
 
 .wizard-footer {
   border-bottom: 0;
-  border-top: 1px solid #d7e5e8;
+  border-top: 1px solid #e5d8da;
 }
 
 .wizard-body {
@@ -97,17 +97,19 @@
 }
 
 .it-console-shell {
-  border-color: #bfd4cc;
+  border-color: #deced1;
   width: min(1760px, calc(100vw - 2.4rem));
   max-height: none;
 }
 
 .it-console-header {
-  background: linear-gradient(100deg, #ebf7f0, #f6faef);
+  background:
+    linear-gradient(135deg, rgb(225 14 73 / 8%), transparent 52%),
+    linear-gradient(100deg, #fff7f9, #f4efef);
 }
 
 .it-console-tabs {
-  background: linear-gradient(90deg, #eef8f1, #f3f8ee);
+  background: linear-gradient(90deg, #fff7f9, #f7f0f1);
 }
 
 .it-console-workspace {
@@ -138,8 +140,8 @@
 .it-console-assistant-pane {
   min-height: 0;
   display: flex;
-  border-left: 1px solid #c9ddd4;
-  background: linear-gradient(180deg, #fafffc 0%, #f5fbf8 100%);
+  border-left: 1px solid #e4d6d8;
+  background: linear-gradient(180deg, #fffdfd 0%, #f8f3f4 100%);
   overflow: hidden;
   transition: width 190ms ease;
 }
@@ -155,16 +157,16 @@
   display: flex;
   justify-content: flex-end;
   padding: 0.55rem 0.7rem 0.5rem;
-  border-bottom: 1px solid #c9ddd4;
-  background: linear-gradient(90deg, #f2fbf5, #eef9f4);
+  border-bottom: 1px solid #e4d6d8;
+  background: linear-gradient(90deg, #fff7f9, #f7f1f2);
 }
 
 .assistant-visibility-toggle {
-  border: 1px solid #98bcc4;
+  border: 1px solid #dcbfc6;
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
-  background: #f1fbfd;
-  color: #0e4c5b;
+  background: #fff;
+  color: #6d5254;
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.7rem;
   font-weight: 600;
@@ -172,7 +174,7 @@
 }
 
 .assistant-visibility-toggle:hover {
-  background: #dff2f6;
+  background: #fff0f4;
 }
 
 .assistant-visibility-toggle.closed {
@@ -180,11 +182,11 @@
 }
 
 .it-console-panel {
-  background: linear-gradient(180deg, #fbfffc 0%, #f7fbfa 100%);
+  background: linear-gradient(180deg, #fffefe 0%, #f7f2f3 100%);
 }
 
 .section-tabs {
-  border-bottom-color: #c9ddd4;
+  border-bottom-color: #e2d5d7;
 }
 
 .breadcrumb {
@@ -207,7 +209,7 @@
 .admin-table-wrapper {
   margin-top: 0.9rem;
   overflow-x: auto;
-  border: 1px solid #c9dcdc;
+  border: 1px solid #e2d5d7;
   border-radius: 12px;
-  background: #fffef8;
+  background: #fff;
 }

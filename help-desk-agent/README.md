@@ -29,6 +29,24 @@ Detailed component docs:
 - Node.js + npm
 - OpenAI API key in `backend/.env`
 
+## Upstream and SDK sync
+
+Keep this MVP aligned with the official OpenAI Agents SDK sources:
+
+- Canonical upstream repository: `https://github.com/openai/openai-agents-python`
+- Canonical package source: `https://pypi.org/project/openai-agents/`
+- Sync cadence: before new feature work and at least weekly
+
+Preferred dependency update commands:
+
+```bash
+uv add --upgrade openai-agents
+# or
+pip install -U openai-agents
+```
+
+After updating, verify local behavior and update docs under `help-desk-agent/` when upstream behavior, setup, or APIs changed.
+
 ## Quick start
 
 From `help-desk-agent/`:

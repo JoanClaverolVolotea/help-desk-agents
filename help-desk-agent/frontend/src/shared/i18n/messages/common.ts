@@ -7,7 +7,10 @@ export const COMMON_MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
       "english": "English",
       "spanish": "Spanish",
       "shortEnglish": "EN",
-      "shortSpanish": "ES"
+      "shortSpanish": "ES",
+      "themeLabel": "Style",
+      "themeBrand": "Brand",
+      "themeLite": "Lite"
     },
     "common": {
       "newValue": "new",
@@ -81,7 +84,10 @@ export const COMMON_MESSAGES: Record<LanguageCode, Record<string, unknown>> = {
       "english": "Inglés",
       "spanish": "Español",
       "shortEnglish": "EN",
-      "shortSpanish": "ES"
+      "shortSpanish": "ES",
+      "themeLabel": "Estilo",
+      "themeBrand": "Marca",
+      "themeLite": "Suave"
     },
     "common": {
       "newValue": "nuevo",

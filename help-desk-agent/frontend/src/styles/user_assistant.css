@@ -1,9 +1,11 @@
 .user-portal-shell {
-  border-color: #b7ced4;
+  border-color: #deced1;
 }
 
 .user-portal-header {
-  background: linear-gradient(100deg, #e8f4f9, #edf8ef);
+  background:
+    linear-gradient(135deg, rgb(225 14 73 / 8%), transparent 52%),
+    linear-gradient(105deg, #fff6f9, #f6f0f1);
 }
 
 .user-back-link,
@@ -12,28 +14,30 @@
 }
 
 .user-portal-panel {
-  background: linear-gradient(180deg, #f8fcff, #f7fdf6);
+  background: linear-gradient(180deg, #fefcfc, #f7f2f3);
 }
 
 .user-portal-status {
-  border-bottom-color: #c6dce2;
+  border-bottom-color: #e1d2d4;
 }
 
 .user-portal-composer {
-  background: #f8fdff;
-  border-top-color: #c6dce2;
+  background: linear-gradient(180deg, #fdf8f9, #f7f1f2);
+  border-top-color: #e1d2d4;
 }
 
 .user-portal-transcript {
-  background: linear-gradient(180deg, #f3fbff 0%, #f6fcf7 100%);
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8f2f4 100%),
+    repeating-linear-gradient(45deg, transparent, transparent 26px, rgb(225 14 73 / 3%) 26px, rgb(225 14 73 / 3%) 28px);
 }
 
 .user-portal-transcript .entry-user {
-  background: #0f4665;
+  background: linear-gradient(140deg, #df0e48, #bf0c3e);
 }
 
 .user-portal-transcript .entry-assistant {
-  border-color: #c8dce3;
+  border-color: #e4d8da;
 }
 
 .user-portal-samples {
@@ -41,15 +45,15 @@
   flex-wrap: wrap;
   gap: 0.55rem;
   padding: 0.7rem 1.4rem;
-  border-bottom: 1px solid #c6dce2;
-  background: #f4fafd;
+  border-bottom: 1px solid #e1d2d4;
+  background: linear-gradient(90deg, #fff7f9, #f8f2f3);
 }
 
 .user-portal-samples .sample-button {
-  border-color: #b3ced6;
-  background: #eef8fc;
+  border-color: #e0ccd1;
+  background: #fff;
 }
 
 .user-portal-samples .sample-button:hover {
-  background: #daf0f7;
+  background: #fff1f5;
 }
