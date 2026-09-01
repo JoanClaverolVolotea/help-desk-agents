@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           ref: main
       - name: Setup uv
-        uses: astral-sh/setup-uv@803947b9bd8e9f986429fa0c5a41c367cd732b41
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
         with:
           enable-cache: true
       - name: Fetch tags
